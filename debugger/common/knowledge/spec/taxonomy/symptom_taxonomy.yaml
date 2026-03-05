@@ -1,0 +1,417 @@
+# Debugger Framework · Symptom Taxonomy
+# 症状分类学 — 机器可读版本
+# 格式版本: 1.0 | 最后更新: 2026-02-27
+#
+# 字段说明:
+#   tag              : 机器可读标签（全小写_下划线，用于跨文件精确匹配）
+#   label            : 人类可读名称（中文）
+#   description      : 症状的精确描述
+#   category         : 所属大类（visual_color / visual_geometry / visual_texture /
+#                      visual_depth / visual_lighting / performance）
+#   likely_invariants: 最可能违反的不变量（匹配 invariant_library.yaml 中的 id）
+#   priority_order   : 在同类症状中的优先排查顺序（1=最高）
+#   examples         : 典型现象描述（帮助 Triage Agent 做初始分类判断）
+
+symptoms:
+
+  # ─────────────────────────────────────
+  # 视觉症状 · 颜色异常
+  # ─────────────────────────────────────
+
+  - tag: black_pixel
+    label: 黑色像素
+    description: "渲染输出特定区域呈现纯黑，值为 (0,0,0) 或接近0"
+    category: visual_color
+    likely_invariants: [I-NAN-01, I-SHADER-01, I-SHADER-02, I-SHADING-NONNEG-01, I-LIGHT-UNPACK-01]
+    priority_order: 1
+    examples:
+      - "角色局部区域完全黑色，周围正常"
+      - "整个 DrawCall 的渲染结果全黑"
+      - "阴影区域异常全黑（无环境光）"
+
+  - tag: white_pixel
+    label: 白色像素
+    description: "渲染输出特定区域呈现纯白，值为 (1,1,1) 或 NaN 经硬件处理后的最大值"
+    category: visual_color
+    likely_invariants: [I-NAN-01, I-SHADER-01]
+    priority_order: 1
+    examples:
+      - "角色局部像素全白，过曝"
+      - "整帧突然变为全白"
+
+  - tag: white_spot
+    label: 白色斑点
+    description: "渲染输出中出现局部白色点状或块状瑕疵，非全屏"
+    category: visual_color
+    likely_invariants: [I-NAN-01]
+    priority_order: 1
+    examples:
+      - "角色皮肤上出现随机白点"
+      - "头发区域偶发白色噪点"
+
+  - tag: nan_propagation
+    label: NaN传播
+    description: "NaN 或 Inf 值通过渲染管线传播，导致大范围像素异常"
+    category: visual_color
+    likely_invariants: [I-NAN-01]
+    priority_order: 1
+    examples:
+      - "一帧内多个不相关区域同时出现白色/黑色瑕疵"
+
+  - tag: pixel_overflow
+    label: 像素值溢出
+    description: "像素值超出目标格式的有效范围"
+    category: visual_color
+    likely_invariants: [I-NAN-01, I-NAN-02, I-COLOR-02]
+    priority_order: 2
+    examples:
+      - "HDR 内容写入 LDR RT 导致高光区域全白"
+
+  - tag: color_distortion
+    label: 颜色失真
+    description: "颜色与预期明显不符，整体色调偏移"
+    category: visual_color
+    likely_invariants: [I-COLOR-01, I-LIGHT-UNPACK-01, I-BLEND-01]
+    priority_order: 2
+    examples:
+      - "皮肤颜色偏绿或偏蓝"
+      - "整体场景颜色明显偏色"
+
+  - tag: color_too_dark
+    label: 画面偏暗
+    description: "整体或局部亮度明显不足，低于预期"
+    category: visual_color
+    likely_invariants: [I-COLOR-01, I-SHADING-NONNEG-01, I-LIGHT-01]
+    priority_order: 2
+    examples:
+      - "在 Mali 正常但在 Adreno 上角色整体偏暗"
+      - "加了 Gamma 校正后场景变暗"
+
+  - tag: color_too_bright
+    label: 画面过亮
+    description: "整体或局部亮度过度，高于预期"
+    category: visual_color
+    likely_invariants: [I-COLOR-01, I-COLOR-02, I-LIGHT-01, I-LIGHT-02]
+    priority_order: 2
+    examples:
+      - "高光区域大面积过曝"
+      - "角色皮肤局部过亮"
+
+  - tag: washed_out
+    label: 颜色褪色/平淡
+    description: "画面颜色对比度不足，整体偏灰，色彩饱和度异常低"
+    category: visual_color
+    likely_invariants: [I-COLOR-01, I-COLOR-02, I-LIGHT-02]
+    priority_order: 3
+    examples:
+      - "场景颜色整体偏灰，失去对比度"
+
+  - tag: gamma_error
+    label: Gamma错误
+    description: "颜色空间转换错误，表现为过暗或过亮且与曝光无关"
+    category: visual_color
+    likely_invariants: [I-COLOR-01]
+    priority_order: 2
+    examples:
+      - "切换 sRGB RT 后场景变得过暗（双重 Gamma）"
+      - "禁用 sRGB RT 后场景颜色过亮（Gamma 丢失）"
+
+  - tag: banding
+    label: 颜色条带
+    description: "渐变区域出现可见的色阶分层，而非平滑过渡"
+    category: visual_color
+    likely_invariants: [I-PREC-01]
+    priority_order: 3
+    examples:
+      - "天空渐变区域出现明显色块分层"
+      - "皮肤高光到暗部过渡区域出现条带"
+
+  - tag: artifact
+    label: 视觉瑕疵
+    description: "渲染输出中出现不应存在的图形异常，形态不规则"
+    category: visual_color
+    likely_invariants: [I-PREC-01, I-PREC-02]
+    priority_order: 3
+    examples:
+      - "模型边缘出现锯齿状彩色条纹"
+
+  - tag: gradient
+    label: 渐变异常
+    description: "颜色渐变不平滑，出现跳变或不连续"
+    category: visual_color
+    likely_invariants: [I-PREC-01]
+    priority_order: 3
+    examples:
+      - "角色皮肤高光渐变出现量化跳变"
+
+  - tag: precision
+    label: 精度问题
+    description: "因精度不足导致的各类视觉异常"
+    category: visual_color
+    likely_invariants: [I-PREC-01, I-PREC-02]
+    priority_order: 2
+    examples:
+      - "Adreno 设备上特定区域颜色与 Mali 设备不一致"
+
+  - tag: blackout
+    label: 区域黑化
+    description: "特定区域异常变黑，与正常渲染结果对比明显"
+    category: visual_color
+    likely_invariants: [I-PREC-01, I-LIGHT-UNPACK-01]
+    priority_order: 2
+    examples:
+      - "Adreno 740 上头发区域局部变黑（精度截断）"
+
+  - tag: washout
+    label: 区域白化
+    description: "特定区域异常变白或过曝，与正常渲染结果对比明显"
+    category: visual_color
+    likely_invariants: [I-PREC-01]
+    priority_order: 2
+    examples:
+      - "Adreno 650 上头发区域变白（精度溢出）"
+
+  - tag: hair_shading
+    label: 毛发着色异常
+    description: "毛发/头发渲染结果与预期不符，表现为颜色错误或光照异常"
+    category: visual_color
+    likely_invariants: [I-PREC-01]
+    priority_order: 2
+    examples:
+      - "头发在特定设备上变白或变黑"
+      - "毛发高光异常"
+
+  - tag: local_light_unpack
+    label: 局部光照解包异常
+    description: "从光照数据（光照贴图/光照缓冲）解包时出现错误，导致局部光照完全错误"
+    category: visual_lighting
+    likely_invariants: [I-PREC-01, I-LIGHT-UNPACK-01]
+    priority_order: 2
+    examples:
+      - "局部光源照亮区域颜色完全错误"
+      - "Lightmap 区域颜色偏移"
+
+  # ─────────────────────────────────────
+  # 视觉症状 · 几何异常
+  # ─────────────────────────────────────
+
+  - tag: object_missing
+    label: 物体消失
+    description: "本应在场景中可见的物体未出现在渲染结果中"
+    category: visual_geometry
+    likely_invariants: [I-GEO-01, I-GEO-02, I-GEO-03, I-SHADER-01]
+    priority_order: 1
+    examples:
+      - "角色模型完全不显示"
+      - "部分子网格消失"
+
+  - tag: object_invisible
+    label: 物体不可见
+    description: "物体存在于场景中但渲染输出中不可见（可能因为剔除或变换问题）"
+    category: visual_geometry
+    likely_invariants: [I-GEO-01]
+    priority_order: 1
+    examples:
+      - "物体在 GPU 端存在 DrawCall 但画面无输出"
+
+  - tag: backface_culling
+    label: 背面剔除错误
+    description: "背面被错误剔除（应显示）或正面被错误剔除"
+    category: visual_geometry
+    likely_invariants: [I-GEO-01, I-GEO-02]
+    priority_order: 2
+    examples:
+      - "物体内部可见但外部不可见（法线反向）"
+      - "镜像物体（负缩放）显示为内部"
+
+  - tag: culling
+    label: 剔除异常
+    description: "视锥体或背面剔除行为与预期不符"
+    category: visual_geometry
+    likely_invariants: [I-GEO-01]
+    priority_order: 2
+    examples:
+      - "摄像机正对物体但物体被剔除"
+
+  # ─────────────────────────────────────
+  # 视觉症状 · 纹理异常
+  # ─────────────────────────────────────
+
+  - tag: texture_missing
+    label: 纹理缺失
+    description: "纹理未正确应用到模型表面，显示为默认颜色或纯色"
+    category: visual_texture
+    likely_invariants: [I-TEX-01]
+    priority_order: 1
+    examples:
+      - "模型显示为纯白或纯灰（无纹理）"
+
+  - tag: uv_error
+    label: UV映射错误
+    description: "纹理坐标计算错误导致纹理被错误映射"
+    category: visual_texture
+    likely_invariants: [I-TEX-01]
+    priority_order: 2
+    examples:
+      - "纹理被拉伸到整个模型"
+      - "纹理偏移，不在正确位置"
+
+  - tag: stretched
+    label: 纹理拉伸
+    description: "纹理被不均匀拉伸，比例明显失真"
+    category: visual_texture
+    likely_invariants: [I-TEX-01]
+    priority_order: 2
+    examples:
+      - "圆形纹理变成椭圆"
+
+  - tag: tiling
+    label: 纹理平铺异常
+    description: "纹理平铺方式与预期不符（缺少平铺或异常重复）"
+    category: visual_texture
+    likely_invariants: [I-TEX-01]
+    priority_order: 3
+    examples:
+      - "应重复的纹理只显示一次并被拉伸"
+
+  - tag: blurry
+    label: 纹理模糊
+    description: "纹理显示分辨率明显低于预期"
+    category: visual_texture
+    likely_invariants: [I-MIP-01, I-LOD-01]
+    priority_order: 3
+    examples:
+      - "近距离物体纹理模糊，使用了低级 Mip"
+
+  - tag: mipmap
+    label: Mipmap问题
+    description: "Mipmap 链问题导致的各类纹理瑕疵"
+    category: visual_texture
+    likely_invariants: [I-MIP-01, I-LOD-01]
+    priority_order: 3
+    examples:
+      - "远处纹理显示为不正确的颜色（Mip 内容错误）"
+
+  - tag: alpha_error
+    label: Alpha通道错误
+    description: "Alpha 透明度计算或混合错误"
+    category: visual_texture
+    likely_invariants: [I-ALPHA-01, I-BLEND-01]
+    priority_order: 2
+    examples:
+      - "透明区域不透明，或不透明区域半透明"
+
+  - tag: blend_error
+    label: 混合错误
+    description: "透明/半透明物体的混合结果与预期不符"
+    category: visual_texture
+    likely_invariants: [I-BLEND-01, I-ALPHA-01]
+    priority_order: 2
+    examples:
+      - "透明物体显示顺序错误，前方物体被后方遮挡"
+
+  # ─────────────────────────────────────
+  # 视觉症状 · 深度异常
+  # ─────────────────────────────────────
+
+  - tag: z_fighting
+    label: Z-Fighting
+    description: "共面或近似共面的物体交替遮挡彼此，产生闪烁"
+    category: visual_depth
+    likely_invariants: [I-DEPTH-01, I-PREC-02]
+    priority_order: 2
+    examples:
+      - "地面贴花与地面模型交替闪烁"
+
+  - tag: depth_error
+    label: 深度错误
+    description: "深度值计算错误导致渲染顺序异常"
+    category: visual_depth
+    likely_invariants: [I-DEPTH-01, I-DEPTH-02]
+    priority_order: 2
+    examples:
+      - "远处物体遮挡了近处物体"
+
+  - tag: occlusion
+    label: 遮挡错误
+    description: "物体间遮挡关系与实际空间关系不符"
+    category: visual_depth
+    likely_invariants: [I-DEPTH-01, I-DEPTH-02]
+    priority_order: 2
+    examples:
+      - "透明物体遮挡了后方不透明物体（深度写入未禁用）"
+
+  # ─────────────────────────────────────
+  # 视觉症状 · 光照异常
+  # ─────────────────────────────────────
+
+  - tag: flickering
+    label: 画面闪烁
+    description: "渲染结果在帧间不稳定，出现闪烁现象"
+    category: visual_color
+    likely_invariants: [I-NAN-01, I-NAN-02, I-DEPTH-01, I-MIP-01, I-SHADER-02, I-GEO-03]
+    priority_order: 1
+    examples:
+      - "特定角度下模型某个区域随机闪烁"
+      - "相机移动时出现周期性闪烁"
+
+  # ─────────────────────────────────────
+  # 性能症状
+  # ─────────────────────────────────────
+
+  - tag: stall
+    label: 渲染卡顿/Stall
+    description: "GPU 管线发生停顿，导致帧时间异常升高"
+    category: performance
+    likely_invariants: [I-PERF-01]
+    priority_order: 1
+    examples:
+      - "某帧的 GPU 时间突然从 8ms 升至 40ms"
+
+  - tag: fps_drop
+    label: 帧率骤降
+    description: "帧率突然明显下降"
+    category: performance
+    likely_invariants: [I-PERF-01]
+    priority_order: 1
+    examples:
+      - "进入特定场景后帧率从 60 降至 20"
+
+  - tag: pipeline_error
+    label: 管线错误
+    description: "渲染管线状态错误导致的各类异常"
+    category: performance
+    likely_invariants: [I-PERF-01]
+    priority_order: 2
+    examples:
+      - "Resource Barrier 缺失导致 Validation Layer 报错"
+
+# ─────────────────────────────────────
+# 分类索引
+# ─────────────────────────────────────
+categories:
+  visual_color:
+    label: 颜色/像素异常
+    tags: [black_pixel, white_pixel, white_spot, nan_propagation, pixel_overflow,
+           color_distortion, color_too_dark, color_too_bright, washed_out, gamma_error,
+           banding, artifact, gradient, precision, blackout, washout, hair_shading, flickering]
+
+  visual_geometry:
+    label: 几何/可见性异常
+    tags: [object_missing, object_invisible, backface_culling, culling]
+
+  visual_texture:
+    label: 纹理/UV异常
+    tags: [texture_missing, uv_error, stretched, tiling, blurry, mipmap, alpha_error, blend_error]
+
+  visual_depth:
+    label: 深度/遮挡异常
+    tags: [z_fighting, depth_error, occlusion]
+
+  visual_lighting:
+    label: 光照/解包异常
+    tags: [local_light_unpack]
+
+  performance:
+    label: 性能异常
+    tags: [stall, fps_drop, pipeline_error]
