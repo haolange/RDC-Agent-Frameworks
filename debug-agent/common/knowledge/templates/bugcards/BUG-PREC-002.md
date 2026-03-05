@@ -1,0 +1,37 @@
+# BugCard: BUG-PREC-002
+
+```yaml
+bugcard_id: BUG-PREC-002
+title: "Adreno 740：KajiyaDiffuse half/RelaxedPrecision lowering 触发负值钳零导致头发/披风黑化"
+
+symptom_tags: [blackout, hair_shading]
+trigger_tags: [Adreno_GPU, Adreno_740, Vulkan, RelaxedPrecision]
+violated_invariants: [I-PREC-01, I-SHADING-NONNEG-01]
+recommended_sop: SOP-PREC-01
+
+root_cause_summary: >
+  在 `MobileShadingModels.ush:MobileKajiyaKayDiffuseAttenuation` 中，
+  `half KajiyaDiffuse = 1 - abs(dot(N, L));` 在 Adreno 740（Vulkan）上经 RelaxedPrecision lowering 后出现负值/异常，
+  后续非负钳位链将结果压为 0，导致头发/披风区域整体塌黑。
+
+fingerprint:
+  pattern: "half KajiyaDiffuse = 1 - abs(dot(N, L));"
+  risk_category: precision_lowering
+  shader_stage: PS
+
+fix_verified: true
+fix_verification_data:
+  pixel_before: {x: 512, y: 384, rgba: [0.02, 0.02, 0.02, 1.0]}
+  pixel_after:  {x: 512, y: 384, rgba: [0.34, 0.32, 0.30, 1.0]}
+
+skeptic_signed: true
+bugcard_skeptic_signed: true
+
+related_devices:
+  - device: Adreno_650
+    bug_card: BUG-PREC-001
+    symptom_diff: "650 上白化，740 上黑化（同类 RelaxedPrecision 精度问题）"
+
+action_chain_ref: "knowledge/traces/action_chains/example_adreno_prec.jsonl"
+sop_improvement_notes: ""
+```

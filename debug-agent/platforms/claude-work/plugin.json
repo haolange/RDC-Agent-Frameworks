@@ -1,0 +1,89 @@
+{
+  "name": "aird-debug-agent",
+  "description": "AIRD Framework — AI 驱动的不变量推理调试器，9 个专家 Agent 协作体系，含完整质量门槛与知识库系统",
+  "core_source": "../../common/AGENT_CORE.md",
+  "agents": [
+    {
+      "name": "Team Lead",
+      "agent_id": "team_lead",
+      "description": "渲染调试团队协调者（Delegate Mode）——管理假设看板、调度专家、裁决根因",
+      "prompt_file": "./agents/team_lead.md"
+    },
+    {
+      "name": "Triage & Taxonomy",
+      "agent_id": "triage_agent",
+      "description": "症状分类专家——将自然语言报告映射为标准 symptom_tags / trigger_tags，推荐 SOP",
+      "prompt_file": "./agents/triage.md"
+    },
+    {
+      "name": "Capture & Repro",
+      "agent_id": "capture_repro_agent",
+      "description": "捕获与复现专家——设计 A/B 对比 capture 策略，验证 anchor 三维精度",
+      "prompt_file": "./agents/capture.md"
+    },
+    {
+      "name": "Pass Graph / Pipeline",
+      "agent_id": "pass_graph_pipeline_agent",
+      "description": "渲染管线分析专家——Native Command List / Event Stream 发散点定位，输出资源依赖链",
+      "prompt_file": "./agents/pipeline.md"
+    },
+    {
+      "name": "Pixel Forensics",
+      "agent_id": "pixel_forensics_agent",
+      "description": "像素与数值取证专家——逆向追溯像素历史，定位 first_bad_event",
+      "prompt_file": "./agents/forensics.md"
+    },
+    {
+      "name": "Shader & IR",
+      "agent_id": "shader_ir_agent",
+      "description": "着色器与 IR 分析专家——HLSL / SPIR-V / ISA 关联分析，提取可疑表达式指纹",
+      "prompt_file": "./agents/shader.md"
+    },
+    {
+      "name": "Driver & Device",
+      "agent_id": "driver_device_agent",
+      "description": "驱动与设备差异专家——API Trace 和 ISA 级对比，输出 platform_attribution",
+      "prompt_file": "./agents/driver.md"
+    },
+    {
+      "name": "Skeptic",
+      "agent_id": "skeptic_agent",
+      "description": "对抗性审查专家（五把解剖刀）——假设 VALIDATED 前和 BugCard 入库前必须签署",
+      "prompt_file": "./agents/skeptic.md"
+    },
+    {
+      "name": "Report & Knowledge Curator",
+      "agent_id": "curator_agent",
+      "description": "报告与知识管理专家——生成 BugFull / BugCard，维护知识库与跨设备指纹图",
+      "prompt_file": "./agents/curator.md"
+    }
+  ],
+  "knowledge_base": [
+    {
+      "name": "invariant_library",
+      "path": "../../common/knowledge/spec/invariants/invariant_library.yaml"
+    },
+    {
+      "name": "symptom_taxonomy",
+      "path": "../../common/knowledge/spec/taxonomy/symptom_taxonomy.yaml"
+    },
+    {
+      "name": "trigger_taxonomy",
+      "path": "../../common/knowledge/spec/taxonomy/trigger_taxonomy.yaml"
+    },
+    {
+      "name": "sop_library",
+      "path": "../../common/knowledge/spec/skills/sop_library.yaml"
+    }
+  ],
+  "mcp_servers": [
+    {
+      "name": "rdx-mcp",
+      "command": "python3",
+      "args": [
+        "-m",
+        "rdx.server"
+      ]
+    }
+  ]
+}

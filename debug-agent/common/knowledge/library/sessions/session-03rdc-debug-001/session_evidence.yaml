@@ -1,0 +1,75 @@
+{
+  "session_id": "session-03rdc-debug-001",
+  "evidence": [
+    {
+      "evidence_id": "rdx-trc_ddd546680232",
+      "type": "tool_execution",
+      "result": "passed",
+      "description": "rd.core.init via daemon",
+      "operation": "rd.core.init",
+      "trace_id": "trc_ddd546680232",
+      "ts_ms": 1772537610984,
+      "artifacts": []
+    },
+    {
+      "evidence_id": "rdx-trc_f0b8c3726b59",
+      "type": "tool_execution",
+      "result": "passed",
+      "description": "rd.capture.open_file via daemon",
+      "operation": "rd.capture.open_file",
+      "trace_id": "trc_f0b8c3726b59",
+      "ts_ms": 1772537619943,
+      "artifacts": []
+    },
+    {
+      "evidence_id": "rdx-trc_7db9b73097f6",
+      "type": "tool_execution",
+      "result": "passed",
+      "description": "rd.capture.open_replay via daemon",
+      "operation": "rd.capture.open_replay",
+      "trace_id": "trc_7db9b73097f6",
+      "ts_ms": 1772537630616,
+      "artifacts": []
+    },
+    {
+      "evidence_id": "rdx-trc_0c00d9c537f1",
+      "type": "tool_execution",
+      "result": "passed",
+      "description": "rd.core.init via daemon",
+      "operation": "rd.core.init",
+      "trace_id": "trc_0c00d9c537f1",
+      "ts_ms": 1772538409644,
+      "artifacts": []
+    },
+    {
+      "evidence_id": "rdx-trc_f43bc09ef4b9",
+      "type": "tool_execution",
+      "result": "passed",
+      "description": "rd.capture.open_file via daemon",
+      "operation": "rd.capture.open_file",
+      "trace_id": "trc_f43bc09ef4b9",
+      "ts_ms": 1772538418718,
+      "artifacts": []
+    },
+    {
+      "evidence_id": "rdx-trc_e6f2be1e8b5a",
+      "type": "tool_execution",
+      "result": "passed",
+      "description": "rd.capture.open_replay via daemon",
+      "operation": "rd.capture.open_replay",
+      "trace_id": "trc_e6f2be1e8b5a",
+      "ts_ms": 1772538427303,
+      "artifacts": []
+    },
+    {
+      "evidence_id": "rdx-trc_920e4a9cddf2",
+      "type": "tool_execution",
+      "result": "passed",
+      "description": "rd.replay.set_frame via daemon",
+      "operation": "rd.replay.set_frame",
+      "trace_id": "trc_920e4a9cddf2",
+      "ts_ms": 1772538427536,
+      "artifacts": []
+    }
+  ]
+}

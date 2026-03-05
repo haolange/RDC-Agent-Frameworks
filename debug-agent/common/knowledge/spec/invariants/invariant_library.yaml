@@ -1,0 +1,777 @@
+# AIRD Framework · Invariant Library
+#
+# 字段说明:
+#   id                  : 不变量唯一标识
+#   name                : 简短名称
+#   category            : 所属大类
+#   severity            : CRITICAL / HIGH / MEDIUM / LOW
+#   definition          : 精确定义（一句话）
+#   symptom_tags        : 与 symptom_taxonomy.yaml 中 tag 字段对齐
+#   trigger_tags        : 与 trigger_taxonomy.yaml 中 tag 字段对齐（可为空）
+#   typical_root_causes : 常见根因列表（Agent 假设生成的起点）
+#   fix_patterns        : 经过验证的修复模式关键词
+#   linked_sop          : 主要关联 SOP（精确匹配 sop_library.yaml 中的 id）
+#   secondary_sops      : 次要关联 SOP（可选）
+#   detection_tools     : 推荐检测工具（精确匹配 rdx-mcp 暴露的工具名，如 rd.texture.get_data）
+#   example_cards       : 关联历史案例（精确匹配 knowledge/templates/bugcards/ 中的文件名）
+#   detection_hints     : Agent 执行检测时的具体提示步骤
+#   fix_template_ref    : 修复代码模板参考（指向 sop_library.yaml 中对应 SOP 的 fix_template）
+
+invariants:
+
+  # ─────────────────────────────────────
+  # 一、数值类 (Numerical)
+  # ─────────────────────────────────────
+
+  - id: I-NAN-01
+    name: 禁止NaN/Inf传播
+    category: Numerical
+    severity: CRITICAL
+    definition: "任何渲染输出的像素值必须是有界有限值，最终颜色输出不允许包含 NaN 或 Inf。"
+    symptom_tags:
+      - white_pixel
+      - white_spot
+      - flickering
+      - pixel_overflow
+      - black_pixel
+      - nan_propagation
+    trigger_tags: []
+    typical_root_causes:
+      - "normalize(零向量) — 对长度为0的向量调用 normalize()"
+      - "0/0 除零操作 — 分母未做保护"
+      - "sqrt(负数) — 被开方数未 clamp"
+      - "log(负数) — 对数输入未验证"
+      - "pow(负数, 非整数) — 指数运算边界情况"
+      - "极端浮点溢出 — half 类型数值超出表示范围"
+    fix_patterns:
+      - SafeNormalize
+      - SafeDivide
+      - SafeSqrt
+      - Clamp
+      - IsFinite守卫
+    linked_sop: SOP-NAN-01
+    secondary_sops: []
+    detection_tools:
+      - rd.texture.get_data
+      - rd.debug.pixel_history
+      - rd.shader.debug_start
+      - rd.export.screenshot
+    example_cards: []
+    detection_hints:
+      - "截图观察全白/过曝区域，记录像素坐标"
+      - "用 rd.debug.pixel_history 追溯该像素的 Pixel History，定位首次出现 NaN 的 DrawCall"
+      - "对可疑 DrawCall 调用 rd.shader.debug_start，逐步检查 normalize/除法/sqrt 操作的输入值"
+    fix_template_ref: "SOP-NAN-01.fix_template"
+
+  - id: I-NAN-02
+    name: 数值范围约束
+    category: Numerical
+    severity: HIGH
+    definition: "所有中间计算值必须在合理范围内，超出范围的数值表示可能存在数值不稳定。"
+    symptom_tags:
+      - pixel_overflow
+      - flickering
+    trigger_tags: []
+    typical_root_causes:
+      - "矩阵变换错误 — MVP 矩阵元素异常"
+      - "单位错误 — 度与弧度混用"
+      - "缩放系数过大/过小 — 导致顶点坐标超出精度范围"
+    fix_patterns:
+      - 矩阵单位验证
+      - 数值范围断言
+      - Clamp中间值
+    linked_sop: SOP-NAN-01
+    secondary_sops: []
+    detection_tools:
+      - rd.shader.debug_start
+      - rd.pipeline.get_state
+    example_cards: []
+    detection_hints:
+      - "用 rd.shader.debug_start 查看 Vertex Shader 的输出位置，检查 clipPos 是否在 NDC 范围"
+      - "检查 Uniform Buffer 中的矩阵值是否包含异常大/小的分量"
+
+  # ─────────────────────────────────────
+  # 二、几何类 (Geometric)
+  # ─────────────────────────────────────
+
+  - id: I-GEO-01
+    name: 可见性约束
+    category: Geometric
+    severity: HIGH
+    definition: "可见物体的边界框必须与视锥体相交，物体在世界空间中必须有一个以上的顶点在视锥体内。"
+    symptom_tags:
+      - object_missing
+      - object_invisible
+      - backface_culling
+      - culling
+    trigger_tags: []
+    typical_root_causes:
+      - "负缩放导致剔除反转 — World Matrix 行列式 < 0"
+      - "视锥体设置错误 — near >= far"
+      - "世界矩阵过于远离原点 — 超出精度范围"
+      - "View Matrix 方向错误 — Up 向量设置有误"
+    fix_patterns:
+      - 动态CullMode适配
+      - 视锥体近远平面修正
+      - 行列式符号检测
+    linked_sop: SOP-GEO-01
+    secondary_sops: []
+    detection_tools:
+      - rd.event.get_actions
+      - rd.pipeline.get_rasterizer_state
+      - rd.resource.get_details
+      - rd.shader.debug_start
+    example_cards: []
+    detection_hints:
+      - "用 rd.pipeline.get_rasterizer_state 检查 CullMode 和 FrontCounterClockwise"
+      - "用 rd.shader.debug_start 查看 Vertex Shader 输出的 clipPos，验证是否在 [-w, w] 范围内"
+      - "检查 World Matrix 行列式符号，负值表示存在负缩放"
+
+  - id: I-GEO-02
+    name: 正面方向约束
+    category: Geometric
+    severity: MEDIUM
+    definition: "顶点的环绕顺序必须一致，逆时针或顺时针定义的面必须保持全局一致。"
+    symptom_tags:
+      - backface_culling
+      - object_missing
+    trigger_tags: []
+    typical_root_causes:
+      - "顶点顺序错误 — 建模时环绕顺序与引擎约定不一致"
+      - "索引顺序错误 — 索引缓冲定义了错误的面方向"
+      - "手动翻转背面 — 修改了 FrontCounterClockwise 但未同步调整几何数据"
+    fix_patterns:
+      - 统一环绕顺序
+      - 索引重排
+    linked_sop: SOP-GEO-01
+    secondary_sops: []
+    detection_tools:
+      - rd.pipeline.get_rasterizer_state
+      - rd.mesh.get_post_vs_data
+    example_cards: []
+    detection_hints:
+      - "对比 FrontCounterClockwise 设置与资产的实际环绕顺序"
+      - "用 rd.mesh.get_post_vs_data 查看顶点和索引数据，手动验证面法线方向"
+
+  - id: I-GEO-03
+    name: 顶点索引约束
+    category: Geometric
+    severity: MEDIUM
+    definition: "索引值必须在顶点缓冲的有效范围内，越界索引会导致未定义行为。"
+    symptom_tags:
+      - object_missing
+      - flickering
+    trigger_tags: []
+    typical_root_causes:
+      - "索引缓冲越界 — 索引值 >= 顶点数"
+      - "顶点数量与索引不匹配 — LOD 切换时未更新索引缓冲"
+      - "索引类型错误 — 16bit 索引溢出，应换用 32bit"
+    fix_patterns:
+      - 索引范围验证
+      - 索引类型升级
+    linked_sop: SOP-GEO-01
+    secondary_sops: []
+    detection_tools:
+      - rd.resource.get_details
+      - rd.buffer.get_data
+    example_cards: []
+    detection_hints:
+      - "用 rd.resource.get_details 获取 IndexBuffer 的元素数量和数据类型"
+      - "用 rd.buffer.get_data 读取索引数据，检查最大索引值是否超过顶点缓冲大小"
+
+  # ─────────────────────────────────────
+  # 三、颜色类 (Color)
+  # ─────────────────────────────────────
+
+  - id: I-COLOR-01
+    name: 颜色空间一致性
+    category: Color
+    severity: HIGH
+    definition: "颜色空间转换必须恰好执行一次，多次转换或缺失转换都会导致颜色失真。"
+    symptom_tags:
+      - color_too_dark
+      - color_too_bright
+      - color_distortion
+      - washed_out
+      - gamma_error
+    trigger_tags: []
+    typical_root_causes:
+      - "双重 Gamma 校正 — RT 格式为 sRGB 同时 Shader 手动做了 pow(color, 1/2.2)"
+      - "缺失 Gamma 校正 — RT 格式为 LINEAR 但 Shader 未做 gamma 编码"
+      - "HDR 颜色写入 LDR RT — 缺少 Tone Mapping"
+      - "错误的颜色空间假设 — 纹理实际是 sRGB 但被当作 Linear 采样"
+    fix_patterns:
+      - sRGB_RT配合Linear输出
+      - Linear_RT配合手动GammaEncode
+      - ToneMapping
+    linked_sop: SOP-COLOR-01
+    secondary_sops: []
+    detection_tools:
+      - rd.texture.get_data
+      - rd.pipeline.get_blend_state
+      - rd.shader.get_source
+      - rd.pipeline.get_state
+    example_cards: []
+    detection_hints:
+      - "用 rd.pipeline.get_state 检查 Render Target 格式，区分 _SRGB 和 _UNORM 后缀"
+      - "用 rd.shader.get_source 搜索 pow/gamma/2.2/LinearToSRGB 关键词，统计转换次数"
+      - "对比异常像素的实际值与预期值，判断是过亮（gamma做了两次）还是过暗（gamma未做）"
+
+  - id: I-COLOR-02
+    name: 颜色范围约束
+    category: Color
+    severity: MEDIUM
+    definition: "最终输出的颜色值必须在目标格式的合法范围内：LDR 格式 [0,1]，HDR 格式 [0,+∞)。"
+    symptom_tags:
+      - pixel_overflow
+      - color_too_bright
+      - washed_out
+    trigger_tags: []
+    typical_root_causes:
+      - "HDR 值写入 LDR 格式 — 缺少 Tone Mapping 步骤"
+      - "Tone Mapping 缺失 — HDR 管线最终未做色调映射"
+      - "曝光过度 — 曝光参数设置错误"
+    fix_patterns:
+      - ToneMapping
+      - Saturate
+      - HDR_RT升级
+    linked_sop: SOP-COLOR-01
+    secondary_sops: []
+    detection_tools:
+      - rd.texture.get_data
+      - rd.shader.debug_start
+    example_cards: []
+    detection_hints:
+      - "用 rd.texture.get_data 读取 RT 原始值，检查是否存在 > 1.0 的分量"
+      - "确认渲染管线是否存在 Tone Mapping Pass"
+
+  # ─────────────────────────────────────
+  # 四、纹理类 (Texture)
+  # ─────────────────────────────────────
+
+  - id: I-TEX-01
+    name: 纹理坐标有效性
+    category: Texture
+    severity: HIGH
+    definition: "纹理坐标必须在纹理的有效采样范围内，超范围坐标的行为由纹理寻址模式决定。"
+    symptom_tags:
+      - texture_missing
+      - uv_error
+      - stretched
+      - tiling
+      - alpha_error
+    trigger_tags: []
+    typical_root_causes:
+      - "UV 计算错误 — Shader 中 UV 变换矩阵不正确"
+      - "纹理坐标溢出 — UV 超出 [0,1] 且寻址模式为 Clamp 导致边缘拉伸"
+      - "寻址模式设置错误 — 应用 Repeat 但设置了 Clamp，或反之"
+    fix_patterns:
+      - UV计算修正
+      - 寻址模式调整
+      - frac()限制UV范围
+    linked_sop: SOP-TEX-01
+    secondary_sops: []
+    detection_tools:
+      - rd.resource.get_details
+      - rd.shader.debug_start
+      - rd.pipeline.get_state
+    example_cards: []
+    detection_hints:
+      - "用 rd.shader.debug_start 查看目标像素的 UV 坐标值，判断是否在预期范围内"
+      - "用 rd.pipeline.get_state 检查 Sampler 的 AddressU/V 模式"
+      - "用 rd.resource.get_details 确认纹理尺寸，计算 UV 是否正确映射"
+
+  - id: I-MIP-01
+    name: Mipmap一致性
+    category: Texture
+    severity: MEDIUM
+    definition: "纹理 Mipmap 链必须完整且一致，不同 Mipmap 级别之间应该平滑过渡。"
+    symptom_tags:
+      - blurry
+      - mipmap
+      - flickering
+    trigger_tags: []
+    typical_root_causes:
+      - "Mipmap 生成错误 — 某级 Mip 内容错误或使用了错误的过滤方式"
+      - "Mipmap 链不完整 — 手动上传时缺少某些级别"
+      - "手动设置 Mipmap 级别导致不连续 — MaxMip 设置与实际不符"
+    fix_patterns:
+      - 重新生成Mipmap链
+      - MaxMip修正
+    linked_sop: SOP-TEX-01
+    secondary_sops: []
+    detection_tools:
+      - rd.resource.get_details
+      - rd.texture.get_data
+    example_cards: []
+    detection_hints:
+      - "用 rd.resource.get_details 检查 MipLevels 数量是否完整（应为 log2(max(w,h))+1）"
+      - "用 rd.texture.get_data 分别读取各 Mip 级别，检查内容是否连续合理"
+
+  - id: I-LOD-01
+    name: 纹理LOD约束
+    category: Texture
+    severity: MEDIUM
+    definition: "纹理 LOD 计算必须在有效范围内，过度放大的纹理会导致模糊或闪烁。"
+    symptom_tags:
+      - blurry
+      - flickering
+    trigger_tags: []
+    typical_root_causes:
+      - "Mipmap 被禁用 — Filter 设置为 POINT 且无 MIP_LINEAR"
+      - "LOD Bias 过大 — 强制采样低分辨率 Mip"
+      - "各向异性过滤异常 — MaxAnisotropy 设置为 1 时倾斜面模糊"
+    fix_patterns:
+      - LOD_Bias归零
+      - 各向异性过滤开启
+      - Filter模式修正
+    linked_sop: SOP-TEX-01
+    secondary_sops: []
+    detection_tools:
+      - rd.resource.get_details
+      - rd.pipeline.get_state
+    example_cards: []
+    detection_hints:
+      - "用 rd.pipeline.get_state 检查 Sampler 的 Filter、MipLODBias、MaxAnisotropy 字段"
+
+  # ─────────────────────────────────────
+  # 五、深度类 (Depth)
+  # ─────────────────────────────────────
+
+  - id: I-DEPTH-01
+    name: 深度范围约束
+    category: Depth
+    severity: HIGH
+    definition: "深度值必须在深度缓冲格式的有效范围内，常见 24-bit 格式范围为 [0.0, 1.0]。"
+    symptom_tags:
+      - z_fighting
+      - depth_error
+      - flickering
+      - occlusion
+    trigger_tags: []
+    typical_root_causes:
+      - "深度范围设置错误 — near 或 far 为 0 导致 Projection 矩阵奇异"
+      - "深度缓冲格式精度不足 — D16 在远距离场景中精度不够"
+      - "远平面过远导致精度分散 — far/near 超过 10000"
+    fix_patterns:
+      - 调整near_far比例
+      - 升级深度格式至D32
+      - Reversed_Z
+    linked_sop: SOP-DEPTH-01
+    secondary_sops: []
+    detection_tools:
+      - rd.pipeline.get_depth_stencil_state
+      - rd.texture.get_data
+      - rd.debug.pixel_history
+    example_cards: []
+    detection_hints:
+      - "用 rd.pipeline.get_depth_stencil_state 检查 DepthFunc 和近远平面设置"
+      - "用 rd.texture.get_data 可视化深度缓冲，观察值域分布是否集中在某端"
+      - "计算 far/near 比值，超过 10000 建议采用 Reversed-Z 技术"
+
+  - id: I-DEPTH-02
+    name: 深度写入约束
+    category: Depth
+    severity: MEDIUM
+    definition: "深度测试和深度写入必须正确配置，透明物体不应写入深度缓冲。"
+    symptom_tags:
+      - occlusion
+      - depth_error
+    trigger_tags: []
+    typical_root_causes:
+      - "深度写入在透明渲染时未禁用 — 导致后续透明物体被遮挡"
+      - "深度测试在应该启用时未启用 — 物体错误地遮挡其他物体"
+      - "深度函数设置错误 — Less vs Greater 使用场景混淆"
+    fix_patterns:
+      - 透明物体禁用DepthWrite
+      - DepthFunc修正
+    linked_sop: SOP-DEPTH-01
+    secondary_sops: []
+    detection_tools:
+      - rd.pipeline.get_depth_stencil_state
+      - rd.pipeline.get_state
+    example_cards: []
+    detection_hints:
+      - "用 rd.pipeline.get_depth_stencil_state 检查 DepthWriteMask 和 DepthEnable 字段"
+      - "对透明物体的 DrawCall 验证 DepthWriteMask 是否为 ZERO"
+
+  # ─────────────────────────────────────
+  # 六、Shader 类 (Shader)
+  # ─────────────────────────────────────
+
+  - id: I-SHADER-01
+    name: Shader合法性
+    category: Shader
+    severity: CRITICAL
+    definition: "所有 Shader 必须能够成功编译，编译错误必须被捕获并修复。"
+    symptom_tags:
+      - black_pixel
+      - white_pixel
+      - object_missing
+    trigger_tags: []
+    typical_root_causes:
+      - "Shader 编译错误 — 语法错误或语义错误"
+      - "Shader 类型不匹配 — VS/PS/CS 入口点与绑定阶段不一致"
+      - "符号未定义 — 宏或函数引用了未声明的标识符"
+    fix_patterns:
+      - 修复编译错误
+      - 检查Shader入口点
+    linked_sop: SOP-NAN-01
+    secondary_sops: []
+    detection_tools:
+      - rd.shader.get_source
+      - rd.shader.get_messages
+      - rd.pipeline.get_state
+    example_cards: []
+    detection_hints:
+      - "用 rd.shader.get_messages 获取编译错误/警告信息"
+      - "用 rd.pipeline.get_state 验证各阶段 Shader 是否成功绑定（非 null）"
+
+  - id: I-SHADER-02
+    name: Shader输出完整性
+    category: Shader
+    severity: HIGH
+    definition: "Pixel Shader 必须在所有执行路径上输出有效的颜色值，未初始化的输出会导致未定义行为。"
+    symptom_tags:
+      - black_pixel
+      - flickering
+    trigger_tags: []
+    typical_root_causes:
+      - "早期返回导致输出未设置 — discard 前未赋值输出变量"
+      - "条件分支未覆盖所有情况 — if/else 中某条路径缺少 return"
+      - "错误的 return 语句 — 返回了未初始化的变量"
+    fix_patterns:
+      - 统一初始化输出变量
+      - 覆盖所有分支路径
+    linked_sop: SOP-NAN-01
+    secondary_sops: []
+    detection_tools:
+      - rd.shader.debug_start
+      - rd.shader.get_source
+    example_cards: []
+    detection_hints:
+      - "用 rd.shader.get_source 检查所有 return 语句和 discard 语句前的赋值情况"
+      - "用 rd.shader.debug_start 单步执行，观察输出寄存器的值何时被首次赋值"
+
+  - id: I-SHADING-NONNEG-01
+    name: 着色值非负
+    category: Shader
+    severity: MEDIUM
+    definition: "光照计算结果（尤其是漫反射分量）必须为非负值，负值光照会导致异常暗斑或颜色失真。"
+    symptom_tags:
+      - color_too_dark
+      - black_pixel
+    trigger_tags: []
+    typical_root_causes:
+      - "NdotL 未做 max(0, x) 保护 — 背光面计算出负值漫反射"
+      - "环境光遮蔽值为负 — AO 贴图解码错误"
+    fix_patterns:
+      - max_0_NdotL
+      - saturate
+    linked_sop: SOP-NAN-01
+    secondary_sops: []
+    detection_tools:
+      - rd.shader.debug_start
+      - rd.debug.pixel_history
+    example_cards: []
+    detection_hints:
+      - "用 rd.shader.debug_start 检查光照计算中 NdotL 的原始值"
+      - "确认 Shader 使用了 max(0, NdotL) 或 saturate(NdotL)"
+
+  # ─────────────────────────────────────
+  # 七、精度类 (Precision)
+  # ─────────────────────────────────────
+
+  - id: I-PREC-01
+    name: 插值精度约束
+    category: Precision
+    severity: MEDIUM
+    definition: "顶点到像素的颜色插值必须保持足够精度，过低的精度会导致颜色条带(Banding)。"
+    symptom_tags:
+      - banding
+      - artifact
+      - gradient
+      - precision
+      - blackout
+      - washout
+      - hair_shading
+      - local_light_unpack
+    trigger_tags:
+      - Adreno_GPU
+      - RelaxedPrecision
+    typical_root_causes:
+      - "使用低精度数据类型 — half 类型在 Adreno 上被激进地映射为 FP16，精度不足"
+      - "SPIR-V RelaxedPrecision decoration — 编译器根据此修饰符降低精度"
+      - "Render Target 精度不足 — 8bit RT 在渐变处产生可见条带"
+      - "抖动(Dithering)被禁用 — 低精度 RT 未使用 dither 补偿"
+    fix_patterns:
+      - PrecisionFence
+      - half替换为float
+      - RangeHardening
+      - RT格式升级
+      - Dithering
+    linked_sop: SOP-PREC-01
+    secondary_sops: []
+    detection_tools:
+      - rd.pipeline.get_state
+      - rd.texture.get_data
+      - rd.shader.debug_start
+      - rd.shader.get_source
+    example_cards:
+      - BUG-PREC-001
+      - BUG-PREC-002
+    detection_hints:
+      - "用 rd.shader.get_source 搜索 half 关键词，标记所有使用 half 的计算表达式"
+      - "获取 SPIR-V/IR，检查是否存在 RelaxedPrecision decoration（Adreno 专项）"
+      - "对比同一 Shader 在 Adreno 与 Mali 上的编译结果差异"
+      - "用 rd.shader.debug_start 读取关键中间值，判断是溢出还是精度截断"
+    fix_template_ref: "SOP-PREC-01.fix_template"
+
+  - id: I-PREC-02
+    name: 矩阵运算精度
+    category: Precision
+    severity: MEDIUM
+    definition: "矩阵运算必须保持足够的精度，累积误差可能导致变换错误。"
+    symptom_tags:
+      - artifact
+      - precision
+      - z_fighting
+    trigger_tags: []
+    typical_root_causes:
+      - "多次矩阵乘法累积误差 — 长链乘法未做中间正交化"
+      - "矩阵未正交化 — 旋转矩阵因浮点误差累积失去正交性"
+      - "逆矩阵计算错误 — 接近奇异矩阵求逆结果不稳定"
+    fix_patterns:
+      - 矩阵正交化
+      - Gram_Schmidt
+      - 条件数检查
+    linked_sop: SOP-PREC-01
+    secondary_sops: []
+    detection_tools:
+      - rd.shader.debug_start
+      - rd.pipeline.get_state
+    example_cards: []
+    detection_hints:
+      - "检查 Normal Matrix 是否由 inverse(transpose(World)) 正确计算"
+      - "验证旋转矩阵列向量的正交性（点积应接近0，模长应接近1）"
+
+  # ─────────────────────────────────────
+  # 八、光照类 (Lighting)
+  # ─────────────────────────────────────
+
+  - id: I-LIGHT-01
+    name: 光照方向归一化
+    category: Lighting
+    severity: HIGH
+    definition: "光照计算中使用的方向向量必须归一化，未归一化的方向会导致光照强度错误。"
+    symptom_tags:
+      - color_too_bright
+      - color_too_dark
+      - color_distortion
+    trigger_tags: []
+    typical_root_causes:
+      - "光照方向向量未归一化 — lightDir 直接从 Uniform Buffer 读取后未调用 normalize()"
+      - "插值后法线未重新归一化 — 顶点法线经插值后长度偏离1"
+    fix_patterns:
+      - normalize_lightDir
+      - normalize_interpolated_normal
+    linked_sop: SOP-NAN-01
+    secondary_sops: []
+    detection_tools:
+      - rd.shader.get_source
+      - rd.shader.debug_start
+    example_cards: []
+    detection_hints:
+      - "用 rd.shader.debug_start 读取 lightDir 和 normal 的值，计算其长度是否接近1"
+      - "在 Shader 源码中搜索 dot(normal, light) 的上下文，确认两个参数都经过 normalize()"
+
+  - id: I-LIGHT-02
+    name: 光照强度约束
+    category: Lighting
+    severity: MEDIUM
+    definition: "光照强度必须在合理范围内，超出范围的值需要 Tone Mapping 处理。"
+    symptom_tags:
+      - color_too_bright
+      - washed_out
+    trigger_tags: []
+    typical_root_causes:
+      - "光源强度设置过大 — 美术资产参数未经验证"
+      - "缺少衰减计算 — 点光源未添加距离衰减"
+      - "HDR 颜色未映射 — 缺少 Tone Mapping Pass"
+    fix_patterns:
+      - 光源强度限制
+      - 距离衰减
+      - ToneMapping
+    linked_sop: SOP-COLOR-01
+    secondary_sops: []
+    detection_tools:
+      - rd.shader.debug_start
+      - rd.texture.get_data
+    example_cards: []
+    detection_hints:
+      - "用 rd.shader.debug_start 检查光照累加值，确认 HDR 管线存在 Tone Mapping 步骤"
+
+  - id: I-LIGHT-UNPACK-01
+    name: 光照解包约束
+    category: Lighting
+    severity: MEDIUM
+    definition: "从纹理/缓冲解包的光照数据必须正确解码，错误的解码会导致光照完全错误。"
+    symptom_tags:
+      - local_light_unpack
+      - color_distortion
+      - black_pixel
+    trigger_tags:
+      - Adreno_GPU
+    typical_root_causes:
+      - "编码/解码格式不匹配 — 光照贴图编码为 RGBM 但解码为 HDR"
+      - "字节序错误 — Buffer 数据端序与 Shader 解读方式不一致"
+      - "缩放/偏移错误 — 解包后未乘以正确的范围系数"
+    fix_patterns:
+      - 统一编解码格式
+      - 缩放系数校正
+    linked_sop: SOP-PREC-01
+    secondary_sops: []
+    detection_tools:
+      - rd.shader.debug_start
+      - rd.buffer.get_data
+      - rd.shader.get_source
+    example_cards:
+      - BUG-PREC-001
+      - BUG-PREC-002
+    detection_hints:
+      - "用 rd.buffer.get_data 读取原始光照数据，与 Shader 的解码逻辑对照"
+      - "用 rd.shader.debug_start 查看解包后的光照值，与预期值对比"
+
+  # ─────────────────────────────────────
+  # 九、透明/混合类 (Alpha/Blend)
+  # ─────────────────────────────────────
+
+  - id: I-ALPHA-01
+    name: Alpha范围约束
+    category: Blend
+    severity: HIGH
+    definition: "Alpha 值必须在 [0, 1] 范围内，超出范围的 Alpha 导致未定义混合行为。"
+    symptom_tags:
+      - alpha_error
+      - blend_error
+    trigger_tags: []
+    typical_root_causes:
+      - "预乘 alpha 计算错误 — 对已预乘的颜色再次乘以 alpha"
+      - "HDR alpha 值未映射 — alpha 通道超过 1.0"
+    fix_patterns:
+      - saturate_alpha
+      - 预乘Alpha修正
+    linked_sop: SOP-TEX-01
+    secondary_sops: []
+    detection_tools:
+      - rd.pipeline.get_blend_state
+      - rd.shader.debug_start
+    example_cards: []
+    detection_hints:
+      - "用 rd.shader.debug_start 读取 PS 输出的 alpha 通道值，检查是否在 [0,1]"
+      - "确认材质是否使用预乘 Alpha，Shader 中不应对预乘颜色再次乘 alpha"
+
+  - id: I-BLEND-01
+    name: 混合方程一致性
+    category: Blend
+    severity: MEDIUM
+    definition: "混合操作必须与渲染目标格式兼容，不兼容的混合会导致颜色错误。"
+    symptom_tags:
+      - blend_error
+      - alpha_error
+      - color_distortion
+    trigger_tags: []
+    typical_root_causes:
+      - "Blend Op 与 Render Target 不兼容 — 对整型 RT 使用了浮点混合"
+      - "透明物体顺序错误 — 未排序的透明物体产生混合顺序依赖错误"
+      - "Alpha Test vs Alpha Blend 混淆 — 本应做 Alpha Test 的物体使用了 Alpha Blend"
+    fix_patterns:
+      - 透明物体排序
+      - AlphaTest替代AlphaBlend
+      - BlendOp修正
+    linked_sop: SOP-TEX-01
+    secondary_sops: []
+    detection_tools:
+      - rd.pipeline.get_blend_state
+      - rd.pipeline.get_state
+      - rd.shader.debug_start
+    example_cards: []
+    detection_hints:
+      - "用 rd.pipeline.get_blend_state 检查 BlendEnable、SrcBlend、DstBlend、BlendOp 的组合"
+      - "验证透明物体 DrawCall 的提交顺序是否从后到前"
+
+  # ─────────────────────────────────────
+  # 十、性能类 (Performance)
+  # ─────────────────────────────────────
+
+  - id: I-PERF-01
+    name: 资源状态有效性
+    category: Performance
+    severity: MEDIUM
+    definition: "资源必须在使用前正确转换到所需状态，状态转换错误会导致 Pipeline Stall 或渲染错误。"
+    symptom_tags:
+      - stall
+      - fps_drop
+      - pipeline_error
+    trigger_tags: []
+    typical_root_causes:
+      - "缺少 Resource Barrier — D3D12/Vulkan 中资源转换未插入 Barrier"
+      - "状态转换过于频繁 — 同一资源在 RT 和 SRV 之间频繁切换"
+      - "不必要的同步 — CPU/GPU 同步点过多导致 GPU 饥饿"
+    fix_patterns:
+      - 批量ResourceBarrier
+      - 减少同步点
+      - 资源别名
+    linked_sop: SOP-PERF-01
+    secondary_sops: []
+    detection_tools:
+      - rd.core.get_logs
+      - rd.resource.get_history
+      - rd.event.get_actions
+    example_cards: []
+    detection_hints:
+      - "用 rd.resource.get_history 查看资源状态转换日志，识别频繁切换的资源"
+      - "用 rd.core.get_logs 统计同步 API 调用（vkQueueWaitIdle / ID3D12Fence::Signal 等）频率"
+
+# ─────────────────────────────────────
+# 快速检索索引：symptom_tag → invariant_ids
+# Agent 可直接使用此索引做初始路由
+# ─────────────────────────────────────
+symptom_to_invariants:
+  white_pixel:        [I-NAN-01, I-SHADER-01]
+  white_spot:         [I-NAN-01]
+  black_pixel:        [I-NAN-01, I-SHADER-01, I-SHADER-02, I-SHADING-NONNEG-01, I-LIGHT-UNPACK-01]
+  flickering:         [I-NAN-01, I-NAN-02, I-DEPTH-01, I-MIP-01, I-SHADER-02, I-GEO-03]
+  pixel_overflow:     [I-NAN-01, I-NAN-02, I-COLOR-02]
+  nan_propagation:    [I-NAN-01]
+  object_missing:     [I-GEO-01, I-GEO-02, I-GEO-03, I-SHADER-01]
+  object_invisible:   [I-GEO-01]
+  backface_culling:   [I-GEO-01, I-GEO-02]
+  culling:            [I-GEO-01]
+  color_too_dark:     [I-COLOR-01, I-SHADING-NONNEG-01, I-LIGHT-01]
+  color_too_bright:   [I-COLOR-01, I-COLOR-02, I-LIGHT-01, I-LIGHT-02]
+  color_distortion:   [I-COLOR-01, I-LIGHT-UNPACK-01, I-BLEND-01]
+  washed_out:         [I-COLOR-01, I-COLOR-02, I-LIGHT-02]
+  gamma_error:        [I-COLOR-01]
+  texture_missing:    [I-TEX-01]
+  uv_error:           [I-TEX-01]
+  stretched:          [I-TEX-01]
+  tiling:             [I-TEX-01]
+  blurry:             [I-MIP-01, I-LOD-01]
+  mipmap:             [I-MIP-01, I-LOD-01]
+  z_fighting:         [I-DEPTH-01, I-PREC-02]
+  depth_error:        [I-DEPTH-01, I-DEPTH-02]
+  occlusion:          [I-DEPTH-01, I-DEPTH-02]
+  banding:            [I-PREC-01]
+  artifact:           [I-PREC-01, I-PREC-02]
+  gradient:           [I-PREC-01]
+  precision:          [I-PREC-01, I-PREC-02]
+  blackout:           [I-PREC-01, I-LIGHT-UNPACK-01]
+  washout:            [I-PREC-01]
+  hair_shading:       [I-PREC-01]
+  local_light_unpack: [I-PREC-01, I-LIGHT-UNPACK-01]
+  alpha_error:        [I-ALPHA-01, I-BLEND-01]
+  blend_error:        [I-BLEND-01, I-ALPHA-01]
+  stall:              [I-PERF-01]
+  fps_drop:           [I-PERF-01]
+  pipeline_error:     [I-PERF-01]

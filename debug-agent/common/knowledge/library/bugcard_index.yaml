@@ -1,0 +1,6 @@
+# AIRD Framework · BugCard Index (optional)
+#
+# 用途：Curator 可用此索引做去重/快速定位（不强制）。
+# 建议维护为 append-only 的摘要索引；BugCard 正文请放在 knowledge/library/bugcards/。
+
+bugcards: []

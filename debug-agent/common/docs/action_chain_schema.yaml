@@ -1,0 +1,121 @@
+# Action Chain 标准记录格式
+#
+# Action Chain 是每次调试 session 的完整工具调用与决策序列记录。
+# 用途：
+#   1. 作为未来 SOP 草稿自动提取的训练数据
+#   2. 用于跨 session 分析调试效率（哪些步骤可压缩/并行化）
+#   3. 为反事实评分引擎提供历史基准数据
+
+# ── 必填字段（最小必填集） ────────────────────────────────────
+required_fields:
+  - session_id          # 格式：dbg-YYYYMMDD-NNN，如 dbg-20260227-001
+  - bug_id              # 关联的 BugCard ID，如 BUG-PREC-002（未结案时为 null）
+  - start_time          # ISO 8601，如 2026-02-27T10:00:00+08:00
+  - steps               # 步骤列表（见 step_schema）
+  - outcome             # 调试结果（见 outcome_schema）
+
+# ── 可选字段 ─────────────────────────────────────────────────
+optional_fields:
+  - end_time            # ISO 8601
+  - total_duration_min  # 总调试时长（分钟）
+  - platform            # 运行平台：claude-code / code-buddy / claude-work / copilot / manus
+  - triage_result_ref   # 关联的 TRIAGE_RESULT 消息路径
+  - notes               # 本次调试的自由备注
+
+# ── Step Schema（每个步骤的字段） ────────────────────────────
+step_schema:
+  required:
+    - step_id           # 整数，从 1 开始，单调递增
+    - agent             # 执行 Agent（agent_id）：team_lead / triage_agent / capture_repro_agent / pass_graph_pipeline_agent / pixel_forensics_agent / shader_ir_agent / driver_device_agent / skeptic_agent / curator_agent
+    - action_type       # 动作类型（见 action_types）
+    - timestamp         # ISO 8601
+
+  optional:
+    - tool              # rd.* 工具名，仅 action_type=tool_call 时填写
+    - params            # 工具参数摘要（不含敏感路径）
+    - output_summary    # 工具输出的一句话摘要（<= 100 字）
+    - hypothesis_id     # 仅 action_type=hypothesis_update 时填写
+    - from_state        # 假设状态变更前（ACTIVE / VALIDATE / VALIDATED / REFUTED / ARCHIVED）
+    - to_state          # 假设状态变更后
+    - reason            # 状态变更原因
+    - evidence_id       # 新增证据的 ID，仅 action_type=evidence_add 时填写
+    - evidence_type     # tool_output / counterfactual_test / expert_judgment
+    - message_to        # 仅 action_type=message_send 时填写
+
+action_types:
+  - tool_call           # 调用 rd.* 工具
+  - repo_search         # 在仓库/知识库目录中全文搜索（rg/grep/IDE）
+  - taxonomy_lookup     # 分类学/不变量/SOP 的索引查表（纯读取）
+  - hypothesis_update   # 假设板状态变更
+  - evidence_add        # 新增证据
+  - message_send        # Agent 间消息传递
+  - artifact_write      # 写入 session artifacts / library files（如 sessions/<id>/*.yaml）
+  - quality_check       # 质量 Hook 触发（validator 运行）
+  - human_input         # 用户提供额外信息
+
+# ── Outcome Schema ──────────────────────────────────────────
+outcome_schema:
+  required:
+    - verdict           # resolved / unresolved / escalated
+  optional:
+    - root_cause_invariant  # 违反的不变量 ID，如 I-PREC-01
+    - fix_applied       # boolean
+    - counterfactual_passed  # boolean
+    - total_steps       # 总步骤数
+    - bugcard_id        # 生成的 BugCard ID
+    - skeptic_challenges_count   # Skeptic 提出的质疑总数
+    - skeptic_challenges_resolved  # 被回应并解决的质疑数
+    - sop_adherence_score  # SOP 遵循度评分 0.0-1.0（工具链顺序与 SOP 的匹配度）
+
+# ── 示例（用于参考） ─────────────────────────────────────────
+example:
+  session_id: "dbg-20260227-001"
+  bug_id: "BUG-PREC-002"
+  platform: "claude-code"
+  start_time: "2026-02-27T10:00:00+08:00"
+  end_time: "2026-02-27T11:23:00+08:00"
+  total_duration_min: 83
+  steps:
+    - step_id: 1
+      agent: team_lead
+      action_type: message_send
+      message_to: triage_agent
+      timestamp: "2026-02-27T10:00:30+08:00"
+      output_summary: "派发任务：分类头发着色黑化问题"
+    - step_id: 2
+      agent: triage_agent
+      action_type: repo_search
+      params: {paths: ["knowledge/library/bugcards/"], query: "hair blackout Adreno"}
+      output_summary: "在 bugcards/ 中命中 BUG-PREC-001（相似指纹），推荐 SOP-PREC-01"
+      timestamp: "2026-02-27T10:01:00+08:00"
+    - step_id: 15
+      agent: team_lead
+      action_type: hypothesis_update
+      hypothesis_id: "H-001"
+      from_state: VALIDATE
+      to_state: VALIDATED
+      reason: "Skeptic 五把刀全部通过，skeptic_signed=true"
+      timestamp: "2026-02-27T11:10:00+08:00"
+  outcome:
+    verdict: resolved
+    root_cause_invariant: "I-PREC-01"
+    fix_applied: true
+    counterfactual_passed: true
+    total_steps: 42
+    bugcard_id: "BUG-PREC-002"
+    skeptic_challenges_count: 2
+    skeptic_challenges_resolved: 2
+    sop_adherence_score: 0.87
+
+# ── SOP 提取映射（从哪些字段提取 SOP 工具链步骤） ──────────────
+sop_extraction_mapping:
+  sop_stage_from:
+    - source_field: "steps[action_type=tool_call].tool"
+      maps_to: "sop.tool_chain[n].tools"
+    - source_field: "steps[action_type=tool_call].output_summary"
+      maps_to: "sop.tool_chain[n].termination（作为终止条件候选）"
+    - source_field: "steps[action_type=hypothesis_update].reason"
+      maps_to: "sop.tool_chain[n].objective（作为阶段目标候选）"
+  cluster_by:
+    - root_cause_invariant   # 相同不变量的 session 聚类提取共同工具链
+    - triage_result.symptom_tags   # 相同症状组合的 session 提取共同诊断路径

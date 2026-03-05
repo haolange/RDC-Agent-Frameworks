@@ -1,0 +1,381 @@
+# AIRD Framework · Trigger Taxonomy
+# 触发条件分类学 — 机器可读版本
+# 格式版本: 1.0 | 最后更新: 2026-02-27
+#
+# 字段说明:
+#   tag         : 机器可读标签（大小写敏感，用于跨文件精确匹配；建议仅使用字母/数字/下划线）
+#   label       : 人类可读名称
+#   description : 触发条件的精确描述
+#   category    : 所属大类
+#   aliases     : 该触发条件的别名（用于模糊匹配）
+#   known_issues: 此触发条件已知关联的高频不变量（引导 Driver Agent 重点检查）
+#   notes       : 补充说明（驱动行为差异、已知怪癖等）
+
+triggers:
+
+  # ─────────────────────────────────────
+  # 硬件平台 · GPU 厂商
+  # ─────────────────────────────────────
+
+  - tag: Adreno_GPU
+    label: 高通 Adreno GPU
+    description: "高通骁龙系列 SoC 内置 GPU，广泛用于 Android 旗舰机型"
+    category: hardware_gpu_vendor
+    aliases: [Qualcomm, Adreno, Snapdragon_GPU]
+    known_issues:
+      - invariant: I-PREC-01
+        note: "Adreno 驱动对 SPIR-V RelaxedPrecision decoration 的处理比 Mali 更激进，
+               会将 half 类型映射为严格 FP16，在光照计算中容易溢出或截断"
+      - invariant: I-LIGHT-UNPACK-01
+        note: "Adreno 特定驱动版本对 structured buffer 的对齐要求与规范不同，
+               可能导致光照数据解包偏移"
+    notes: >
+      Adreno 是 Android 高端机市场份额最大的 GPU 架构。
+      其编译器相比 Mali 倾向于更激进地应用精度降级优化，
+      这是 I-PREC-01 类 Bug 的高发环境。
+      调试时优先对比 Adreno 与 Mali 的 SPIR-V 编译结果差异。
+
+  - tag: Mali_GPU
+    label: ARM Mali GPU
+    description: "ARM 设计的 Mali 系列 GPU，广泛用于 Android 中高端机型"
+    category: hardware_gpu_vendor
+    aliases: [ARM_Mali, Mali]
+    known_issues: []
+    notes: >
+      Mali 通常作为「基准设备」参与 A/B 对比测试。
+      Mali 对 RelaxedPrecision 的处理相对保守，
+      若 Bug 在 Mali 上不复现但在 Adreno 上复现，优先考虑 I-PREC-01。
+
+  - tag: Apple_GPU
+    label: Apple GPU (Metal)
+    description: "Apple 自研 GPU（A 系列/M 系列芯片），仅通过 Metal API 访问"
+    category: hardware_gpu_vendor
+    aliases: [Apple_Silicon, A_series_GPU, M_series_GPU]
+    known_issues:
+      - invariant: I-COLOR-01
+        note: "Metal 的 sRGB RT 处理与 Vulkan/D3D12 行为存在细微差异"
+    notes: >
+      Metal 不支持 SPIR-V，Shader 需通过 MSL 或 SPIR-V Cross 转译。
+      精度相关 Bug 在 Apple GPU 上通常不如 Adreno 明显。
+
+  - tag: Intel_iGPU
+    label: Intel 集成显卡
+    description: "Intel CPU 内置集成显卡"
+    category: hardware_gpu_vendor
+    aliases: [Intel_GPU, Intel_UHD, Intel_Arc]
+    known_issues:
+      - invariant: I-SHADER-01
+        note: "部分 Intel 驱动对 HLSL/GLSL 的特定语法容忍度低"
+    notes: ""
+
+  - tag: NVIDIA_GPU
+    label: NVIDIA GPU
+    description: "NVIDIA 独立/集成 GPU"
+    category: hardware_gpu_vendor
+    aliases: [NVIDIA, GeForce, RTX, GTX]
+    known_issues: []
+    notes: ""
+
+  - tag: AMD_GPU
+    label: AMD GPU
+    description: "AMD 独立/集成 GPU"
+    category: hardware_gpu_vendor
+    aliases: [AMD, Radeon, RDNA]
+    known_issues: []
+    notes: ""
+
+  - tag: PowerVR_GPU
+    label: PowerVR GPU
+    description: "Imagination Technologies PowerVR GPU，部分 iOS 早期设备使用"
+    category: hardware_gpu_vendor
+    aliases: [Imagination, PowerVR]
+    known_issues: []
+    notes: ""
+
+  # ─────────────────────────────────────
+  # 硬件平台 · 具体型号
+  # ─────────────────────────────────────
+
+  - tag: Adreno_630
+    label: Adreno 630
+    description: "高通骁龙 845 内置 GPU"
+    category: hardware_gpu_model
+    aliases: [SD845_GPU]
+    known_issues:
+      - invariant: I-PREC-01
+        note: "RelaxedPrecision 精度降低问题高发"
+    notes: ""
+
+  - tag: Adreno_650
+    label: Adreno 650
+    description: "高通骁龙 865 内置 GPU"
+    category: hardware_gpu_model
+    aliases: [SD865_GPU]
+    known_issues:
+      - invariant: I-PREC-01
+        note: "已知案例 BUG-PREC-001：头发着色白化问题"
+    notes: ""
+
+  - tag: Adreno_740
+    label: Adreno 740
+    description: "高通骁龙 8 Gen 2 内置 GPU"
+    category: hardware_gpu_model
+    aliases: [SD8Gen2_GPU, Snapdragon8Gen2_GPU]
+    known_issues:
+      - invariant: I-PREC-01
+        note: "已知案例 BUG-PREC-002：头发着色黑化问题（精度截断方向与 650 相反）"
+    notes: ""
+
+  - tag: Mali_G76
+    label: Mali-G76
+    description: "ARM Mali-G76 GPU，常见于中端 Android 设备"
+    category: hardware_gpu_model
+    aliases: []
+    known_issues: []
+    notes: ""
+
+  # ─────────────────────────────────────
+  # 驱动/软件 · 操作系统
+  # ─────────────────────────────────────
+
+  - tag: Android_11
+    label: Android 11
+    description: "Android 11 操作系统（API Level 30）"
+    category: software_os
+    aliases: [API30, Android11]
+    known_issues: []
+    notes: ""
+
+  - tag: Android_12
+    label: Android 12
+    description: "Android 12 操作系统（API Level 31/32）"
+    category: software_os
+    aliases: [API31, API32, Android12]
+    known_issues: []
+    notes: ""
+
+  - tag: Android_13
+    label: Android 13
+    description: "Android 13 操作系统（API Level 33）"
+    category: software_os
+    aliases: [API33, Android13]
+    known_issues: []
+    notes: ""
+
+  - tag: iOS_15
+    label: iOS 15
+    description: "Apple iOS 15"
+    category: software_os
+    aliases: []
+    known_issues: []
+    notes: ""
+
+  - tag: Windows_10
+    label: Windows 10
+    description: "Microsoft Windows 10"
+    category: software_os
+    aliases: [Win10]
+    known_issues: []
+    notes: ""
+
+  - tag: Windows_11
+    label: Windows 11
+    description: "Microsoft Windows 11"
+    category: software_os
+    aliases: [Win11]
+    known_issues: []
+    notes: ""
+
+  # ─────────────────────────────────────
+  # 驱动/软件 · 图形 API
+  # ─────────────────────────────────────
+
+  - tag: Vulkan
+    label: Vulkan
+    description: "Khronos Vulkan 图形/计算 API"
+    category: software_graphics_api
+    aliases: [VK, Vulkan_API]
+    known_issues:
+      - invariant: I-PREC-01
+        note: "SPIR-V RelaxedPrecision decoration 在此 API 下有效，影响精度行为"
+      - invariant: I-PERF-01
+        note: "Vulkan 要求显式 Resource Barrier，缺失会导致 Validation 报错或渲染错误"
+    notes: "移动端主流图形 API，RelaxedPrecision 相关 Bug 的主要发生环境"
+
+  - tag: OpenGLES_3
+    label: OpenGL ES 3.x
+    description: "Khronos OpenGL ES 3.0/3.1/3.2"
+    category: software_graphics_api
+    aliases: [GLES3, GLES31, GLES32]
+    known_issues: []
+    notes: ""
+
+  - tag: DirectX_11
+    label: DirectX 11
+    description: "Microsoft DirectX 11 / D3D11"
+    category: software_graphics_api
+    aliases: [D3D11, DX11]
+    known_issues: []
+    notes: ""
+
+  - tag: DirectX_12
+    label: DirectX 12
+    description: "Microsoft DirectX 12 / D3D12"
+    category: software_graphics_api
+    aliases: [D3D12, DX12]
+    known_issues:
+      - invariant: I-PERF-01
+        note: "D3D12 要求显式 Resource Barrier，缺失会导致 Debug Layer 报错"
+    notes: ""
+
+  - tag: Metal
+    label: Metal
+    description: "Apple Metal 图形/计算 API"
+    category: software_graphics_api
+    aliases: [Metal_API]
+    known_issues: []
+    notes: ""
+
+  # ─────────────────────────────────────
+  # 渲染特性 · SPIR-V 相关
+  # ─────────────────────────────────────
+
+  - tag: RelaxedPrecision
+    label: SPIR-V RelaxedPrecision
+    description: "SPIR-V 精度修饰符，允许实现降低操作精度以换取性能"
+    category: rendering_spirv
+    aliases: [relaxed_precision, half_precision]
+    known_issues:
+      - invariant: I-PREC-01
+        note: "Adreno 驱动将此修饰符解释为严格 FP16，可能导致溢出或精度截断"
+    notes: >
+      通常由 HLSL 中使用 half 类型，经 DXC/glslc 编译为 SPIR-V 时自动添加。
+      检查方法：spirv-dis 反汇编后搜索 OpDecorate * RelaxedPrecision。
+
+  # ─────────────────────────────────────
+  # 渲染特性 · 材质类型
+  # ─────────────────────────────────────
+
+  - tag: PBR_material
+    label: PBR 材质
+    description: "基于物理的渲染材质（Physically Based Rendering）"
+    category: rendering_material
+    aliases: [PBR, physical_material]
+    known_issues:
+      - invariant: I-NAN-01
+        note: "PBR 中的微面元 BRDF 计算（GGX等）包含多处除法和开方，是 NaN 高发区"
+    notes: ""
+
+  - tag: skin_material
+    label: 皮肤材质
+    description: "角色皮肤渲染，通常涉及次表面散射（SSS）"
+    category: rendering_material
+    aliases: [skin, character_skin, SSS_material]
+    known_issues:
+      - invariant: I-PREC-01
+        note: "皮肤 SSS 计算通常包含多层纹理采样和光照累加，精度要求高"
+    notes: ""
+
+  - tag: hair_material
+    label: 毛发材质
+    description: "毛发/头发渲染材质，通常使用各向异性高光"
+    category: rendering_material
+    aliases: [hair, fur_material, hair_rendering]
+    known_issues:
+      - invariant: I-PREC-01
+        note: "已知案例 BUG-PREC-001/002：Adreno 上 hair 着色的 half 精度问题"
+    notes: ""
+
+  - tag: transparent_material
+    label: 透明材质
+    description: "使用 Alpha 混合的透明/半透明材质"
+    category: rendering_material
+    aliases: [alpha_blend_material, transparency]
+    known_issues:
+      - invariant: I-ALPHA-01
+        note: "透明材质对 Alpha 范围和混合顺序要求严格"
+      - invariant: I-DEPTH-02
+        note: "透明材质通常需要禁用深度写入"
+    notes: ""
+
+  # ─────────────────────────────────────
+  # 渲染特性 · 渲染管线
+  # ─────────────────────────────────────
+
+  - tag: deferred_rendering
+    label: 延迟渲染
+    description: "Deferred Rendering / Deferred Shading 管线"
+    category: rendering_pipeline
+    aliases: [deferred_shading, deferred]
+    known_issues:
+      - invariant: I-COLOR-01
+        note: "G-Buffer 到光照 Pass 的颜色空间处理容易出错"
+    notes: ""
+
+  - tag: forward_rendering
+    label: 前向渲染
+    description: "Forward Rendering / Forward+ 管线"
+    category: rendering_pipeline
+    aliases: [forward, forward_plus]
+    known_issues: []
+    notes: ""
+
+  - tag: shadow_pass
+    label: 阴影 Pass
+    description: "Shadow Map 生成和应用阶段"
+    category: rendering_pipeline
+    aliases: [shadow_mapping, shadow_render]
+    known_issues:
+      - invariant: I-DEPTH-01
+        note: "Shadow Map 精度对近远平面比例非常敏感"
+    notes: ""
+
+  - tag: post_processing
+    label: 后处理
+    description: "后处理效果（Bloom/Tone Mapping/AA 等）"
+    category: rendering_pipeline
+    aliases: [post_process, postprocess]
+    known_issues:
+      - invariant: I-COLOR-01
+        note: "HDR->LDR 的 Tone Mapping 是颜色空间问题的高发阶段"
+    notes: ""
+
+  - tag: ray_tracing
+    label: 光线追踪
+    description: "DXR / Vulkan Ray Tracing 特性"
+    category: rendering_pipeline
+    aliases: [DXR, RT, raytracing]
+    known_issues: []
+    notes: ""
+
+# ─────────────────────────────────────
+# 分类索引
+# ─────────────────────────────────────
+categories:
+  hardware_gpu_vendor:
+    label: GPU 厂商
+    tags: [Adreno_GPU, Mali_GPU, Apple_GPU, Intel_iGPU, NVIDIA_GPU, AMD_GPU, PowerVR_GPU]
+
+  hardware_gpu_model:
+    label: GPU 具体型号
+    tags: [Adreno_630, Adreno_650, Adreno_740, Mali_G76]
+
+  software_os:
+    label: 操作系统
+    tags: [Android_11, Android_12, Android_13, iOS_15, Windows_10, Windows_11]
+
+  software_graphics_api:
+    label: 图形 API
+    tags: [Vulkan, OpenGLES_3, DirectX_11, DirectX_12, Metal]
+
+  rendering_spirv:
+    label: SPIR-V 特性
+    tags: [RelaxedPrecision]
+
+  rendering_material:
+    label: 材质类型
+    tags: [PBR_material, skin_material, hair_material, transparent_material]
+
+  rendering_pipeline:
+    label: 渲染管线阶段
+    tags: [deferred_rendering, forward_rendering, shadow_pass, post_processing, ray_tracing]

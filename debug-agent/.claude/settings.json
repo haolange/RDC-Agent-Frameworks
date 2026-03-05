@@ -1,0 +1,58 @@
+{
+  "description": "AIRD Framework - Claude Code Quality Hooks",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": "Write",
+          "file_pattern": "**/knowledge/library/**/*bugcard*.yaml"
+        },
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 common/hooks/utils/codebuddy_hook_dispatch.py write-bugcard",
+            "description": "Validate tool contract and BugCard schema before library write",
+            "on_failure": "block",
+            "failure_message": "BugCard write blocked: tool contract drift or BugCard validation failed."
+          }
+        ]
+      },
+      {
+        "matcher": {
+          "tool_name": "Write",
+          "file_pattern": "**/knowledge/library/sessions/**/skeptic_signoff.yaml"
+        },
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 common/hooks/utils/codebuddy_hook_dispatch.py write-skeptic",
+            "description": "Validate tool contract and Skeptic signoff artifact format",
+            "on_failure": "warn",
+            "failure_message": "Skeptic signoff file did not pass validation."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": {
+          "assistant_message_pattern": ".*"
+        },
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
+            "description": "Finalization gate: only blocks when AIRD_FINAL_VERDICT (or other close keywords) appear",
+            "on_failure": "block",
+            "failure_message": "Finalization blocked by gate checks."
+          }
+        ]
+      }
+    ]
+  },
+  "hook_notes": {
+    "tool_contract_ssot": "extensions/rdx-mcp/rdx/spec/tool_catalog_196.json",
+    "session_artifacts_root": "common/knowledge/library/sessions/<session_id>/",
+    "session_marker": "common/knowledge/library/sessions/.current_session"
+  }
+}

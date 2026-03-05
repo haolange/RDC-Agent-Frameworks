@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "rdx-mcp": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "${CODEBUDDY_PLUGIN_ROOT}/../../../rdx-mcp",
+        "python",
+        "-m",
+        "rdx.server"
+      ],
+      "description": "RenderDoc MCP Server with unified core execution."
+    }
+  }
+}

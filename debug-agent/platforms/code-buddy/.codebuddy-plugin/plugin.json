@@ -1,0 +1,12 @@
+{
+  "name": "aird-debug-agent",
+  "description": "AIRD Framework — AI 驱动的不变量推理调试器，9 个专家 Agent 协作体系，含完整质量门禁与知识库系统",
+  "author": {
+    "name": "AIRD Framework"
+  },
+  "keywords": ["rendering", "debug", "gpu", "renderdoc", "invariant"],
+  "agents": "./agents/",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json"
+}

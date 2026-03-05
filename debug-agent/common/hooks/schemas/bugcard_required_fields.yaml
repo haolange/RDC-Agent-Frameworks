@@ -1,0 +1,94 @@
+# BugCard 必填字段清单
+# 任何 BugCard 入库前必须通过此 schema 验证
+
+description: "BugCard 必填字段清单，由 bugcard_validator.py 使用"
+
+required_fields:
+  - field: bugcard_id
+    type: string
+    pattern: "^BUG-[A-Z]+-\\d{3}$"
+    description: "BugCard 唯一标识符，格式：BUG-<类别>-<序号>"
+    example: "BUG-PREC-002"
+
+  - field: title
+    type: string
+    min_length: 10
+    max_length: 120
+    description: "一句话描述 Bug（设备+症状+根因关键词）"
+    example: "Adreno 740 头发着色黑化：half 精度截断导致光照累加溢出"
+
+  - field: symptom_tags
+    type: list
+    min_items: 1
+    item_source: "common/knowledge/spec/taxonomy/symptom_taxonomy.yaml"
+    description: "标准症状标签列表，至少一个"
+
+  - field: trigger_tags
+    type: list
+    min_items: 1
+    item_source: "common/knowledge/spec/taxonomy/trigger_taxonomy.yaml"
+    description: "触发条件标签列表（GPU型号/驱动/API），至少一个"
+
+  - field: violated_invariants
+    type: list
+    min_items: 1
+    item_source: "common/knowledge/spec/invariants/invariant_library.yaml"
+    description: "被违反的不变量 ID 列表"
+    example: ["I-PREC-01"]
+
+  - field: recommended_sop
+    type: string
+    pattern: "^SOP-[A-Z]+-\\d{2}$"
+    item_source: "common/knowledge/spec/skills/sop_library.yaml"
+    description: "推荐的 SOP ID"
+    example: "SOP-PREC-01"
+
+  - field: root_cause_summary
+    type: string
+    min_length: 30
+    max_length: 500
+    description: "精确根因描述，必须包含：代码位置或驱动版本或API调用"
+    disallow_patterns:
+      - "可能是"
+      - "大概"
+      - "不确定"
+      - "maybe"
+      - "probably"
+
+  - field: fingerprint
+    type: object
+    required_subfields: [pattern, risk_category, shader_stage]
+    description: "可疑代码表达式指纹，用于跨 session 检索"
+
+  - field: fix_verified
+    type: boolean
+    description: "修复是否已通过验证"
+
+  - field: fix_verification_data
+    type: object
+    required_subfields: [pixel_before, pixel_after]
+    condition: "fix_verified == true"
+    description: "修复前后的量化对比数据（像素值）"
+
+  - field: skeptic_signed
+    type: boolean
+    must_be: true
+    description: "Skeptic Agent 是否已签署此 BugCard"
+
+  - field: bugcard_skeptic_signed
+    type: boolean
+    must_be: true
+    description: "Skeptic Agent 对 BugCard 内容的二次签署"
+
+optional_fields:
+  - field: related_devices
+    type: list
+    description: "跨设备关联记录"
+
+  - field: sop_improvement_notes
+    type: string
+    description: "SOP 改进建议（供后续人工审核）"
+
+  - field: action_chain_ref
+    type: string
+    description: "关联的 Action Chain 文件路径"

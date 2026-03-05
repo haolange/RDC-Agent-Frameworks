@@ -1,0 +1,8 @@
+# AIRD Framework · Cross-Device Fingerprint Graph (optional)
+#
+# 用途：将 fingerprint 与 device/driver/symptom 关联，用于跨设备归因与相似问题检索。
+
+version: "1.0"
+nodes: []
+edges: []
+

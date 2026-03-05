@@ -1,0 +1,7 @@
+{"ts_ms": 1772537610984, "operation": "rd.core.init", "transport": "daemon", "trace_id": "trc_ddd546680232", "ok": true, "args_keys": ["enable_app_api", "enable_remote", "global_env"], "error_code": ""}
+{"ts_ms": 1772537619943, "operation": "rd.capture.open_file", "transport": "daemon", "trace_id": "trc_f0b8c3726b59", "ok": true, "args_keys": ["file_path", "read_only"], "error_code": ""}
+{"ts_ms": 1772537630616, "operation": "rd.capture.open_replay", "transport": "daemon", "trace_id": "trc_7db9b73097f6", "ok": true, "args_keys": ["capture_file_id", "options"], "error_code": ""}
+{"ts_ms": 1772538409644, "operation": "rd.core.init", "transport": "daemon", "trace_id": "trc_0c00d9c537f1", "ok": true, "args_keys": ["enable_app_api", "enable_remote", "global_env"], "error_code": ""}
+{"ts_ms": 1772538418718, "operation": "rd.capture.open_file", "transport": "daemon", "trace_id": "trc_f43bc09ef4b9", "ok": true, "args_keys": ["file_path", "read_only"], "error_code": ""}
+{"ts_ms": 1772538427303, "operation": "rd.capture.open_replay", "transport": "daemon", "trace_id": "trc_e6f2be1e8b5a", "ok": true, "args_keys": ["capture_file_id", "options"], "error_code": ""}
+{"ts_ms": 1772538427536, "operation": "rd.replay.set_frame", "transport": "daemon", "trace_id": "trc_920e4a9cddf2", "ok": true, "args_keys": ["frame_index", "session_id"], "error_code": ""}

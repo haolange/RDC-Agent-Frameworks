@@ -1,0 +1,38 @@
+{
+  "PostToolUse": [
+    {
+      "matcher": "Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run --with pyyaml python \"${CODEBUDDY_PLUGIN_ROOT}/../../common/hooks/utils/codebuddy_hook_dispatch.py\" write-bugcard",
+          "description": "BugCard contract and schema validation",
+          "timeout": 30000
+        }
+      ]
+    },
+    {
+      "matcher": "Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run --with pyyaml python \"${CODEBUDDY_PLUGIN_ROOT}/../../common/hooks/utils/codebuddy_hook_dispatch.py\" write-skeptic",
+          "description": "Skeptic signoff artifact validation",
+          "timeout": 30000
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run --with pyyaml python \"${CODEBUDDY_PLUGIN_ROOT}/../../common/hooks/utils/codebuddy_hook_dispatch.py\" stop-gate",
+          "description": "Finalization gate: strict contract + session artifacts + validators",
+          "timeout": 30000
+        }
+      ]
+    }
+  ]
+}
