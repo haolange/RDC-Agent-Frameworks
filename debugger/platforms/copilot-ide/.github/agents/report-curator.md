@@ -1,13 +1,14 @@
 ---
-name: "RenderDoc/RDC Curator"
-description: "Produce reports and merge reusable GPU debug knowledge"
-agent_id: "curator_agent"
-model: "inherit"
-tools: ["bash", "read"]
-color: "#16A085"
+description: "Produce reports and merge reusable GPU debug knowledge."
+tools: ["changes", "codebase", "editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "problems", "runCommands", "runTasks", "search", "searchResults", "testFailure", "terminalLastCommand", "terminalSelection", "usages"]
+model: "preferred: gemini-3.1-pro"
 ---
 
 <!-- Auto-generated from common/agents by scripts/sync_platform_agents.py. Do not edit platform copies manually. -->
+
+# RenderDoc/RDC Curator
+
+Use RenderDoc/RDC platform tools to debug GPU rendering issues.
 
 # Agent: Report & Knowledge Curator
 # 角色：报告生成与知识管理专家

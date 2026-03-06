@@ -1,13 +1,14 @@
 ---
-name: "RenderDoc/RDC Pipeline"
-description: "Trace pass divergence and dependency chains"
-agent_id: "pass_graph_pipeline_agent"
-model: "inherit"
-tools: ["bash", "read"]
-color: "#3498DB"
+description: "Trace pass divergence and dependency chains."
+tools: ["changes", "codebase", "editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "problems", "runCommands", "runTasks", "search", "searchResults", "testFailure", "terminalLastCommand", "terminalSelection", "usages"]
+model: "preferred: grok-4.1 | sonnet-4.6"
 ---
 
 <!-- Auto-generated from common/agents by scripts/sync_platform_agents.py. Do not edit platform copies manually. -->
+
+# RenderDoc/RDC Pipeline
+
+Use RenderDoc/RDC platform tools to debug GPU rendering issues.
 
 # Agent: Pass Graph / Pipeline
 # 角色：命令列表与管线状态分析专家

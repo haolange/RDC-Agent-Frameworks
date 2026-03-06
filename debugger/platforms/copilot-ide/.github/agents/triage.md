@@ -1,13 +1,14 @@
 ---
-name: "RenderDoc/RDC Triage"
-description: "Normalize symptoms, triggers, and SOP entrypoints"
-agent_id: "triage_agent"
-model: "inherit"
-tools: ["bash", "read"]
-color: "#8E44AD"
+description: "Normalize symptoms, triggers, and SOP entrypoints."
+tools: ["changes", "codebase", "editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "problems", "runCommands", "runTasks", "search", "searchResults", "testFailure", "terminalLastCommand", "terminalSelection", "usages"]
+model: "preferred: grok-4.1 | sonnet-4.6"
 ---
 
 <!-- Auto-generated from common/agents by scripts/sync_platform_agents.py. Do not edit platform copies manually. -->
+
+# RenderDoc/RDC Triage
+
+Use RenderDoc/RDC platform tools to debug GPU rendering issues.
 
 # Agent: Triage & Taxonomy
 # 角色：症状分类专家

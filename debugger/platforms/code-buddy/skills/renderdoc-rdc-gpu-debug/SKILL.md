@@ -1,25 +1,37 @@
 ﻿# RenderDoc/RDC GPU Debug Skill
 
-## 描述
+## 任务目标
 
-这个 skill 的目标是让 Agent 明确自己要使用 RenderDoc/RDC 平台 tools 来调试 GPU 渲染问题，而不是停留在抽象框架层面。
+这个 skill 的目标是让 Agent 明确：当前任务是使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题，而不是讨论一个抽象 framework。
 
-任务入口：
+## 必读顺序
 
-- 理解用户的渲染问题、capture、session、event、resource、shader、driver 线索
-- 根据平台接入模式选择 `MCP` 或 `CLI`
-- 通过 `rd.*` tools 或平台工具入口收集证据、验证假设、生成报告和知识条目
+1. `../../../../common/AGENT_CORE.md`
+2. `../../../../docs/platform-capability-model.md`
+3. `../../../../docs/platform-capability-matrix.md`
+4. `../../../../docs/model-routing.md`
+5. 若用户要求 `CLI` 模式：`./cli-mode-reference.md`
 
-必读：
+## 平台模式
 
-- `../../../../common/AGENT_CORE.md`
-- `../../../../docs/platform-capability-model.md`
-- `../../../../docs/platform-capability-matrix.md`
-- `../../../../docs/model-routing.md`
-- 若用户要求 `CLI` 模式：`../../../../docs/cli-mode-reference.md`
+### `MCP` 模式
 
-模式规则：
+- 允许 tool discovery。
+- 允许先发现工具能力，再进行多步编排。
 
-- `MCP` 模式允许 tool discovery。
-- `CLI` 模式禁止靠 `--help`、枚举命令、随机试跑、观察式试错来摸索能力面。
-- 当前 skill 是 GPU 调试主技能，不只是“知识载入说明”。
+### `CLI` 模式
+
+- 禁止 discovery-by-trial-and-error。
+- 禁止靠 `--help`、命令枚举、随机试跑、观察式试错来摸索能力面。
+- 用户明确要求 `CLI` 模式时，必须先阅读 `cli-mode-reference.md`，再执行任务。
+
+## 工具边界
+
+- 目标是驱动 `rd.*` / platform tools 处理 capture、session、event、resource、shader、driver 证据。
+- 禁止自造工具名。
+- 调用时优先检查共享响应契约中的 `ok` 与 `error_message`。
+
+## 结案约束
+
+- 结案前必须满足 `session_evidence.yaml`、`skeptic_signoff.yaml`、`action_chain.jsonl` 与 `.current_session` 的 artifact 合同。
+- `skeptic_agent` 未完成 signoff 时，不得把结论当成最终结论。

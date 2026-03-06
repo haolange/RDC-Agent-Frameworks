@@ -1,7 +1,26 @@
 ﻿# Manus Adaptation
 
-This platform remains a workflow-level fallback adaptation.
+这是面向 `Manus` 的 workflow-level 降级适配。
 
-It is intentionally lower capability than `code-buddy`, `claude-code`, `copilot-cli`, and `copilot-ide`.
+## 提供内容
 
-Use it when the host mainly supports staged workflows rather than first-class agents, hooks, and per-agent model routing.
+- `workflows/00_debug_workflow.md`
+- `references/entrypoints.md`
+
+## 明确边界
+
+- 不宣称 custom agents
+- 不宣称 hooks
+- 不宣称 skills
+- 不宣称 per-agent model routing
+
+## Artifact 要求
+
+即使作为 workflow 宿主，也必须遵守：
+
+- `session_evidence.yaml`
+- `skeptic_signoff.yaml`
+- `action_chain.jsonl`
+- `.current_session`
+
+缺失这些产物时，不得视为有效结案。

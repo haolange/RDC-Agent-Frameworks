@@ -1,16 +1,16 @@
 ﻿# Copilot IDE Adaptation
 
-This directory packages the best-effort adaptation for VS Code / IDE custom agents.
+这是面向 VS Code / IDE custom agents 的适配，不复刻 CLI plugin 布局。
 
-Target capability set:
+## 完成态
 
-- custom agents / agent plugins
-- hooks
-- MCP
-- preferred per-agent model routing
+- `.github/agents/`：完整角色集
+- `.github/mcp.json`：MCP 入口
+- `agent-plugin.json`：IDE 侧补充元数据
+- `references/entrypoints.md`：知识入口与边界说明
 
-Notes:
+## 宿主边界
 
-- IDE hosts may support preferred model selection, but exact model availability is host-dependent.
-- This package preserves role layering even when the host cannot satisfy every preferred model.
-
+- `preferred model` 仅表示偏好，不保证宿主一定采用
+- hooks 在 IDE 宿主里以文档化边界形式处理，不伪造一个 CLI 风格 hooks 目录
+- 不提供独立 `skills/` 目录；知识入口通过 agent 文档与 references 链接暴露

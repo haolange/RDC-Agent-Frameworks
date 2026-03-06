@@ -1,0 +1,118 @@
+﻿{
+  "schema_version": 1,
+  "platforms": {
+    "code-buddy": {
+      "display_name": "Code Buddy",
+      "packaging": "plugin-bundle",
+      "custom_agents": true,
+      "skills": true,
+      "hooks": true,
+      "mcp": true,
+      "per_agent_model": "explicit",
+      "handoffs": true,
+      "cli_discovery_policy": "mcp-discovery-ok,cli-reference-required",
+      "required_paths": [
+        "platforms/code-buddy/.codebuddy-plugin/plugin.json",
+        "platforms/code-buddy/.mcp.json",
+        "platforms/code-buddy/hooks/hooks.json",
+        "platforms/code-buddy/skills/renderdoc-rdc-gpu-debug/SKILL.md",
+        "platforms/code-buddy/skills/renderdoc-rdc-gpu-debug/cli-mode-reference.md",
+        "platforms/code-buddy/agents/01_team_lead.md",
+        "platforms/code-buddy/agents/09_report_knowledge_curator.md"
+      ]
+    },
+    "claude-code": {
+      "display_name": "Claude Code",
+      "packaging": "project-config-plus-subagents",
+      "custom_agents": true,
+      "skills": true,
+      "hooks": true,
+      "mcp": true,
+      "per_agent_model": "alias",
+      "handoffs": true,
+      "cli_discovery_policy": "mcp-discovery-ok,cli-reference-required",
+      "required_paths": [
+        "platforms/claude-code/README.md",
+        "platforms/claude-code/.claude/settings.json",
+        "platforms/claude-code/skills/renderdoc-rdc-gpu-debug/SKILL.md",
+        "platforms/claude-code/skills/renderdoc-rdc-gpu-debug/cli-mode-reference.md",
+        "platforms/claude-code/agents/01_team_lead.md",
+        "platforms/claude-code/agents/09_report_knowledge_curator.md"
+      ]
+    },
+    "copilot-cli": {
+      "display_name": "Copilot CLI",
+      "packaging": "cli-plugin",
+      "custom_agents": true,
+      "skills": true,
+      "hooks": true,
+      "mcp": true,
+      "per_agent_model": "inherit",
+      "handoffs": "limited",
+      "cli_discovery_policy": "cli-reference-required",
+      "required_paths": [
+        "platforms/copilot-cli/.copilot-plugin.json",
+        "platforms/copilot-cli/.mcp.json",
+        "platforms/copilot-cli/hooks/hooks.json",
+        "platforms/copilot-cli/skills/renderdoc-rdc-gpu-debug/SKILL.md",
+        "platforms/copilot-cli/skills/renderdoc-rdc-gpu-debug/cli-mode-reference.md",
+        "platforms/copilot-cli/agents/01_team_lead.md",
+        "platforms/copilot-cli/agents/09_report_knowledge_curator.md"
+      ]
+    },
+    "copilot-ide": {
+      "display_name": "Copilot IDE",
+      "packaging": "github-agents-plus-mcp",
+      "custom_agents": true,
+      "skills": false,
+      "hooks": "documented-boundary",
+      "mcp": true,
+      "per_agent_model": "preferred",
+      "handoffs": true,
+      "cli_discovery_policy": "n/a",
+      "required_paths": [
+        "platforms/copilot-ide/README.md",
+        "platforms/copilot-ide/agent-plugin.json",
+        "platforms/copilot-ide/.github/mcp.json",
+        "platforms/copilot-ide/.github/agents/orchestrator.md",
+        "platforms/copilot-ide/.github/agents/verifier.md",
+        "platforms/copilot-ide/.github/agents/report-curator.md",
+        "platforms/copilot-ide/references/entrypoints.md"
+      ]
+    },
+    "claude-work": {
+      "display_name": "Claude Work",
+      "packaging": "local-plugin-contract",
+      "custom_agents": true,
+      "skills": false,
+      "hooks": false,
+      "mcp": true,
+      "per_agent_model": "inherit",
+      "handoffs": "weak",
+      "cli_discovery_policy": "cli-reference-required",
+      "required_paths": [
+        "platforms/claude-work/README.md",
+        "platforms/claude-work/plugin.json",
+        "platforms/claude-work/references/entrypoints.md",
+        "platforms/claude-work/agents/team_lead.md",
+        "platforms/claude-work/agents/curator.md"
+      ]
+    },
+    "manus": {
+      "display_name": "Manus",
+      "packaging": "workflow-package",
+      "custom_agents": false,
+      "skills": false,
+      "hooks": false,
+      "mcp": false,
+      "per_agent_model": "workflow-level",
+      "handoffs": "workflow-level",
+      "cli_discovery_policy": "n/a",
+      "required_paths": [
+        "platforms/manus/README.md",
+        "platforms/manus/references/entrypoints.md",
+        "platforms/manus/workflows/00_debug_workflow.md"
+      ]
+    }
+  }
+}

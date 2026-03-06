@@ -1,13 +1,14 @@
 ---
-name: "RenderDoc/RDC Capture"
-description: "Establish reproducible captures and anchors"
-agent_id: "capture_repro_agent"
-model: "inherit"
-tools: ["bash", "read"]
-color: "#2ECC71"
+description: "Establish reproducible captures and anchors."
+tools: ["changes", "codebase", "editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "problems", "runCommands", "runTasks", "search", "searchResults", "testFailure", "terminalLastCommand", "terminalSelection", "usages"]
+model: "preferred: grok-4.1 | sonnet-4.6"
 ---
 
 <!-- Auto-generated from common/agents by scripts/sync_platform_agents.py. Do not edit platform copies manually. -->
+
+# RenderDoc/RDC Capture
+
+Use RenderDoc/RDC platform tools to debug GPU rendering issues.
 
 # Agent: Capture & Repro
 # 角色：捕获与复现专家

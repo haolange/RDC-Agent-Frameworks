@@ -1,14 +1,14 @@
 ---
-name: "RenderDoc/RDC Forensics"
-description: "Locate the first bad event by pixel evidence"
-agent_id: "pixel_forensics_agent"
-model: "inherit"
-tools: ["bash", "read", "write"]
-skills: renderdoc-rdc-gpu-debug
-color: "#1ABC9C"
+description: "Locate the first bad event by pixel evidence."
+tools: ["changes", "codebase", "editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "problems", "runCommands", "runTasks", "search", "searchResults", "testFailure", "terminalLastCommand", "terminalSelection", "usages"]
+model: "preferred: grok-4.1 | sonnet-4.6"
 ---
 
 <!-- Auto-generated from common/agents by scripts/sync_platform_agents.py. Do not edit platform copies manually. -->
+
+# RenderDoc/RDC Forensics
+
+Use RenderDoc/RDC platform tools to debug GPU rendering issues.
 
 # Agent: Pixel / Value Forensics
 # 角色：像素取证专家

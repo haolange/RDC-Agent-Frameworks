@@ -11,7 +11,7 @@
   - 角色：verifier
   - 优先模型：`gpt-5.4`
 - `curator_agent`
-  - 角色：reporter / knowledge
+  - 角色：report / knowledge
   - 优先模型：`gemini-3.1-pro`
 - `triage_agent`、`capture_repro_agent`、`pass_graph_pipeline_agent`、`pixel_forensics_agent`、`shader_ir_agent`、`driver_device_agent`
   - 角色：investigator
@@ -19,10 +19,21 @@
 
 ## 平台回退原则
 
-- 平台支持显式 per-agent model 时，按 `common/config/model_routing.json` 直接映射。
-- 平台只支持 model alias 时，保留角色分工，映射到最接近的家族别名。
-- 平台忽略或不支持 per-agent model 时，保留角色设计，降级为 `inherit` 或宿主默认模型。
-- 不因平台能力不足而改写角色边界。
+- `code-buddy`
+  - 使用显式模型字符串。
+- `claude-code`
+  - 使用 `opus` / `sonnet` alias；无法精确表达时按模型 family 回退，但不改角色边界。
+- `copilot-cli`
+  - 默认 `inherit`，保留角色分工与 agent 文案。
+- `copilot-ide`
+  - 使用 `preferred model` 表达；宿主忽略时也不改角色设计。
+- `claude-work`、`manus`
+  - 只保留角色语义或 workflow 语义，不承诺精确模型控制。
+
+## 约束
+
+- 不允许在平台 agent frontmatter 中手工散落写模型策略。
+- 模型策略只能来自 SSOT，再由脚本生成或校验。
 
 权威配置文件：
 

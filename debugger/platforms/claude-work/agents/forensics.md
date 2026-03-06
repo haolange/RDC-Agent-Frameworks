@@ -1,9 +1,9 @@
 ---
 name: "RenderDoc/RDC Forensics"
-description: "Locate first bad event using pixel evidence"
+description: "Locate the first bad event by pixel evidence"
 agent_id: "pixel_forensics_agent"
 model: "inherit"
-tools: ["bash","read"]
+tools: ["bash", "read"]
 color: "#1ABC9C"
 ---
 

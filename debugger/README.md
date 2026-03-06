@@ -1,7 +1,7 @@
 ﻿# RenderDoc/RDC GPU Debug
 ## Invariant-Driven Rendering Debugger
 
-`RenderDoc/RDC GPU Debug` 是构建在 RenderDoc/RDC 平台能力之上的多 Agent 渲染调试 framework。
+`RenderDoc/RDC GPU Debug` 是构建在 RenderDoc/RDC 平台能力之上的多 Agent GPU Debug framework。
 
 它的主驱动不是“多试几次工具”，而是：
 
@@ -25,16 +25,13 @@
 6. `common/agents/*.md`
 7. `common/knowledge/spec/*`
 
-## 目录概览
+## 平台完成标准
 
-- `common/`
-  - 平台无关 SSOT：Agent prompt、知识规范、质量门槛、project plugin、adapter config。
-- `platforms/`
-  - 各宿主平台适配物。
-- `docs/`
-  - 平台能力模型、平台能力矩阵、模型路由、`CLI` 模式附属说明、平台适配文档。
-- `scripts/`
-  - 校验与同步脚本。
+- `code-buddy/`：满配基线，保持 `plugin + agents + hooks + skills + MCP`
+- `claude-code/`：真实的 Claude Code 适配，具备 `agents + skill + hooks config + MCP config`
+- `copilot-cli/`：真实的 CLI plugin 适配，具备 `plugin + agents + hooks + skills + MCP`
+- `copilot-ide/`：IDE custom agents 适配，具备 `.github/agents + MCP + preferred model + 边界说明`
+- `claude-work/`、`manus/`：可信降级适配，不伪装成满配实现
 
 ## 平台接入原则
 
@@ -48,6 +45,8 @@
 具体实现路径、catalog 位置、`MCP`/`CLI` 启动入口属于 adapter/config 层，集中定义在：
 
 - `common/config/platform_adapter.json`
+- `common/config/platform_capabilities.json`
+- `common/config/model_routing.json`
 
 ## `MCP` 与 `CLI`
 
@@ -69,20 +68,14 @@
 python debugger/scripts/validate_tool_contract.py --strict
 ```
 
+### 校验平台布局
+
+```bash
+python debugger/scripts/validate_platform_layout.py --strict
+```
+
 ### 同步平台 prompt 镜像
 
 ```bash
 python debugger/scripts/sync_platform_agents.py
 ```
-
-## Session Artifact Contract
-
-结案前必须存在：
-
-- `common/knowledge/library/sessions/<session_id>/session_evidence.yaml`
-- `common/knowledge/library/sessions/<session_id>/skeptic_signoff.yaml`
-- `common/knowledge/library/sessions/<session_id>/action_chain.jsonl`
-- `common/knowledge/library/sessions/.current_session`
-
-
-

@@ -1,13 +1,14 @@
 ---
-name: "RenderDoc/RDC Driver"
-description: "Perform cross-device attribution and platform checks"
-agent_id: "driver_device_agent"
-model: "inherit"
-tools: ["bash", "read"]
-color: "#F39C12"
+description: "Perform cross-device attribution and platform checks."
+tools: ["changes", "codebase", "editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "problems", "runCommands", "runTasks", "search", "searchResults", "testFailure", "terminalLastCommand", "terminalSelection", "usages"]
+model: "preferred: grok-4.1 | sonnet-4.6"
 ---
 
 <!-- Auto-generated from common/agents by scripts/sync_platform_agents.py. Do not edit platform copies manually. -->
+
+# RenderDoc/RDC Driver
+
+Use RenderDoc/RDC platform tools to debug GPU rendering issues.
 
 # Agent: Driver / Device Specialist
 # 角色：驱动与设备差异分析专家

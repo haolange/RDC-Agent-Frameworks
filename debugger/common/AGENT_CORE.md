@@ -22,6 +22,8 @@
 默认实现接入配置位于：
 
 - `common/config/platform_adapter.json`
+- `common/config/platform_capabilities.json`
+- `common/config/model_routing.json`
 
 ## 2. 接入模式规则
 
@@ -115,6 +117,7 @@
 - `platforms/claude-code/agents/`
 - `platforms/code-buddy/agents/`
 - `platforms/copilot-cli/agents/`
+- `platforms/copilot-ide/.github/agents/`
 - `platforms/claude-work/agents/`
 
 镜像同步命令：
@@ -129,5 +132,8 @@ tool contract 校验命令：
 python debugger/scripts/validate_tool_contract.py --strict
 ```
 
+平台布局校验命令：
 
-
+```bash
+python debugger/scripts/validate_platform_layout.py --strict
+```

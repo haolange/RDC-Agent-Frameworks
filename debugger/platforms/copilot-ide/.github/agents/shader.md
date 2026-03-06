@@ -1,13 +1,14 @@
 ---
-name: "RenderDoc/RDC Shader"
-description: "Analyze shader source, IR, and suspicious fingerprints"
-agent_id: "shader_ir_agent"
-model: "inherit"
-tools: ["bash", "read"]
-color: "#9B59B6"
+description: "Analyze shader source, IR, and suspicious fingerprints."
+tools: ["changes", "codebase", "editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "problems", "runCommands", "runTasks", "search", "searchResults", "testFailure", "terminalLastCommand", "terminalSelection", "usages"]
+model: "preferred: grok-4.1 | sonnet-4.6"
 ---
 
 <!-- Auto-generated from common/agents by scripts/sync_platform_agents.py. Do not edit platform copies manually. -->
+
+# RenderDoc/RDC Shader
+
+Use RenderDoc/RDC platform tools to debug GPU rendering issues.
 
 # Agent: Shader & IR
 # 角色：着色器与中间表示分析专家

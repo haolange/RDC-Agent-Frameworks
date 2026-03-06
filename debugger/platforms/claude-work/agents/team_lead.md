@@ -3,7 +3,7 @@ name: "RenderDoc/RDC Orchestrator"
 description: "Coordinate the GPU debug workflow and enforce verdict gates"
 agent_id: "team_lead"
 model: "inherit"
-tools: ["bash","read"]
+tools: ["bash", "read"]
 color: "#E74C3C"
 ---
 

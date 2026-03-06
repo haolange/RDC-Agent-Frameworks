@@ -1,0 +1,61 @@
+﻿{
+  "description": "RenderDoc/RDC GPU Debug - Claude Code adaptation",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": "Write",
+          "file_pattern": "**/knowledge/library/**/*bugcard*.yaml"
+        },
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ../../../common/hooks/utils/codebuddy_hook_dispatch.py write-bugcard",
+            "description": "Validate tool contract and BugCard schema before library write",
+            "on_failure": "block",
+            "failure_message": "BugCard write blocked: tool contract drift or schema validation failed."
+          }
+        ]
+      },
+      {
+        "matcher": {
+          "tool_name": "Write",
+          "file_pattern": "**/knowledge/library/sessions/**/skeptic_signoff.yaml"
+        },
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ../../../common/hooks/utils/codebuddy_hook_dispatch.py write-skeptic",
+            "description": "Validate skeptic signoff artifact format",
+            "on_failure": "warn",
+            "failure_message": "Skeptic signoff file did not pass validation."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": {
+          "assistant_message_pattern": ".*"
+        },
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ../../../common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
+            "description": "Finalization gate for RenderDoc/RDC GPU Debug",
+            "on_failure": "block",
+            "failure_message": "Finalization blocked by session artifact or contract checks."
+          }
+        ]
+      }
+    ]
+  },
+  "mcpServers": {
+    "renderdoc-platform-mcp": {
+      "command": "python",
+      "args": [
+        "${DEBUGGER_PLATFORM_TOOLS_ROOT}/mcp/run_mcp.py"
+      ]
+    }
+  }
+}
