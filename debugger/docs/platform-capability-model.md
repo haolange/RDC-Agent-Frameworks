@@ -13,6 +13,22 @@
 
 这些能力共同构成 framework 的平台前提，但不要求平台必须以某个特定仓库名或启动方式出现。
 
+为了避免把“宿主能不能 handoff”与“live runtime 能不能安全并行”混为一谈，框架还要求显式区分：
+
+- 宿主能力
+  - `custom_agents`、`skills`、`hooks`、`mcp`、`handoffs`、`per_agent_model`
+- runtime 合同
+  - `context_state_model`
+  - `local_parallelism`
+  - `remote_handle_lifecycle`
+  - `remote_coordination_mode`
+  - `rehydration_contract`
+
+其中：
+
+- 宿主能力回答“平台能表达什么协作壳子”
+- runtime 合同回答“RenderDoc/RDC live 调试链路怎样才是安全的”
+
 ## 2. 什么不是框架真相
 
 以下内容都属于 adapter/config 层：
@@ -76,5 +92,12 @@
 
 - `common/config/platform_adapter.json`
 
+平台协作拓扑与 runtime 协作硬规则集中记录在：
+
+- `common/config/platform_capabilities.json`
+- `docs/runtime-coordination-model.md`
+
 需要绑定到当前环境时，应修改该配置，而不是在主文档、Prompt、脚本和插件配置里重复硬编码。
+
+
 

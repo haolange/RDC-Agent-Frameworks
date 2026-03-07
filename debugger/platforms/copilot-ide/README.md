@@ -14,3 +14,6 @@
 - `preferred model` 仅表示偏好，不保证宿主一定采用
 - hooks 在 IDE 宿主里以文档化边界形式处理，不伪造一个 CLI 风格 hooks 目录
 - 不提供独立 `skills/` 目录；知识入口通过 agent 文档与 references 链接暴露
+- framework 在该平台上的默认协作拓扑是 `staged_handoff`
+- 即使有 custom agents，也不把同一 live session 当作多人并发工作区
+- remote case 一律采用 `single_runtime_owner`

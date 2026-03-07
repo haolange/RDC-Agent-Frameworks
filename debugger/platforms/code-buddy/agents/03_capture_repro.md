@@ -79,6 +79,25 @@ rd.export.screenshot(session_id=<session_id>, event_id=<anchor_event_id>, output
 
 **注意：你提供的是 capture/session anchor，不是最终 `causal_anchor`。后续 Agent 必须继续把它收敛为 `first_bad_event`、`first_divergence_event`、`root_drawcall` 或 `root_expression`。**
 
+### Step 5: 产出可重建的 `runtime_baton`
+
+你的输出不只是“capture/session anchor 已建立”，还必须让下一轮执行者能够安全复位 live 调试上下文。
+
+你必须产出 `runtime_baton`，并遵守以下规则：
+
+- local `concurrent_team`
+  - 为每条后续 live 调试链路建议独立 `context_id`
+  - 不得暗示多个专家共享同一 `context`
+- `staged_handoff`
+  - 明确当前 `runtime_owner`
+  - 明确下一轮需要证明或证伪的 `task_goal`
+- remote
+  - 一律按 `single_runtime_owner` 设计 baton
+  - 记录 `remote_connect` 所需的 `transport/host/port/options_ref`
+  - 不得把 live `remote_id` 当成可长期复用句柄写进 baton 真相
+
+`runtime_baton` 中的 `capture_file_id`、`session_id` 只能作为短生命周期提示；真正的恢复真相源应指向 `causal_anchor`、`session_evidence.yaml`、`action_chain.jsonl` 与必要 artifact。
+
 ---
 
 ## 质量门槛（内嵌检查清单）
@@ -94,6 +113,8 @@ rd.export.screenshot(session_id=<session_id>, event_id=<anchor_event_id>, output
 □ 4. 若设计了 A/B 捕获，两份 capture 的环境可比性已验证（列出对比清单）
 □ 5. capture 文件路径已正确记录，后续 Agent 可直接使用
 □ 6. Anchor 至少包含 event_id；resource_id 若未知必须标注为 unknown（后续由 Pipeline/Forensics 补全）
+□ 7. 已产出可重建的 `runtime_baton`，且 `task_goal`、`context_id`、`rdc_path`、rehydrate 信息完整
+□ 8. 若是 remote case，baton 已明确 `single_runtime_owner` 与 remote rehydrate 顺序
 
 如有任何一项未通过 → 重新执行捕获或补充验证。
 ```
@@ -139,6 +160,33 @@ environment_parity_check:            # A/B 捕获时必填
   diff_variable: "仅 GPU 型号不同（Adreno 740 vs Mali-G99）"
 
 repro_reliability: stable            # stable | intermittent | one_time
+runtime_baton:
+  coordination_mode: staged_handoff  # concurrent_team | staged_handoff | workflow_stage
+  runtime_owner: capture_repro_agent
+  context_id: "gpu-debug-main"
+  backend: remote                    # local | remote
+  capture_ref:
+    rdc_path: "<capture_A.rdc>"
+    capture_file_id: "<optional short-lived handle>"
+    session_id: "<optional short-lived handle>"
+  rehydrate:
+    required: true
+    remote_connect:
+      transport: adb_android
+      host: "127.0.0.1"
+      port: 38920
+      options_ref: "session_evidence.yaml#remote_bootstrap"
+    frame_index: 0
+    active_event_id: 523
+    causal_anchor_ref: "event:523"
+    focus:
+      pixel: "(512, 384)"
+      resource_id: unknown
+      shader_id: ""
+  evidence_refs:
+    - "session_evidence.yaml#capture_anchor"
+    - "action_chain.jsonl"
+  task_goal: "复位到异常像素所在事件，验证 first_bad_event 是否早于当前 anchor"
 notes: ""
 ```
 
@@ -150,3 +198,5 @@ notes: ""
 - ❌ 提交无法重放的 capture 文件
 - ❌ 在未确认截图与症状一致时就提交
 - ❌ A/B 捕获时存在除设备/驱动外的环境差异（会污染 Driver Agent 的归因）
+- ❌ 把 `capture_file_id`、`session_id` 或 live `remote_id` 当成 baton 的唯一恢复依据
+- ❌ remote case 下暗示多个专家可以并发共享同一 live remote session

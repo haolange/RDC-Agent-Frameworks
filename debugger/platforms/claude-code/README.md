@@ -19,3 +19,5 @@
 - `MCP` 模式允许 discovery
 - `CLI` 模式必须先阅读 skill 中的 `cli-mode-reference.md`
 - 不允许靠 `--help` 或随机试跑来摸索平台能力
+- 当前平台协作拓扑是 `concurrent_team`，但并行只允许发生在多 `context/daemon` 链路之间
+- remote case 一律退化为 `single_runtime_owner`

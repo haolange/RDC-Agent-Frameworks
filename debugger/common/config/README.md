@@ -10,6 +10,10 @@
 
 当前文件：
 
+- `platform_capabilities.json`
+  - `runtime_contract`: 与宿主无关的 live runtime 约束。
+  - `platforms.*.handoffs`: 宿主有没有 handoff 能力。
+  - `platforms.*.coordination_mode`: framework 在该宿主上的实际协作拓扑。
 - `platform_adapter.json`
   - `paths.tools_root`: 平台工具工作区根目录默认值。
   - `paths.catalog_path`: tool catalog 默认位置。
@@ -22,3 +26,4 @@
 
 - 这里允许绑定当前环境中的具体实现默认值。
 - 其他文档和 Prompt 不应把这些路径或名字当成框架真相。
+

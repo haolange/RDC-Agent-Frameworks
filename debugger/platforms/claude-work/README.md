@@ -18,3 +18,5 @@
 
 - 保留角色分工和证据门槛
 - 若任务依赖完整 hooks / rich MCP orchestration，应优先切回 `code-buddy`、`claude-code` 或 `copilot-cli`
+- framework 在该平台上的默认协作拓扑是 `staged_handoff`
+- remote case 一律采用 `single_runtime_owner`

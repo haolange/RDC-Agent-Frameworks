@@ -24,6 +24,7 @@
 - `common/config/platform_adapter.json`
 - `common/config/platform_capabilities.json`
 - `common/config/model_routing.json`
+- `docs/runtime-coordination-model.md`
 
 ## 2. 接入模式规则
 
@@ -116,6 +117,22 @@
 - 在进入根因分析前，必须先建立 `causal_anchor`；capture/session anchor 本身不足以直接承载根因裁决。
 - `capture_file_id`、`session_id`、`active_event_id` 都是短生命周期运行时句柄，不得假设长期稳定。
 
+## 6.1 Runtime Coordination Rules
+
+上层 framework 在设计多 Agent 协作时，必须把宿主能力与 runtime 约束分开理解。
+
+硬规则：
+
+- `CLI` 与 `MCP` 共用同一套 daemon / context 机制。
+- `context` 只有单套当前 runtime 状态槽，不是多个 live session 的共享黑板。
+- `full-capability` 平台的并行分工，不等于“共享同一个 live session 并发操作”。
+- local 并行调查只能通过多 `context/daemon` 实现；同一 `context` 不得并行维护多条 live 调试链路。
+- remote `open_replay` 成功后会消费对应的 live `remote_id`；framework 不设计 remote 多 live session 并发流程。
+- remote 协作一律采用 `single_runtime_owner`：只有 owner 调用 `rd.*`，其他角色通过 brief / baton / artifact 协作。
+- 跨 agent 或跨轮次移交 live 调试上下文时，必须提供可重建的 `runtime_baton`。
+
+`runtime_baton` 的恢复顺序与语义以 `docs/runtime-coordination-model.md` 为准。
+
 ## 7. Artifact Contract
 
 结案前必须具备：
@@ -166,3 +183,5 @@ python debugger/scripts/validate_tool_contract.py --strict
 ```bash
 python debugger/scripts/validate_platform_layout.py --strict
 ```
+
+

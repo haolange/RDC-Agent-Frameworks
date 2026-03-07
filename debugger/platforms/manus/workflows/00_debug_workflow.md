@@ -21,4 +21,7 @@
 
 - Manus 不承担 custom agents / per-agent model 的宿主能力。
 - workflow 的每一阶段都必须引用共享 artifact contract。
+- `workflow_stage` 是该平台的协作上限，不模拟 team-agent 实时协作。
+- remote 阶段由单一 runtime owner 顺序完成 `rd.remote.connect -> rd.remote.ping -> rd.capture.open_file -> rd.capture.open_replay -> re-anchor -> collect evidence`。
+- 若需要跨轮次继续调查，必须依赖可重建的 `runtime_baton`，不得凭记忆续跑 live runtime。
 - 如需动态 tool discovery，应停止 workflow 并切回支持 `MCP` 的平台。

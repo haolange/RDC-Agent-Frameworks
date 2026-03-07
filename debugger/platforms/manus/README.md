@@ -13,6 +13,8 @@
 - 不宣称 hooks
 - 不宣称 skills
 - 不宣称 per-agent model routing
+- `workflow_stage` 是该平台的协作上限
+- remote case 一律采用 `single_runtime_owner`，不模拟多 live owners
 
 ## Artifact 要求
 

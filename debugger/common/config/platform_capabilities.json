@@ -1,5 +1,12 @@
 ﻿{
   "schema_version": 1,
+  "runtime_contract": {
+    "context_state_model": "single_current_runtime_per_context",
+    "local_parallelism": "multi_context_multi_daemon",
+    "remote_handle_lifecycle": "remote_id_single_consumer",
+    "remote_coordination_mode": "single_runtime_owner",
+    "rehydration_contract": "required"
+  },
   "platforms": {
     "code-buddy": {
       "display_name": "Code Buddy",
@@ -10,6 +17,7 @@
       "mcp": true,
       "per_agent_model": "explicit",
       "handoffs": true,
+      "coordination_mode": "concurrent_team",
       "cli_discovery_policy": "mcp-discovery-ok,cli-reference-required",
       "required_paths": [
         "platforms/code-buddy/.codebuddy-plugin/plugin.json",
@@ -30,6 +38,7 @@
       "mcp": true,
       "per_agent_model": "alias",
       "handoffs": true,
+      "coordination_mode": "concurrent_team",
       "cli_discovery_policy": "mcp-discovery-ok,cli-reference-required",
       "required_paths": [
         "platforms/claude-code/README.md",
@@ -49,6 +58,7 @@
       "mcp": true,
       "per_agent_model": "inherit",
       "handoffs": "limited",
+      "coordination_mode": "staged_handoff",
       "cli_discovery_policy": "cli-reference-required",
       "required_paths": [
         "platforms/copilot-cli/.copilot-plugin.json",
@@ -69,6 +79,7 @@
       "mcp": true,
       "per_agent_model": "preferred",
       "handoffs": true,
+      "coordination_mode": "staged_handoff",
       "cli_discovery_policy": "n/a",
       "required_paths": [
         "platforms/copilot-ide/README.md",
@@ -89,6 +100,7 @@
       "mcp": true,
       "per_agent_model": "inherit",
       "handoffs": "weak",
+      "coordination_mode": "staged_handoff",
       "cli_discovery_policy": "cli-reference-required",
       "required_paths": [
         "platforms/claude-work/README.md",
@@ -107,6 +119,7 @@
       "mcp": false,
       "per_agent_model": "workflow-level",
       "handoffs": "workflow-level",
+      "coordination_mode": "workflow_stage",
       "cli_discovery_policy": "n/a",
       "required_paths": [
         "platforms/manus/README.md",

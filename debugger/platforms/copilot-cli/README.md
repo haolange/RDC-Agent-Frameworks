@@ -15,6 +15,8 @@
 - `MCP` 模式允许 discovery-first flow
 - 用户要求 `CLI` 模式时，必须先阅读 skill 中的 `cli-mode-reference.md`
 - 不允许靠 `--help`、枚举命令、随机试跑来猜能力面
+- 当前平台协作拓扑是 `staged_handoff`
+- remote case 一律采用 `single_runtime_owner`
 
 ## 模型策略
 

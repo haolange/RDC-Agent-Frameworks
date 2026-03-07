@@ -20,11 +20,12 @@
 
 1. `common/AGENT_CORE.md`
 2. `docs/platform-capability-model.md`
-3. `docs/platform-capability-matrix.md`
-4. `docs/model-routing.md`
-5. `docs/cli-mode-reference.md`
-6. `common/agents/*.md`
-7. `common/knowledge/spec/*`
+3. `docs/runtime-coordination-model.md`
+4. `docs/platform-capability-matrix.md`
+5. `docs/model-routing.md`
+6. `docs/cli-mode-reference.md`
+7. `common/agents/*.md`
+8. `common/knowledge/spec/*`
 
 ## 平台完成标准
 
@@ -48,6 +49,11 @@
 - `common/config/platform_adapter.json`
 - `common/config/platform_capabilities.json`
 - `common/config/model_routing.json`
+
+其中：
+
+- `platform_capabilities.json` 同时记录宿主能力与 runtime 合同
+- `docs/runtime-coordination-model.md` 记录多 Agent 协作时的 live runtime 约束、`runtime_baton` 与 remote rehydrate 规则
 
 ## `MCP` 与 `CLI`
 
@@ -80,4 +86,6 @@ python debugger/scripts/validate_platform_layout.py --strict
 ```bash
 python debugger/scripts/sync_platform_agents.py
 ```
+
+
 

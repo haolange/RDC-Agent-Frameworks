@@ -31,6 +31,20 @@
 - 禁止自造工具名。
 - 调用时优先检查共享响应契约中的 `ok` 与 `error_message`。
 
+## 协作拓扑
+
+- 当前平台默认 `coordination_mode = concurrent_team`。
+- `concurrent_team` 只表示可以并行分工，不表示多个 Agent 可以共享同一个 live session。
+- local 多 Agent 并行时，每条 live 调试链路都必须独占一个 `context/daemon`。
+- 禁止多个 Agent 在同一 `context` 下并发维护多条 live 调试链路。
+- remote 场景强制退化为 `single_runtime_owner`；其他专家只提交 brief / evidence request，不直接并发占用 live remote runtime。
+
+## Baton / Rehydrate
+
+- 需要跨轮次移交 live 调试上下文时，必须附带 `runtime_baton`。
+- `capture_file_id`、`session_id`、`remote_id` 都只能作为短生命周期提示，不得成为唯一真相源。
+- baton 恢复顺序以 `../../../../docs/runtime-coordination-model.md` 为准。
+
 ## 方向约束
 
 - 出现 `hair_shading`、`precision`、`washout`、`blackout`、`Adreno_GPU` 这类组合时，禁止直接依据 screen-like 观测做根因裁决。
