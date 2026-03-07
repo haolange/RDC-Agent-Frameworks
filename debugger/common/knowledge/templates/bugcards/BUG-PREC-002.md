@@ -1,4 +1,4 @@
-# BugCard: BUG-PREC-002
+﻿# BugCard: BUG-PREC-002
 
 ```yaml
 bugcard_id: BUG-PREC-002
@@ -8,9 +8,12 @@ symptom_tags: [blackout, hair_shading]
 trigger_tags: [Adreno_GPU, Adreno_740, Vulkan, RelaxedPrecision]
 violated_invariants: [I-PREC-01, I-SHADING-NONNEG-01]
 recommended_sop: SOP-PREC-01
+causal_anchor_type: first_bad_event
+causal_anchor_ref: "event:523"
+causal_chain_summary: >
+  目标像素在 Event#523 首次从正常值跌落为接近 0；同一 drawcall 的 `half KajiyaDiffuse` 表达式经 RelaxedPrecision lowering 后产生异常负值，因此黑化是在该 drawcall 首次引入，而不是在后续后处理阶段首次显现。
 
-root_cause_summary: >
-  在 `MobileShadingModels.ush:MobileKajiyaKayDiffuseAttenuation` 中，
+root_cause_summary: >  在 `MobileShadingModels.ush:MobileKajiyaKayDiffuseAttenuation` 中，
   `half KajiyaDiffuse = 1 - abs(dot(N, L));` 在 Adreno 740（Vulkan）上经 RelaxedPrecision lowering 后出现负值/异常，
   后续非负钳位链将结果压为 0，导致头发/披风区域整体塌黑。
 
@@ -35,3 +38,4 @@ related_devices:
 action_chain_ref: "knowledge/traces/action_chains/example_adreno_prec.jsonl"
 sop_improvement_notes: ""
 ```
+

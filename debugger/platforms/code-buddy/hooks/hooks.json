@@ -1,4 +1,4 @@
-{
+﻿{
   "PostToolUse": [
     {
       "matcher": "Write",
@@ -29,10 +29,11 @@
         {
           "type": "command",
           "command": "uv run --with pyyaml python \"${CODEBUDDY_PLUGIN_ROOT}/../../common/hooks/utils/codebuddy_hook_dispatch.py\" stop-gate",
-          "description": "Finalization gate: strict contract + session artifacts + validators",
+          "description": "Finalization gate: causal anchor + counterfactual + skeptic + session artifacts",
           "timeout": 30000
         }
       ]
     }
   ]
 }
+

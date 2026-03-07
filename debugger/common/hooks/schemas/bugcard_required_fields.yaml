@@ -1,4 +1,4 @@
-# BugCard 必填字段清单
+﻿# BugCard 必填字段清单
 # 任何 BugCard 入库前必须通过此 schema 验证
 
 description: "BugCard 必填字段清单，由 bugcard_validator.py 使用"
@@ -42,6 +42,22 @@ required_fields:
     item_source: "common/knowledge/spec/skills/sop_library.yaml"
     description: "推荐的 SOP ID"
     example: "SOP-PREC-01"
+
+  - field: causal_anchor_type
+    type: string
+    allowed_values: [first_bad_event, first_divergence_event, root_drawcall, root_expression]
+    description: "本次根因裁决所依赖的 causal anchor 类型"
+
+  - field: causal_anchor_ref
+    type: string
+    min_length: 3
+    description: "causal anchor 的具体引用，例如 event:523 或 drawcall:DeferredPass#88"
+
+  - field: causal_chain_summary
+    type: string
+    min_length: 30
+    max_length: 600
+    description: "简述从 causal anchor 到根因表达式的因果链，禁止只描述首次明显可见的阶段"
 
   - field: root_cause_summary
     type: string
@@ -92,3 +108,5 @@ optional_fields:
   - field: action_chain_ref
     type: string
     description: "关联的 Action Chain 文件路径"
+
+

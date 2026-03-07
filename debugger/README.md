@@ -9,6 +9,7 @@
 - 用证据链把猜测推进到可验证结论
 - 用反事实验证阻止“看起来像”的误判
 - 用 BugCard / BugFull / Action Chain 沉淀可复用知识
+- 用 `causal_anchor` 把“首次可见”与“首次引入”分开，禁止靠 screen-like 观察直接做根因裁决
 
 ## 当前成熟度
 
@@ -79,3 +80,4 @@ python debugger/scripts/validate_platform_layout.py --strict
 ```bash
 python debugger/scripts/sync_platform_agents.py
 ```
+

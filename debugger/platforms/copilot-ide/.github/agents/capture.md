@@ -77,6 +77,8 @@ rd.export.screenshot(session_id=<session_id>, event_id=<anchor_event_id>, output
 
 通过截图观察和初步 `rd.event.get_actions(session_id=<session_id>)` 结果，给出尽可能精确的锚点建议。
 
+**注意：你提供的是 capture/session anchor，不是最终 `causal_anchor`。后续 Agent 必须继续把它收敛为 `first_bad_event`、`first_divergence_event`、`root_drawcall` 或 `root_expression`。**
+
 ---
 
 ## 质量门槛（内嵌检查清单）

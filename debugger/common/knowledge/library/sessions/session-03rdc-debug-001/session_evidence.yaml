@@ -1,6 +1,22 @@
-{
+﻿{
   "session_id": "session-03rdc-debug-001",
+  "causal_anchor": {
+    "type": "root_drawcall",
+    "ref": "event:523",
+    "established_by": "pixel_forensics_agent",
+    "justification": "示例 session 以 Event#523 作为首次引入异常的 drawcall 锚点。"
+  },
   "evidence": [
+    {
+      "evidence_id": "anchor-example-001",
+      "type": "causal_anchor_evidence",
+      "result": "passed",
+      "description": "Pixel History confirms Event#523 is the first bad event for the target pixel.",
+      "anchor_ref": "event:523",
+      "source_tool": "rd.debug.pixel_history",
+      "ts_ms": 1772537609000,
+      "artifacts": []
+    },
     {
       "evidence_id": "rdx-trc_ddd546680232",
       "type": "tool_execution",

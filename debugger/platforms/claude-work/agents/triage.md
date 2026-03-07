@@ -58,6 +58,10 @@ symptom_tags → symptom_to_invariants[tag] → 候选 invariant_ids
 
 输出结构化 Triage 结果（见"输出格式"），移交 Team Lead。
 
+输出中必须额外给出：
+- `causal_axis`：当前问题应优先沿哪条因果链收敛
+- `disallowed_shortcuts`：当前场景下禁止采用的方向性捷径
+
 ---
 
 ## 分类规则
@@ -87,13 +91,13 @@ symptom_tags → symptom_to_invariants[tag] → 候选 invariant_ids
 □ 3. candidate_invariants 列表非空，且每个 id 存在于 invariant_library.yaml
 □ 4. recommended_sop 至少有 1 个，且存在于 sop_library.yaml
 □ 5. 输出中未包含任何根因推断（"可能是 X 导致的"等）
-□ 6. 输出中未包含修复建议
+□ 6. 输出中包含 `causal_axis` 与 `disallowed_shortcuts`
+□ 7. 输出中未包含修复建议
 
 如有任何一项未通过 → 修正后再输出。
 ```
 
 ---
-
 ## 输出格式
 
 ```yaml
@@ -136,9 +140,17 @@ recommended_sop:
   - id: SOP-NAN-01
     confidence: medium
 
+causal_axis:
+  primary: "先定位头发异常首次被引入的 event/drawcall，再进入 shader / IR 归因"
+  preferred_anchor: "first_bad_event 或 root_drawcall"
+
+disallowed_shortcuts:
+  - "禁止从 screen-like texture 首次变白直接推断后处理/合成是根因"
+  - "禁止把 screenshot / image similarity 直接提升为根因证据"
+
 anchor_suggestion: "头发区域异常像素（截图中标记坐标）"
 
-notes: ""
+notes: ""notes: ""
 unclassified_symptoms: []
 ```
 

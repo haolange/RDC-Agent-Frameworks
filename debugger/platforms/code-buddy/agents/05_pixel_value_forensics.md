@@ -25,6 +25,8 @@ color: "#1ABC9C"
 
 **你的核心输出是 `first_bad_event`——这是根因分析的精确起点。**
 
+对于数值、颜色、精度、传播类问题，`first_bad_event` 是强制输出；没有它，不得宣称已经完成因果锚定。
+
 ---
 
 ## 核心工作流
@@ -39,6 +41,8 @@ color: "#1ABC9C"
 - 优先选取异常区域中**最典型**的像素（如最白、最黑、最偏色的一个）
 - 对于 NaN 类问题：选取显示为全白或全黑的像素
 - 对于精度类问题：选取颜色差异最大的像素
+
+若 pipeline / render target 链路暂时不稳定，允许先用截图、texture 导出或 screen-like fallback 来**选点**；但这些证据只能服务于回到 Pixel History 或等价链路，不能单独代替 `first_bad_event`。
 
 ### Step 2: Pixel History 追溯
 
@@ -89,14 +93,15 @@ rd.texture.get_region_values(session_id=<session_id>, texture_id=<RT_ID>, rect={
 ```
 [质量门槛检查 - Pixel Forensics Agent 输出前必须全部通过]
 
-□ 1. first_bad_event 已明确（具体 event_id，不得是范围）
+□ 1. 对于数值/颜色/精度/传播类问题，`first_bad_event` 已明确（具体 event_id，不得是范围）
 □ 2. 异常值类型已判定（NaN/Inf/溢出/截断/颜色空间），并映射到对应不变量
-□ 3. 已确认 first_bad_event 之前至少一个事件的像素值是正常的
-    （证明异常确实在该事件引入，而非继承自更上游）
-□ 4. 数值证据已量化记录（具体数值，不得是"值很大"等模糊描述）
+□ 3. 已确认 `first_bad_event` 之前至少一个事件的像素值是正常的
+   （证明异常确实在该事件引入，而非继承自更上游）
+□ 4. 数值证据已量化记录（具体数值，不得是“值很大”等模糊描述）
 □ 5. Shader Stage 已确认（VS / PS / CS 哪个阶段产生异常）
+□ 6. 若使用 screenshot / texture fallback 选点，已明确标注其用途仅为选点或回锚，不是根因裁决
 
-如有任何一项未通过 → 继续追溯或标注无法确认的原因。
+如有任何一项未通过 → 继续追溯，或向 Team Lead 报告 `BLOCKED_REANCHOR`。
 ```
 
 ---
@@ -121,16 +126,22 @@ pixel_history:
     pass: "DeferredShadingPass.GBuffer"
   first_bad_event:
     event_id: 523
-    value: {r: 3.47, g: 2.91, b: 8.23, a: 1.0}   # 溢出（精度问题）
+    value: {r: 3.47, g: 2.91, b: 8.23, a: 1.0}
     pass: "DeferredShadingPass.LightingCalculation"
     shader_stage: PS
+
+causal_anchor_candidate:
+  type: first_bad_event
+  ref: "event:523"
+  established_by: pixel_forensics_agent
+  justification: "目标像素在 Event#523 首次从正常值跳变为异常值，且 Event#521 仍为正常值"
 
 anomaly_analysis:
   type: precision_overflow            # NaN | infinity | precision_overflow | precision_truncation | color_space
   violated_invariant: I-PREC-01
   evidence:
     - type: pixel_value
-      description: "first_bad_event 处 RGB 通道值全部超出 [0,1]，最大值 8.23"
+      description: "first_bad_event 的 RGB 通道值全部超出 [0,1]，最大值 8.23"
     - type: propagation
       description: "Event#524 及之后该像素维持在 (1,1,1,1)（硬件 Clamp 后的最大值）"
 
@@ -142,8 +153,7 @@ spatial_analysis:
 
 recommended_next:
   - agent: shader_ir_agent
-    focus: "分析 Event#523（DeferredShadingPass.LightingCalculation）的 PS Shader，
-            检查产生值 > 1 的计算表达式，重点检查 half 类型光照累加"
+    focus: "分析 Event#523（DeferredShadingPass.LightingCalculation）的 PS Shader，检查与该 causal anchor 绑定的精度问题表达式"
 ```
 
 ---

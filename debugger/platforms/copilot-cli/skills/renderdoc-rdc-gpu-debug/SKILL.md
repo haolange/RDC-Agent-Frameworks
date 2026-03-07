@@ -31,6 +31,11 @@
 - 禁止自造工具名。
 - 调用时优先检查共享响应契约中的 `ok` 与 `error_message`。
 
+## 方向约束
+
+- 出现 `hair_shading`、`precision`、`washout`、`blackout`、`Adreno_GPU` 这类组合时，禁止直接依据 screen-like 观测做根因裁决。
+- 必须先建立 `causal_anchor`，再把 `RelaxedPrecision`、后处理阶段或 screen-space shader 线索提升为根因分析对象。
+
 ## 结案约束
 
 - 结案前必须满足 `session_evidence.yaml`、`skeptic_signoff.yaml`、`action_chain.jsonl` 与 `.current_session` 的 artifact 合同。

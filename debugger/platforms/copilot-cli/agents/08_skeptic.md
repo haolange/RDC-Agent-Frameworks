@@ -42,6 +42,7 @@ color: "#C0392B"
 
 检验标准：
 - 专家 Agent 是否仅发现了"A 出现时 B 也出现"，而非"A 导致了 B"？
+- 是否把“问题首次明显可见的阶段”误当成了“问题首次被引入的阶段”？
 - 是否存在更简单的替代解释（奥卡姆剃刀）？
 - 若删除该假设的关键证据，结论是否仍然成立？
 
@@ -69,6 +70,7 @@ color: "#C0392B"
 
 检验标准：
 - 是否存在任何基于"推断"、"经验"、"这种类型的 Bug 通常是..."的结论？
+- 是否把 screenshot / image similarity / screen-like fallback 直接提升成了根因证据？
 - 每个关键断言是否都有具体的工具调用输出（含 event_id、pixel 坐标、数值）？
 - Shader & IR Agent 的 debug 值是否来自实际调试，还是估算？
 
@@ -83,6 +85,18 @@ color: "#C0392B"
 
 ---
 
+## 默认 Challenge 模板
+
+当你发现以下两类误判模式时，应默认发起 challenge，而不是默许团队继续推进：
+
+1. **可见阶段被误当成引入阶段**
+   - 适用条件：结论主要依赖“某张 screen-like texture / 某个后续 pass 首次明显变坏”
+   - required_action：要求团队回到 `first_bad_event`、`first_divergence_event` 或 `root_drawcall`
+2. **fallback 证据越权提升为根因证据**
+   - 适用条件：截图、图像差异、similarity、screen-space shader 线索被直接提升为根因裁决
+   - required_action：要求补充 `causal_anchor_evidence`、shader/debug/IR 直接证据或重新回锚
+
+---
 ## 核心工作流
 
 ### 当 Team Lead 提交假设签署请求时：

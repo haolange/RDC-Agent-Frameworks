@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 BugCard 完整性验证器 — RenderDoc/RDC GPU Debug M4 Quality Hooks
 
@@ -157,6 +157,11 @@ def _validate_field_against_rule(field: str, rule: dict, data: dict) -> list[str
             else:
                 if not rx.match(val):
                     errors.append(f"[格式] {field} '{val}' 不符合 pattern {pattern!r}")
+        allowed = rule.get("allowed_values")
+        if isinstance(allowed, list) and allowed:
+            allowed_norm = [str(x) for x in allowed]
+            if val not in allowed_norm:
+                errors.append(f"[??] {field} '{val}' ???????{allowed_norm}")
         disallow = rule.get("disallow_patterns")
         if isinstance(disallow, list):
             for token in disallow:

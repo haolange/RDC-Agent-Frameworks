@@ -42,7 +42,7 @@
           {
             "type": "command",
             "command": "python ../../../common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
-            "description": "Finalization gate for RenderDoc/RDC GPU Debug",
+            "description": "Finalization gate for RenderDoc/RDC GPU Debug (causal anchor + counterfactual + skeptic)",
             "on_failure": "block",
             "failure_message": "Finalization blocked by session artifact or contract checks."
           }
@@ -59,3 +59,4 @@
     }
   }
 }
+

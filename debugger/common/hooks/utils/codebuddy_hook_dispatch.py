@@ -76,10 +76,11 @@ def _py_cmd(*parts: str) -> list[str]:
     return [sys.executable, *[str(p) for p in parts]]
 
 
-def _validator_paths(root: Path) -> tuple[Path, Path, Path]:
+def _validator_paths(root: Path) -> tuple[Path, Path, Path, Path]:
     validators = root / "common" / "hooks" / "validators"
     return (
         validators / "bugcard_validator.py",
+        validators / "causal_anchor_validator.py",
         validators / "counterfactual_validator.py",
         validators / "skeptic_signoff_checker.py",
     )
@@ -131,8 +132,8 @@ def _validate_session_id(session_id: str) -> str:
 
 
 def _cmd_write_bugcard(root: Path) -> int:
-    bugcard_validator, _, _ = _validator_paths(root)
-    _, _, skeptic_checker = _validator_paths(root)
+    bugcard_validator, _, _, _ = _validator_paths(root)
+    _, _, _, skeptic_checker = _validator_paths(root)
     _, validate_contract = _script_paths(root)
     file_path = _extract_tool_output_file()
     if not file_path:
@@ -174,7 +175,7 @@ def _cmd_write_bugcard(root: Path) -> int:
 
 
 def _cmd_write_skeptic(root: Path) -> int:
-    _, _, skeptic_checker = _validator_paths(root)
+    _, _, _, skeptic_checker = _validator_paths(root)
     _, validate_contract = _script_paths(root)
     file_path = _extract_tool_output_file()
     if not file_path:
@@ -252,7 +253,7 @@ def _cmd_stop_gate(root: Path, force: bool = False) -> int:
     if (not force) and (not _should_gate_stop(stdin_text)):
         return 0
 
-    _, counterfactual_validator, skeptic_checker = _validator_paths(root)
+    _, causal_anchor_validator, counterfactual_validator, skeptic_checker = _validator_paths(root)
     _, validate_contract = _script_paths(root)
 
     errors: list[str] = []
@@ -272,6 +273,12 @@ def _cmd_stop_gate(root: Path, force: bool = False) -> int:
         errors.append(f"missing skeptic signoff artifact ({signoff_err or 'skeptic_signoff.yaml'})")
     if rc_act != 0:
         errors.append(f"missing action chain artifact ({action_chain_err or 'action_chain.jsonl'})")
+
+    if not errors:
+        r0 = _run(_py_cmd(str(causal_anchor_validator), evidence_path))
+        _relay(r0)
+        if r0.returncode != 0:
+            errors.append("causal anchor validator failed")
 
     if not errors:
         r1 = _run(_py_cmd(str(counterfactual_validator), evidence_path))

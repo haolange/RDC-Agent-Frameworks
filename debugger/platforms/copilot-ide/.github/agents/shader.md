@@ -71,6 +71,7 @@ rd.shader.extract_binary(session_id=<session_id>, shader_id=<shader_id>, output_
 - `OpDecorate * RelaxedPrecision` — 标记所有使用 RelaxedPrecision 的变量
 - 确认哪些 HLSL `half` 变量对应了 RelaxedPrecision decoration
 
+**注意：screen-space shader 中发现的 `RelaxedPrecision` 只能算线索，除非它已经绑定到 `first_bad_event` 或 `root_drawcall`；否则不得直接把它提升为根因归因。**
 ### Step 4: A/B Shader 差分分析（有基准时必须执行）
 
 若有 A（异常）和 B（基准）两份 capture：
@@ -103,12 +104,14 @@ rd.shader.debug_start(session_id=<session_id>, mode="pixel", event_id=<first_bad
 [质量门槛检查 - Shader & IR Agent 输出前必须全部通过]
 
 □ 1. 可疑代码表达式已定位（具体代码行，含代码引用，不得是"大概在光照计算里"）
-□ 2. 若为精度类问题，SPIR-V RelaxedPrecision decoration 扫描结果已提供
-□ 3. 可疑表达式的实际输入值已通过 rd.shader.debug_start 获取（不得是估算值）
-□ 4. 若有 A/B 两份 Shader，已明确说明差异在哪一层（HLSL/SPIR-V/ISA）
-□ 5. 输出的代码指纹格式可被 Driver Agent 和 Skeptic 直接引用验证
+□ 2. 若为精度类问题，当前表达式已绑定到 `first_bad_event` 或 `root_drawcall`
+□ 3. 若为精度类问题，SPIR-V RelaxedPrecision decoration 扫描结果已提供
+□ 4. 可疑表达式的实际输入值已通过 rd.shader.debug_start 获取（不得是估算值）
+□ 5. 若有 A/B 两份 Shader，已明确说明差异在哪一层（HLSL/SPIR-V/ISA）
+□ 6. 若证据仅来自 screen-space shader 或视觉 fallback，已明确标记为线索而非最终归因
+□ 7. 输出的代码指纹格式可被 Driver Agent 和 Skeptic 直接引用验证
 
-如有任何一项未通过 → 补充分析或标注无法确认的原因。
+如有任何一项未通过 → 补充分析，或向 Team Lead 报告 `BLOCKED_REANCHOR`。
 ```
 
 ---
@@ -122,6 +125,10 @@ to: team_lead
 
 event_id: 523
 shader_stage: PS
+anchor_binding:
+  causal_anchor_type: first_bad_event
+  causal_anchor_ref: "event:523"
+  bound_root_drawcall: "DeferredShadingPass.LightingCalculation#523"
 
 source_analysis:
   hlsl_keywords_found:

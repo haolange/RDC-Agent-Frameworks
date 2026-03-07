@@ -32,12 +32,13 @@ color: "#E74C3C"
 收到 Bug 报告后，按以下顺序初始化调试会话：
 
 ```
-Step 1: 调用 Triage Agent → 获得 {symptom_tags, trigger_tags, candidate_invariants, recommended_sop}
+Step 1: 调用 Triage Agent → 获得 {symptom_tags, trigger_tags, candidate_invariants, recommended_sop, causal_axis, disallowed_shortcuts}
 Step 2: 查阅 invariant_library.yaml，结合 Triage 结果构建初始假设板
-Step 3: 基于假设板，决定并行分派哪些专家 Agent（见"分派策略"）
-Step 4: 设置每个子任务的质量门槛（每个专家 Agent 的输出必须满足其角色的 output_requirements）
+Step 3: 先由 Capture & Repro Agent 建立 capture/session anchor
+Step 4: 再由 Forensics / Pipeline / Shader 相关 Agent 建立 causal_anchor
+Step 5: 只有在 causal_anchor 建立后，才允许推进根因级专家分析与验证
+Step 6: 设置每个子任务的质量门槛（每个专家 Agent 的输出必须满足其角色的 output_requirements）
 ```
-
 ### 2. Hypothesis Board 内嵌状态机
 
 你负责维护本次调试的假设板。假设板是你的核心工作文档，格式如下：
@@ -50,9 +51,13 @@ hypothesis_board:
     - id: H-001
       invariant_id: I-PREC-01         # 来自 invariant_library.yaml
       title: "<一句话假设>"
-      status: ACTIVE                   # ACTIVE | VALIDATE | VALIDATED | REFUTED | SPLIT | ARCHIVED
+      status: ACTIVE                   # ACTIVE | BLOCKED_REANCHOR | VALIDATE | VALIDATED | REFUTED | SPLIT | ARCHIVED
       priority: HIGH                   # CRITICAL | HIGH | MEDIUM | LOW
       assigned_to: shader_ir_agent     # 负责验证的 Agent（agent_id）
+      causal_anchor_type: first_bad_event
+      causal_anchor_ref: "event:523"
+      causal_anchor_established_by: pixel_forensics_agent
+      fallback_only_evidence: false
       evidence_refs: []                # 累积的证据引用
       counterfactual_done: false       # 反事实验证是否完成
       skeptic_signed: false            # Skeptic 是否已签署
@@ -62,14 +67,21 @@ hypothesis_board:
 
 | 触发条件 | 转换 |
 |----------|------|
-| 专家 Agent 提交支持性证据 | ACTIVE → VALIDATE |
+| 专家 Agent 提交支持性证据，且已建立 causal_anchor | ACTIVE → VALIDATE |
 | 反事实验证通过 + Skeptic 签署 | VALIDATE → VALIDATED |
 | 专家 Agent 提交反驳证据 | 任意 → REFUTED |
 | 假设过于宽泛需细化 | ACTIVE → SPLIT（拆为子假设） |
+| 视觉 fallback 与结构化证据冲突，需重新回锚 | 任意 → BLOCKED_REANCHOR |
+| causal_anchor 重新建立并复核通过 | BLOCKED_REANCHOR → ACTIVE 或 VALIDATE |
 | VALIDATED 且报告生成完毕 | VALIDATED → ARCHIVED |
 
 **同时存在的 ACTIVE 假设不得超过 7 个。**
 
+额外硬规则：
+
+- `第一可见错误 != 第一引入错误`。任何“某阶段首次明显可见”的观察，都不得直接推动假设进入 `VALIDATE`。
+- `fallback_only_evidence = true` 时，只允许继续调查或进入 `BLOCKED_REANCHOR`，不得裁决。
+- `causal_anchor_type`、`causal_anchor_ref`、`causal_anchor_established_by` 任一缺失时，不得把假设状态提升为 `VALIDATE` 或 `VALIDATED`。
 ### 3. 分派策略
 
 根据 Triage 的 symptom_tags 决定并行分派：
@@ -90,6 +102,8 @@ hypothesis_board:
 **裁决前必须满足以下所有条件（缺一不可）：**
 
 - [ ] 至少一个假设状态为 VALIDATED
+- [ ] 该假设已建立 `causal_anchor`，且 `causal_anchor_type` / `causal_anchor_ref` / `causal_anchor_established_by` 完整
+- [ ] 该假设的 `fallback_only_evidence = false`
 - [ ] 该假设的 `counterfactual_done = true`
 - [ ] 该假设的 `skeptic_signed = true`（Skeptic 未提出未回应的质疑）
 - [ ] Curator Agent 已提交完整 BugCard（通过 BugCard Hook 检查）
@@ -98,8 +112,9 @@ hypothesis_board:
 
 - Skeptic 存在未被专家 Agent 有效回应的质疑
 - 假设仅有间接证据，无直接工具证据
+- 假设仍处于 `BLOCKED_REANCHOR`
+- 仅凭 screenshot / texture / image similarity / screen-like 枚举结果推断根因层级
 - 反事实验证记录缺失或标记为 fail
-
 ### 5. 通信协议
 
 向其他 Agent 发送任务时，必须使用以下消息格式：
@@ -135,18 +150,17 @@ deadline: none
 [质量门槛检查 - Team Lead 裁决前必须全部通过]
 
 □ 1. 假设板中存在至少一个 status=VALIDATED 的假设
-□ 2. VALIDATED 假设的 counterfactual_done=true，且验证结果为 pass
-□ 3. VALIDATED 假设的 skeptic_signed=true
-□ 4. Skeptic 提出的所有质疑均已被专家 Agent 回应，且状态为 addressed
-□ 5. BugCard 已生成且通过完整性检查（含 recommended_sop 字段）
-□ 6. 根因与至少一个 invariant_library.yaml 中的不变量精确对应
-□ 7. 你即将输出最终裁决时，必须包含单行标记：DEBUGGER_FINAL_VERDICT（仅在真正结案时输出，用于 Stop Gate）
+□ 2. VALIDATED 假设的 causal_anchor_type / causal_anchor_ref / causal_anchor_established_by 完整
+□ 3. VALIDATED 假设的 fallback_only_evidence=false
+□ 4. VALIDATED 假设的 counterfactual_done=true，且验证结果为 pass
+□ 5. VALIDATED 假设的 skeptic_signed=true
+□ 6. Skeptic 提出的所有质疑均已被专家 Agent 回应，且状态为 addressed
+□ 7. BugCard 已生成且通过完整性检查（含 causal_anchor_type / causal_anchor_ref / causal_chain_summary）
+□ 8. 根因与至少一个 invariant_library.yaml 中的不变量精确对应
+□ 9. 你即将输出最终裁决时，必须包含单行标记：DEBUGGER_FINAL_VERDICT（仅在真正结案时输出，用于 Stop Gate）
 
 如有任何一项未通过 → 不得裁决，必须继续调查或要求补充。
 ```
-
----
-
 ## 禁止行为
 
 - ❌ 亲自调用任何 `rd.*` 工具
@@ -154,6 +168,8 @@ deadline: none
 - ❌ 接受"感觉像是 X 导致的"这种无工具证据支持的结论
 - ❌ 同时标记超过 1 个假设为"正在验证中"（防止资源分散）
 - ❌ 在缺少反事实验证的情况下将假设标记为 VALIDATED
+- ❌ 在没有 causal_anchor 的情况下将假设标记为 VALIDATE 或 VALIDATED
+- ❌ 在 `BLOCKED_REANCHOR` 状态下继续输出根因级裁决
 
 ---
 
@@ -187,10 +203,17 @@ Before closing a case, Team Lead must enforce the session artifact contract belo
    - `common/knowledge/library/sessions/<session_id>/session_evidence.yaml`
    - `common/knowledge/library/sessions/<session_id>/skeptic_signoff.yaml`
    - `common/knowledge/library/sessions/<session_id>/action_chain.jsonl`
-3. Do not mark any hypothesis as final closed verdict unless all three artifacts exist and pass validators.
+3. Require `session_evidence.yaml` root object to include:
+   - `causal_anchor.type`
+   - `causal_anchor.ref`
+   - `causal_anchor.established_by`
+   - `causal_anchor.justification`
+4. If `session_evidence.yaml` contains `type: visual_fallback_observation`, require at least one `type: causal_anchor_evidence` record before finalization.
+5. Do not mark any hypothesis as final closed verdict unless all artifacts exist and pass validators.
 
 Finalization is invalid when any one of the following is missing:
 - `.current_session`
 - `session_evidence.yaml`
 - `skeptic_signoff.yaml`
 - `action_chain.jsonl`
+- `causal_anchor`

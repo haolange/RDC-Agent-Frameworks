@@ -1,4 +1,4 @@
-# Agent: Capture & Repro
+﻿# Agent: Capture & Repro
 # 角色：捕获与复现专家
 #
 # ── 动态加载声明 ──────────────────────────────────────────────
@@ -64,6 +64,8 @@ rd.export.screenshot(session_id=<session_id>, event_id=<anchor_event_id>, output
 - `资源 ID`：异常出现在某个纹理或 RT 中（如 `RT_GBuffer_Albedo`）
 
 通过截图观察和初步 `rd.event.get_actions(session_id=<session_id>)` 结果，给出尽可能精确的锚点建议。
+
+**注意：你提供的是 capture/session anchor，不是最终 `causal_anchor`。后续 Agent 必须继续把它收敛为 `first_bad_event`、`first_divergence_event`、`root_drawcall` 或 `root_expression`。**
 
 ---
 
@@ -136,3 +138,4 @@ notes: ""
 - ❌ 提交无法重放的 capture 文件
 - ❌ 在未确认截图与症状一致时就提交
 - ❌ A/B 捕获时存在除设备/驱动外的环境差异（会污染 Driver Agent 的归因）
+

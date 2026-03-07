@@ -1,4 +1,4 @@
-# BugFull 模板（Markdown）
+﻿# BugFull 模板（Markdown）
 
 > 建议输出路径：`common/knowledge/library/bugfull/BUG-XXX-001_full.md`
 >
@@ -111,3 +111,4 @@ bugcard_skeptic_signed: true
 - `common/knowledge/library/sessions/.current_session`（文件内容为当前 `session_id`）
 
 Stop Hook 会通过 `common/hooks/utils/resolve_session_artifact.py` 读取 `.current_session` 并解析 artifacts 路径；缺失/不合法会阻断结案。
+

@@ -24,6 +24,10 @@
 #   counterfactual_spec : 反事实验证规范
 #   linked_bugcards     : 历史关联案例
 
+global_execution_rules:
+  - "所有 SOP 在进入根因分析前，必须先建立 causal_anchor。"
+  - "texture / screenshot / image similarity / screen-like fallback 只能用于选点、选对象、选候选 event，不得替代 causal_anchor。"
+  - "若结构化证据与视觉 fallback 结论冲突，必须进入 BLOCKED_REANCHOR 并重新回锚。"
 sops:
 
   # ─────────────────────────────────────
@@ -43,6 +47,21 @@ sops:
         black_pixel 也可能由 NaN 引起（硬件将 NaN 输出为最小值），置信度中等（0.6）。
 
     tool_chain:
+      - stage_id: 0
+        stage_name: 因果回锚
+        objective: "建立可复查的 causal_anchor，禁止用首次明显可见阶段代替首次引入阶段"
+        tools:
+          - tool: rd.export.screenshot
+            purpose: "允许人工确认异常区域，仅用于选点，不作为根因证据"
+            params: {}
+          - tool: rd.debug.pixel_history
+            purpose: "回到目标像素的历史链路，建立 first_bad_event 或等价 causal anchor"
+            params:
+              x: "<异常像素 X>"
+              y: "<异常像素 Y>"
+        termination: "明确 `first_bad_event`、`first_divergence_event` 或 `root_drawcall` 之一作为 causal_anchor"
+        output_artifacts: [causal_anchor]
+
       - stage_id: 1
         stage_name: 定位异常像素
         objective: "确定异常像素的精确坐标和初步值范围"
@@ -106,6 +125,8 @@ sops:
 
     output_requirements:
       mandatory:
+        - type: causal_anchor
+          description: "本次裁决依赖的因果锚点（first_bad_event / root_drawcall / first_divergence_event）"
         - type: first_bad_event
           description: "首次产生 NaN/Inf 的 DrawCall ID 和 Shader 阶段"
         - type: suspicious_expression
@@ -159,6 +180,19 @@ sops:
         color_too_dark 与 color_too_bright 同时出现时，优先排查 I-COLOR-01（双重 Gamma）。
 
     tool_chain:
+      - stage_id: 0
+        stage_name: 因果回锚
+        objective: "先建立 root_drawcall 或 first_divergence_event，禁止把最终变亮/变暗的 pass 当成根因本身"
+        tools:
+          - tool: rd.export.screenshot
+            purpose: "允许人工确认颜色异常区域，仅用于选点和 sanity check"
+            params: {}
+          - tool: rd.event.get_actions
+            purpose: "收敛候选 DrawCall，建立 root_drawcall 或 first_divergence_event"
+            params: {}
+        termination: "明确 root_drawcall 或 first_divergence_event 作为 causal_anchor"
+        output_artifacts: [causal_anchor]
+
       - stage_id: 1
         stage_name: RT 格式检查
         objective: "确认 Render Target 的像素格式（sRGB vs LINEAR）"
@@ -205,6 +239,8 @@ sops:
 
     output_requirements:
       mandatory:
+        - type: causal_anchor
+          description: "颜色问题的 root_drawcall 或 first_divergence_event"
         - type: rt_shader_mismatch_analysis
           description: "RT 格式与 Shader Gamma 处理的匹配分析（是否存在双重转换或缺失）"
         - type: counterfactual_test_result
@@ -545,10 +581,28 @@ sops:
       trigger_tags: [Adreno_GPU, RelaxedPrecision]
       confidence_notes: >
         symptom_tags 包含 hair_shading 且 trigger_tags 包含 Adreno_GPU 时，
-        置信度极高（>0.95），直接进入 SPIR-V Decoration 扫描阶段。
+        置信度极高（>0.95），必须先建立 causal_anchor，再进入 SPIR-V Decoration 扫描阶段。
         banding/gradient 在无特定硬件触发时，优先检查 RT 格式精度。
 
     tool_chain:
+      - stage_id: 0
+        stage_name: 因果回锚
+        objective: "建立 Hair 对应的 first_bad_event 或 root_drawcall，禁止用 screen-like 首次变坏代替首次引入"
+        tools:
+          - tool: rd.export.screenshot
+            purpose: "允许人工确认异常区域，仅用于选点和对齐目标对象"
+            params: {}
+          - tool: rd.debug.pixel_history
+            purpose: "建立 first_bad_event，避免把首次明显可见误当成首次引入"
+            params:
+              x: "<异常像素 X>"
+              y: "<异常像素 Y>"
+          - tool: rd.event.get_actions
+            purpose: "在 Pixel History 不足时收敛 root_drawcall 候选"
+            params: {}
+        termination: "明确 `first_bad_event` 或 `root_drawcall` 之一作为 causal_anchor"
+        output_artifacts: [causal_anchor]
+
       - stage_id: 1
         stage_name: 精度损失现象确认
         objective: "确认精度问题的表现形式：条带/设备差异/光照解包异常"
@@ -605,6 +659,8 @@ sops:
 
     output_requirements:
       mandatory:
+        - type: causal_anchor
+          description: "精度问题的 first_bad_event 或 root_drawcall"
         - type: half_usage_list
           description: "Shader 中所有使用 half 类型的关键表达式清单"
         - type: content_vs_driver_attribution
@@ -764,5 +820,7 @@ symptom_to_sop:
   stall:              [SOP-PERF-01]
   fps_drop:           [SOP-PERF-01]
   pipeline_error:     [SOP-PERF-01]
+
+
 
 

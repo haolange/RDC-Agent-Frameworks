@@ -41,8 +41,8 @@ color: "#16A085"
   - Triage Agent: TRIAGE_RESULT（症状/触发条件标签、SOP 推荐）
   - Capture & Repro Agent: CAPTURE_RESULT（capture 文件路径、anchor 坐标）
   - Pass Graph Agent: PIPELINE_RESULT（发散点、资源链）
-  - Pixel Forensics Agent: FORENSICS_RESULT（first_bad_event、异常像素值）
-  - Shader & IR Agent: SHADER_IR_RESULT（可疑代码指纹、SPIR-V 证据）
+  - Pixel Forensics Agent: FORENSICS_RESULT（first_bad_event、异常像素值、causal_anchor_candidate）
+  - Shader & IR Agent: SHADER_IR_RESULT（可疑代码指纹、SPIR-V 证据、anchor_binding）
   - Driver Agent: DRIVER_DEVICE_RESULT（platform_attribution、ISA 差异）
   - 假设板最终状态: hypothesis_board（VALIDATED 假设列表）
   - Skeptic Agent: SKEPTIC_SIGN_OFF（五把刀审查结论）
@@ -117,10 +117,11 @@ required: bugcard_skeptic_signed = true
 [质量门槛检查 - Curator Agent 输出前必须全部通过]
 
 □ 1. BugFull 包含完整证据链，每条根因断言均有对应工具调用输出（event_id + 数值）
-□ 2. BugCard 的 root_cause_summary 不超过 3 句话，且精确到代码行/驱动版本/API 调用
-□ 3. BugCard 的 fingerprint 字段与 Shader & IR Agent 的 suspicious_expression_fingerprint 一致
-□ 4. BugCard 已获 Skeptic Agent 的签署（bugcard_skeptic_signed = true）
-□ 5. 去重检查已执行，若与已有 BugCard 重叠 > 50% 则选择合并而非新建
+□ 2. BugCard 的 causal_anchor_type / causal_anchor_ref / causal_chain_summary 完整
+□ 3. BugCard 的 root_cause_summary 不超过 3 句话，且精确到代码行/驱动版本/API 调用
+□ 4. BugCard 的 fingerprint 字段与 Shader & IR Agent 的 suspicious_expression_fingerprint 一致
+□ 5. BugCard 已获 Skeptic Agent 的签署（bugcard_skeptic_signed = true）
+□ 6. 去重检查已执行，若与已有 BugCard 重叠 > 50% 则选择合并而非新建
 
 如有任何一项未通过 → 不得写入知识库，必须先补充缺失内容。
 ```
@@ -142,19 +143,25 @@ symptom_tags: [hair_shading, banding, darkening]
 trigger_tags: [Adreno_740, Vulkan, RelaxedPrecision, Android_13]
 violated_invariants: [I-PREC-01]
 recommended_sop: SOP-PREC-01
+causal_anchor_type: first_bad_event
+causal_anchor_ref: "event:523"
+causal_chain_summary: >
+  目标像素在 Event#523 首次从正常值跳变为异常值；同一 drawcall 的 PS shader 中，
+  `half KajiyaDiffuse = 1 - abs(dot(N, L));` 经 RelaxedPrecision lowering 后产生负值，
+  后续非负钳位链将结果压为 0，因此黑化是由该 drawcall 首次引入，而不是由后续 screen-like pass 首次可见。
 
 # ── 核心结论 ──
-title: "Adreno 740 头发着色黑化：half 精度截断导致光照累加溢出"
+title: "Adreno 740 头发着色黑化：half 精度 lowering 触发负值钳零"
 
 root_cause_summary: >
-  Shader 第 42 行 `half diffuse = dot(N, L) * lightColor.r`
-  在 Adreno 740 驱动（512.415.0）编译为 FP16 VMAD 指令，
-  当 lightColor.r > 65504 时 FP16 截断为负值，导致头发着色结果异常偏暗。
+  在 `MobileShadingModels.ush:MobileKajiyaKayDiffuseAttenuation` 中，
+  `half KajiyaDiffuse = 1 - abs(dot(N, L));` 于 Event#523 对应的 PS drawcall 上经 Adreno 740 Vulkan 编译链 lowering 后出现异常负值，
+  导致头发/披风区域被错误压黑。
 
 # ── 证据指纹 ──
 fingerprint:
-  pattern: "half diffuse = dot(N, L) * lightColor.r"
-  risk_category: precision_overflow
+  pattern: "half KajiyaDiffuse = 1 - abs(dot(N, L));"
+  risk_category: precision_lowering
   shader_stage: PS
   hlsl_line: 42
 
@@ -162,10 +169,10 @@ fingerprint:
 related_devices:
   - device: Adreno_650
     bug_card: BUG-PREC-001
-    symptom_diff: "650 上白化（截断方向相反），740 上黑化"
+    symptom_diff: "650 上白化，740 上黑化（同类 RelaxedPrecision 精度问题）"
 
 # ── 修复与验证 ──
-fix_summary: "将所有参与光照累加的 half 变量替换为 float（SOP-PREC-01.Float_Replacement）"
+fix_summary: "将关键 half 计算替换为 float，并重新验证目标像素恢复"
 fix_verified: true
 fix_verification_data:
   pixel_before: {x: 512, y: 384, rgba: [0.21, 0.19, 0.18, 1.0]}
@@ -236,6 +243,7 @@ Curator must always write session-scoped artifacts to the following paths:
 Additional constraints:
 
 1. `session_evidence.yaml` and `skeptic_signoff.yaml` are gate artifacts for Stop Hooks.
-2. `action_chain.jsonl` must reflect the actual tool execution chain for this session.
-3. Artifact paths are fixed; do not write these files to repository root.
-4. If any artifact is missing, mark output as incomplete and block finalization.
+2. `session_evidence.yaml` root object must include `causal_anchor`，且 visual fallback 观察不得在没有 `causal_anchor_evidence` 的情况下出现。
+3. `action_chain.jsonl` must reflect the actual tool execution chain for this session.
+4. Artifact paths are fixed; do not write these files to repository root.
+5. If any artifact is missing, mark output as incomplete and block finalization.

@@ -22,7 +22,7 @@ Claude Code 平台的 Hook 触发配置在 `.claude/settings.json`。
 
 ---
 
-## 三类 Hook 详细说明
+## 四类 Hook / Validator 详细说明
 
 ### Hook 1 · BugCard 完整性检查
 
@@ -39,7 +39,20 @@ python3 common/hooks/validators/bugcard_validator.py path/to/bugcard.yaml
 python3 common/hooks/validators/bugcard_validator.py path/to/bugcard.yaml --strict
 ```
 
-### Hook 2 · 反事实验证检查
+### Hook 2 · Causal Anchor 检查
+
+| 属性 | 值 |
+|------|-----|
+| 触发时机 | Team Lead 结案时（Stop） |
+| 触发工具 | `causal_anchor_validator.py` |
+| 检查项 | `session_evidence.yaml` 根对象包含 `causal_anchor`；存在 `causal_anchor_evidence`；视觉 fallback 不得越权 |
+| 失败行为 | 阻止结案，要求补充因果锚点或回到 re-anchor |
+
+独立运行：
+```bash
+python3 common/hooks/validators/causal_anchor_validator.py "$(python3 common/hooks/utils/resolve_session_artifact.py --artifact session_evidence --must-exist)"
+```
+### Hook 3 · 反事实验证检查
 
 | 属性 | 值 |
 |------|-----|
@@ -53,7 +66,7 @@ python3 common/hooks/validators/bugcard_validator.py path/to/bugcard.yaml --stri
 python3 common/hooks/validators/counterfactual_validator.py "$(python3 common/hooks/utils/resolve_session_artifact.py --artifact session_evidence --must-exist)"
 ```
 
-### Hook 3 · Skeptic 签署检查
+### Hook 4 · Skeptic 签署检查
 
 | 属性 | 值 |
 |------|-----|
@@ -112,4 +125,5 @@ python3 -m pip install pyyaml
 ```
 
 验证脚本仅依赖 Python 标准库 + PyYAML，无其他依赖。
+
 

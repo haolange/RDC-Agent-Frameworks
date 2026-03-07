@@ -3,7 +3,7 @@
   "description": "Implementation defaults for the platform adapter layer. These values bind the framework to a concrete tools workspace without turning that workspace name into framework-level truth.",
   "paths": {
     "tools_root": "..\\RDC-Agent Tools",
-    "catalog_path": "..\\RDC-Agent Tools\\spec\\tool_catalog_196.json"
+    "catalog_path": "..\\RDC-Agent Tools\\spec\\tool_catalog.json"
   },
   "mcp": {
     "server_name": "renderdoc-platform-mcp",
@@ -17,3 +17,4 @@
     "reference_doc": "debugger\\docs\\cli-mode-reference.md"
   }
 }
+

@@ -521,10 +521,12 @@ invariants:
       - BUG-PREC-001
       - BUG-PREC-002
     detection_hints:
+      - "先建立 Hair 相关的 first_bad_event 或 root_drawcall，禁止从首次明显可见的 screen-like 结果直接推根因层级"
       - "用 rd.shader.get_source 搜索 half 关键词，标记所有使用 half 的计算表达式"
       - "获取 SPIR-V/IR，检查是否存在 RelaxedPrecision decoration（Adreno 专项）"
       - "对比同一 Shader 在 Adreno 与 Mali 上的编译结果差异"
       - "用 rd.shader.debug_start 读取关键中间值，判断是溢出还是精度截断"
+      - "一旦确认 RelaxedPrecision 与锚定 drawcall 绑定，优先进入反事实验证，而不是先讲阶段归因叙事"
     fix_template_ref: "SOP-PREC-01.fix_template"
 
   - id: I-PREC-02
@@ -775,5 +777,6 @@ symptom_to_invariants:
   stall:              [I-PERF-01]
   fps_drop:           [I-PERF-01]
   pipeline_error:     [I-PERF-01]
+
 
 
