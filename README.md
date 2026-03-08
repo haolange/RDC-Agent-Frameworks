@@ -1,4 +1,4 @@
-﻿# RDC-Agent Frameworks
+# RDC-Agent Frameworks
 
 本仓库提供构建在 RenderDoc/RDC 平台能力之上的上层 Agent framework。
 

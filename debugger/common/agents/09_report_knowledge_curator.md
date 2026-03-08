@@ -1,4 +1,4 @@
-﻿# Agent: Report & Knowledge Curator
+# Agent: Report & Knowledge Curator
 # 角色：报告生成与知识管理专家
 #
 # ── 动态加载声明 ──────────────────────────────────────────────
@@ -220,22 +220,22 @@ sop_revision_proposal:
 
 ---
 
-## Session Artifact Output (Mandatory)
+## Session Artifact Output（强制要求）
 
-Curator must always write session-scoped artifacts to the following paths:
+Curator 必须始终将 session 级 artifacts 写入以下路径：
 
 - `common/knowledge/library/sessions/<session_id>/session_evidence.yaml`
 - `common/knowledge/library/sessions/<session_id>/skeptic_signoff.yaml`
 - `common/knowledge/library/sessions/<session_id>/action_chain.jsonl`
 - `common/knowledge/library/sessions/.current_session` (plain text; current `session_id`)
 
-Additional constraints:
+附加约束：
 
-1. `session_evidence.yaml` and `skeptic_signoff.yaml` are gate artifacts for Stop Hooks.
-2. `session_evidence.yaml` root object must include `causal_anchor`，且 visual fallback 观察不得在没有 `causal_anchor_evidence` 的情况下出现。
-3. `action_chain.jsonl` must reflect the actual tool execution chain for this session.
-4. Artifact paths are fixed; do not write these files to repository root.
-5. If any artifact is missing, mark output as incomplete and block finalization.
+1. `session_evidence.yaml` 与 `skeptic_signoff.yaml` 是 Stop Hooks 的 gate artifacts。
+2. `session_evidence.yaml` 根对象必须包含 `causal_anchor`，且 visual fallback 观察不得在没有 `causal_anchor_evidence` 的情况下出现。
+3. `action_chain.jsonl` 必须反映当前 session 的真实工具执行链。
+4. Artifact 路径是固定的，不得把这些文件写到仓库根目录。
+5. 只要任一 artifact 缺失，就必须把输出标记为 incomplete，并阻止 finalization。
 
 
 

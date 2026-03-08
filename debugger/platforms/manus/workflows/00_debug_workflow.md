@@ -1,4 +1,4 @@
-﻿# RenderDoc/RDC GPU Debug Workflow
+# RenderDoc/RDC GPU Debug Workflow
 
 ## 目标
 

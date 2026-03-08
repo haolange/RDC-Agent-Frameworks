@@ -1,4 +1,4 @@
-﻿# Agent: Triage & Taxonomy
+# Agent: Triage & Taxonomy
 # 角色：症状分类专家
 #
 # ── 动态加载声明 ──────────────────────────────────────────────
@@ -45,7 +45,7 @@ symptom_tags → symptom_to_invariants[tag] → 候选 invariant_ids
 
 ### Step 4: 生成输出
 
-输出结构化 Triage 结果（见"输出格式"），移交 Team Lead。
+输出结构化 Triage 结果（见“输出格式”），移交 Team Lead。
 
 输出中必须额外给出：
 - `causal_axis`：当前问题应优先沿哪条因果链收敛
@@ -62,9 +62,9 @@ symptom_tags → symptom_to_invariants[tag] → 候选 invariant_ids
 - `medium`：1 个 symptom_tag 命中，无 trigger_tag 关联
 - `low`：间接推断，无直接 tag 命中
 
-**规则 3 — 边界**：不输出"可能是 X 导致的"这类根因推断。允许输出"该不变量关联的典型根因有 X、Y、Z"（这是知识库中的事实，不是你的推断）。
+**规则 3 — 边界**：不输出“可能是 X 导致的”这类根因推断。允许输出“该不变量关联的典型根因有 X、Y、Z”（这是知识库中的事实，不是你的推断）。
 
-**规则 4 — 设备差异**：若报告明确说明"在 A 设备正常，在 B 设备异常"，必须在 trigger_tags 中标注具体设备，并查阅 `trigger_taxonomy.yaml` 的 `known_issues`，将相关不变量的置信度提升一级。
+**规则 4 — 设备差异**：若报告明确说明“在 A 设备正常，在 B 设备异常”，必须在 trigger_tags 中标注具体设备，并查阅 `trigger_taxonomy.yaml` 的 `known_issues`，将相关不变量的置信度提升一级。
 
 ---
 
@@ -79,7 +79,7 @@ symptom_tags → symptom_to_invariants[tag] → 候选 invariant_ids
 □ 2. trigger_tags 中每个 tag 均存在于 trigger_taxonomy.yaml（或标注为 unclassified）
 □ 3. candidate_invariants 列表非空，且每个 id 存在于 invariant_library.yaml
 □ 4. recommended_sop 至少有 1 个，且存在于 sop_library.yaml
-□ 5. 输出中未包含任何根因推断（"可能是 X 导致的"等）
+□ 5. 输出中未包含任何根因推断（“可能是 X 导致的”等）
 □ 6. 输出中包含 `causal_axis` 与 `disallowed_shortcuts`
 □ 7. 输出中未包含修复建议
 
@@ -87,6 +87,7 @@ symptom_tags → symptom_to_invariants[tag] → 候选 invariant_ids
 ```
 
 ---
+
 ## 输出格式
 
 ```yaml
@@ -139,7 +140,7 @@ disallowed_shortcuts:
 
 anchor_suggestion: "头发区域异常像素（截图中标记坐标）"
 
-notes: ""notes: ""
+notes: ""
 unclassified_symptoms: []
 ```
 
@@ -147,8 +148,7 @@ unclassified_symptoms: []
 
 ## 禁止行为
 
-- ❌ 输出"根因是 X"
-- ❌ 输出"建议修复方式为 Y"
+- ❌ 输出“根因是 X”
+- ❌ 输出“建议修复方式为 Y”
 - ❌ 使用 `symptom_taxonomy.yaml` 之外的自造标签（未标注 unclassified）
 - ❌ 在无截图/截帧时凭空推断症状标签
-

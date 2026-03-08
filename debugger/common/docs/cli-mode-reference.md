@@ -1,4 +1,4 @@
-﻿# RenderDoc/RDC GPU Debug CLI Mode Reference
+# RenderDoc/RDC GPU Debug CLI 模式参考
 
 本文只在用户明确要求 `CLI` 模式时使用。  
 目的不是让 Agent 自行探索 `CLI`，而是给出一份受约束的、可直接依赖的接口说明。

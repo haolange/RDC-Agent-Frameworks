@@ -1,4 +1,4 @@
-﻿# BugCard: BUG-PREC-001
+# BugCard：BUG-PREC-001
 
 ```yaml
 bugcard_id: BUG-PREC-001
@@ -13,7 +13,8 @@ causal_anchor_ref: "event:523"
 causal_chain_summary: >
   目标像素在 Event#523 首次出现过曝；同一 drawcall 的 local light unpack 表达式在 Adreno 650 上经 RelaxedPrecision lowering 后产生偏高值，因此白化是在该 drawcall 引入，而不是在后续 screen-like pass 首次生成。
 
-root_cause_summary: >  在 `LightGridCommon.ush:GetMobileLocalLightData` 的 local light color unpack 链路中，
+root_cause_summary: >
+  在 `LightGridCommon.ush:GetMobileLocalLightData` 的 local light color unpack 链路中，
   `LightData.Color = LightIntensity * DwordToUNorm(Vec1.z).xyz` 保持为 half/RelaxedPrecision 数据流，
   Adreno 650（Vulkan）在精度 lowering 后产生偏高值，导致局部光照结果过曝（白化）。
 
@@ -38,4 +39,3 @@ related_devices:
 action_chain_ref: "knowledge/traces/action_chains/example_adreno_prec.jsonl"
 sop_improvement_notes: ""
 ```
-

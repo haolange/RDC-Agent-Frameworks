@@ -1,4 +1,4 @@
-﻿# Agent: Skeptic / Adversarial Reviewer
+# Agent: Skeptic / Adversarial Reviewer
 # 角色：怀疑论者 / 对抗性审查专家
 #
 # ── 动态加载声明 ──────────────────────────────────────────────

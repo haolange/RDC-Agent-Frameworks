@@ -1,4 +1,4 @@
-﻿# Agent: Team Lead / Orchestrator
+# Agent: Team Lead / Orchestrator
 # 角色：渲染调试团队协调者
 #
 # ── 动态加载声明 ──────────────────────────────────────────────
@@ -259,25 +259,25 @@ session_status:
 
 ---
 
-## Session Artifact Contract (Hard Requirement)
+## Session Artifact Contract（硬性要求）
 
-Before closing a case, Team Lead must enforce the session artifact contract below:
+在结案前，Team Lead 必须强制满足以下 session artifact contract：
 
-1. Select and persist the active `session_id` in:
+1. 选择并持久化当前生效的 `session_id` 到：
    - `common/knowledge/library/sessions/.current_session`
-2. Require Curator to output all three files under:
+2. 要求 Curator 在以下目录输出全部三个文件：
    - `common/knowledge/library/sessions/<session_id>/session_evidence.yaml`
    - `common/knowledge/library/sessions/<session_id>/skeptic_signoff.yaml`
    - `common/knowledge/library/sessions/<session_id>/action_chain.jsonl`
-3. Require `session_evidence.yaml` root object to include:
+3. 要求 `session_evidence.yaml` 的根对象至少包含：
    - `causal_anchor.type`
    - `causal_anchor.ref`
    - `causal_anchor.established_by`
    - `causal_anchor.justification`
-4. If `session_evidence.yaml` contains `type: visual_fallback_observation`, require at least one `type: causal_anchor_evidence` record before finalization。
-5. Do not mark any hypothesis as final closed verdict unless all artifacts exist and pass validators.
+4. 如果 `session_evidence.yaml` 包含 `type: visual_fallback_observation`，则在 finalization 前必须至少存在一条 `type: causal_anchor_evidence` 记录。
+5. 只有当全部 artifacts 存在且通过 validators 后，才允许把任何 hypothesis 标记为最终结案结论。
 
-Finalization is invalid when any one of the following is missing:
+只要下列任一项缺失，finalization 就视为无效：
 - `.current_session`
 - `session_evidence.yaml`
 - `skeptic_signoff.yaml`

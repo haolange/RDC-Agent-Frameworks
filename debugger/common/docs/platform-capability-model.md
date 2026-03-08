@@ -1,4 +1,4 @@
-﻿# RenderDoc/RDC GPU Debug Platform Capability Model
+# RenderDoc/RDC GPU Debug 平台能力模型
 
 本文描述 `RenderDoc/RDC GPU Debug` 与底层平台能力层的关系，只使用第一性抽象，不把任何历史实现名当成框架概念。
 

@@ -1,4 +1,4 @@
-﻿# Agent: Pixel / Value Forensics
+# Agent: Pixel / Value Forensics
 # 角色：像素取证专家
 #
 # ── 动态加载声明 ──────────────────────────────────────────────

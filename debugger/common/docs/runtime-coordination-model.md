@@ -1,4 +1,4 @@
-﻿# RenderDoc/RDC GPU Debug Runtime Coordination Model
+# RenderDoc/RDC GPU Debug Runtime 协作模型
 
 本文把 framework 的协作编排与 `rdx-tools` 的 runtime 真相拆开描述。
 
