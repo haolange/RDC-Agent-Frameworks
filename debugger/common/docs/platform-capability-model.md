@@ -92,9 +92,10 @@
 
 - `common/config/platform_adapter.json`
 
-平台协作拓扑与 runtime 协作硬规则集中记录在：
+平台协作拓扑、降级边界与 runtime 协作硬规则集中记录在：
 
 - `common/config/platform_capabilities.json`
+- `common/config/platform_targets.json`
 - `docs/runtime-coordination-model.md`
 
 需要绑定到当前环境时，应修改该配置，而不是在主文档、Prompt、脚本和插件配置里重复硬编码。

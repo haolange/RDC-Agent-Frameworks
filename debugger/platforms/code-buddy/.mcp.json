@@ -1,15 +1,10 @@
-﻿{
-  "mcpServers": {
+{
+  "servers": {
     "renderdoc-platform-mcp": {
-      "command": "uv",
+      "command": "python",
       "args": [
-        "run",
-        "--project",
-        "${DEBUGGER_PLATFORM_TOOLS_ROOT}",
-        "python",
-        "mcp/run_mcp.py"
-      ],
-      "description": "RenderDoc/RDC platform MCP entrypoint. Set DEBUGGER_PLATFORM_TOOLS_ROOT to the concrete platform tools workspace."
+        "${DEBUGGER_PLATFORM_TOOLS_ROOT}/mcp/run_mcp.py"
+      ]
     }
   }
 }

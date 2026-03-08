@@ -33,13 +33,20 @@
 
 ## 协作拓扑
 
-- 当前平台默认 `coordination_mode = {coordination_mode}`。
-{coordination_rules}
+- 当前平台的 `coordination_mode` 以 `common/config/platform_capabilities.json` 与平台生成物为准。
+- `concurrent_team`
+  - 允许并行分派，但每条 live 调试链路都必须独占一个 `context/daemon`
+- `staged_handoff`
+  - 子 Agent 先提交 brief 与 evidence request，再由 runtime owner 执行工具链
+- `workflow_stage`
+  - 只允许阶段化串行推进，不模拟实时 team handoff
 
 ## Baton / Rehydrate
 
 - 跨轮次移交时必须附带 `runtime_baton`。
-{baton_rules}
+- baton 必须优先恢复 `causal_anchor`、`action_chain.jsonl`、`session_evidence.yaml` 与 `rd.session.get_context` 可观察快照。
+- remote case 一律采用 `single_runtime_owner`；其他角色通过 brief / evidence request / artifact 协作。
+- `rd.session.update_context` 只允许恢复 focus 与 notes，不得伪造 runtime-owned handle。
 - `capture_file_id`、`session_id`、`remote_id` 都只能作为短生命周期提示，不得成为唯一真相源。
 - baton 恢复顺序以共享运行时文档 `common/docs/runtime-coordination-model.md` 为准；从当前文件的相对路径是 `../../docs/runtime-coordination-model.md`。
 

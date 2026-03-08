@@ -1,11 +1,11 @@
-﻿{
+{
   "PostToolUse": [
     {
       "matcher": "Write",
       "hooks": [
         {
           "type": "command",
-          "command": "python common/hooks/utils/codebuddy_hook_dispatch.py write-bugcard",
+          "command": "uv run --with pyyaml python ../../common/hooks/utils/codebuddy_hook_dispatch.py write-bugcard",
           "description": "Validate BugCard before write"
         }
       ]
@@ -15,7 +15,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "python common/hooks/utils/codebuddy_hook_dispatch.py write-skeptic",
+          "command": "uv run --with pyyaml python ../../common/hooks/utils/codebuddy_hook_dispatch.py write-skeptic",
           "description": "Validate skeptic signoff artifact"
         }
       ]
@@ -26,7 +26,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "python common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
+          "command": "uv run --with pyyaml python ../../common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
           "description": "Finalization gate"
         }
       ]

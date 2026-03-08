@@ -1,0 +1,40 @@
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+model_verbosity = "medium"
+
+[features]
+multi_agent = true
+
+[windows]
+sandbox = "elevated"
+
+[mcp_servers.renderdoc-platform-mcp]
+command = "python"
+args = ["${DEBUGGER_PLATFORM_TOOLS_ROOT}/mcp/run_mcp.py"]
+
+[agents.team_lead]
+config_file = ".codex/agents/team_lead.toml"
+
+[agents.triage_agent]
+config_file = ".codex/agents/triage_agent.toml"
+
+[agents.capture_repro_agent]
+config_file = ".codex/agents/capture_repro_agent.toml"
+
+[agents.pass_graph_pipeline_agent]
+config_file = ".codex/agents/pass_graph_pipeline_agent.toml"
+
+[agents.pixel_forensics_agent]
+config_file = ".codex/agents/pixel_forensics_agent.toml"
+
+[agents.shader_ir_agent]
+config_file = ".codex/agents/shader_ir_agent.toml"
+
+[agents.driver_device_agent]
+config_file = ".codex/agents/driver_device_agent.toml"
+
+[agents.skeptic_agent]
+config_file = ".codex/agents/skeptic_agent.toml"
+
+[agents.curator_agent]
+config_file = ".codex/agents/curator_agent.toml"

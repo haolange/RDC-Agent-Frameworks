@@ -1,6 +1,6 @@
-﻿{
+{
   "name": "renderdoc-rdc-gpu-debug-ide",
-  "description": "RenderDoc/RDC GPU Debug 的 IDE custom agents 适配包。",
+  "description": "RenderDoc/RDC GPU Debug 的 Copilot IDE direct-reference 适配包。",
   "agentsRoot": ".github/agents",
   "notes": [
     "Use preferred per-agent models where the IDE host supports them.",

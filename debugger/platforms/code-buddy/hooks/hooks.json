@@ -1,11 +1,11 @@
-﻿{
+{
   "PostToolUse": [
     {
       "matcher": "Write",
       "hooks": [
         {
           "type": "command",
-          "command": "uv run --with pyyaml python \"${CODEBUDDY_PLUGIN_ROOT}/../common/hooks/utils/codebuddy_hook_dispatch.py\" write-bugcard",
+          "command": "uv run --with pyyaml python \"${CODEBUDDY_PLUGIN_ROOT}/../../common/hooks/utils/codebuddy_hook_dispatch.py\" write-bugcard",
           "description": "BugCard contract and schema validation",
           "timeout": 30000
         }
@@ -16,7 +16,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "uv run --with pyyaml python \"${CODEBUDDY_PLUGIN_ROOT}/../common/hooks/utils/codebuddy_hook_dispatch.py\" write-skeptic",
+          "command": "uv run --with pyyaml python \"${CODEBUDDY_PLUGIN_ROOT}/../../common/hooks/utils/codebuddy_hook_dispatch.py\" write-skeptic",
           "description": "Skeptic signoff artifact validation",
           "timeout": 30000
         }
@@ -28,7 +28,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "uv run --with pyyaml python \"${CODEBUDDY_PLUGIN_ROOT}/../common/hooks/utils/codebuddy_hook_dispatch.py\" stop-gate",
+          "command": "uv run --with pyyaml python \"${CODEBUDDY_PLUGIN_ROOT}/../../common/hooks/utils/codebuddy_hook_dispatch.py\" stop-gate",
           "description": "Finalization gate: causal anchor + counterfactual + skeptic + session artifacts",
           "timeout": 30000
         }
@@ -36,5 +36,3 @@
     }
   ]
 }
-
-

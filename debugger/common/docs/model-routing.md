@@ -1,40 +1,49 @@
 # 模型路由
 
-本文定义平台无关的角色到模型偏好矩阵，以及各平台的映射与降级方式。
+本文定义平台无关的角色模型意图，以及脚本如何把它们渲染成宿主原生配置。
 
-## 全局角色偏好
+## 统一原则
 
-- `team_lead`
-  - 角色：orchestrator
-  - 优先模型：`opus-4.6`
-- `skeptic_agent`
-  - 角色：verifier
-  - 优先模型：`gpt-5.4`
-- `curator_agent`
-  - 角色：report / knowledge
-  - 优先模型：`gemini-3.1-pro`
-- `triage_agent`、`capture_repro_agent`、`pass_graph_pipeline_agent`、`pixel_forensics_agent`、`shader_ir_agent`、`driver_device_agent`
-  - 角色：investigator
-  - 优先模型：`grok-4.1` 或 `sonnet-4.6`
+- 角色只声明“需要什么能力层级”，不在共享正文里硬编码宿主私有模型字符串。
+- `common/config/model_routing.json` 负责抽象 profile 与宿主映射。
+- `common/config/role_policy.json` 负责 reasoning / verbosity 等执行风格。
+- `debugger/scripts/sync_platform_scaffolds.py` 负责把它们渲染到各平台的 alias、frontmatter、plugin 或 role config。
 
-## 平台回退原则
+## 当前 profile
+
+- `orchestrator`
+  - 目标：深度规划、分派与裁决门槛控制
+- `investigator`
+  - 目标：证据优先、多轮调查、成本可控
+- `verifier`
+  - 目标：对抗性审查与反事实压力测试
+- `reporter`
+  - 目标：结构化报告与知识沉淀
+
+## 平台渲染规则
 
 - `code-buddy`
   - 使用显式模型字符串。
 - `claude-code`
-  - 使用 `opus` / `sonnet` alias；无法精确表达时按模型 family 回退，但不改角色边界。
+  - 使用 `opus` / `sonnet` alias。
 - `copilot-cli`
-  - 默认 `inherit`，保留角色分工与 agent 文案。
+  - 没有稳定的 per-agent model 渲染面时，统一降级为 `inherit`。
 - `copilot-ide`
-  - 使用 `preferred model` 表达；宿主忽略时也不改角色设计。
-- `claude-work`、`manus`
-  - 只保留角色语义或 workflow 语义，不承诺精确模型控制。
+  - 用 preferred model 渲染；宿主忽略时不改角色边界。
+- `claude-desktop`
+  - Claude Desktop 不提供 per-agent model；只保留 `inherit` 级语义，不伪造精细模型控制。
+- `manus`
+  - 只保留 workflow 语义，不声明 per-agent model。
+- `codex`
+  - 渲染到 `.codex/config.toml` 与 `.codex/agents/*.toml`，通过 role config 绑定 per-role model / reasoning / verbosity。
 
 ## 约束
 
-- 不允许在平台 agent frontmatter 中手工散落写模型策略。
-- 模型策略只能来自 SSOT，再由脚本生成或校验。
+- 不允许在平台 agent 文件里手工散落模型策略。
+- 不允许为某个平台改写角色分工来“适配模型限制”。
+- 宿主若忽略某个模型字段，只允许降级绑定方式，不允许改写 role graph。
 
 权威配置文件：
 
 - `common/config/model_routing.json`
+- `common/config/role_policy.json`

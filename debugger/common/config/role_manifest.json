@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "roles": [
+    {
+      "agent_id": "team_lead",
+      "category": "orchestrator",
+      "display_name": "Team Lead",
+      "description": "Coordinate delegates, track hypotheses, and enforce verdict gates.",
+      "source_prompt": "agents/01_team_lead.md",
+      "platform_files": {
+        "claude-code": "01_team_lead.md",
+        "code-buddy": "01_team_lead.md",
+        "copilot-cli": "01_team_lead.agent.md",
+        "copilot-ide": "orchestrator.md",
+        "codex": "team_lead"
+      }
+    },
+    {
+      "agent_id": "triage_agent",
+      "category": "investigator",
+      "display_name": "Triage & Taxonomy",
+      "description": "Map symptoms and triggers to normalized tags and SOP candidates.",
+      "source_prompt": "agents/02_triage_taxonomy.md",
+      "platform_files": {
+        "claude-code": "02_triage_taxonomy.md",
+        "code-buddy": "02_triage_taxonomy.md",
+        "copilot-cli": "02_triage_taxonomy.agent.md",
+        "copilot-ide": "triage.md",
+        "codex": "triage_agent"
+      }
+    },
+    {
+      "agent_id": "capture_repro_agent",
+      "category": "investigator",
+      "display_name": "Capture & Repro",
+      "description": "Establish reproducible capture baselines and anchors.",
+      "source_prompt": "agents/03_capture_repro.md",
+      "platform_files": {
+        "claude-code": "03_capture_repro.md",
+        "code-buddy": "03_capture_repro.md",
+        "copilot-cli": "03_capture_repro.agent.md",
+        "copilot-ide": "capture.md",
+        "codex": "capture_repro_agent"
+      }
+    },
+    {
+      "agent_id": "pass_graph_pipeline_agent",
+      "category": "investigator",
+      "display_name": "Pass Graph / Pipeline",
+      "description": "Trace pass divergence and resource dependency chains.",
+      "source_prompt": "agents/04_pass_graph_pipeline.md",
+      "platform_files": {
+        "claude-code": "04_pass_graph_pipeline.md",
+        "code-buddy": "04_pass_graph_pipeline.md",
+        "copilot-cli": "04_pass_graph_pipeline.agent.md",
+        "copilot-ide": "pipeline.md",
+        "codex": "pass_graph_pipeline_agent"
+      }
+    },
+    {
+      "agent_id": "pixel_forensics_agent",
+      "category": "investigator",
+      "display_name": "Pixel Forensics",
+      "description": "Locate first bad event and pixel-level evidence.",
+      "source_prompt": "agents/05_pixel_value_forensics.md",
+      "platform_files": {
+        "claude-code": "05_pixel_value_forensics.md",
+        "code-buddy": "05_pixel_value_forensics.md",
+        "copilot-cli": "05_pixel_value_forensics.agent.md",
+        "copilot-ide": "forensics.md",
+        "codex": "pixel_forensics_agent"
+      }
+    },
+    {
+      "agent_id": "shader_ir_agent",
+      "category": "investigator",
+      "display_name": "Shader & IR",
+      "description": "Analyze shader source, IR evidence, and suspicious fingerprints.",
+      "source_prompt": "agents/06_shader_ir.md",
+      "platform_files": {
+        "claude-code": "06_shader_ir.md",
+        "code-buddy": "06_shader_ir.md",
+        "copilot-cli": "06_shader_ir.agent.md",
+        "copilot-ide": "shader.md",
+        "codex": "shader_ir_agent"
+      }
+    },
+    {
+      "agent_id": "driver_device_agent",
+      "category": "investigator",
+      "display_name": "Driver & Device",
+      "description": "Perform cross-device attribution and platform-specific checks.",
+      "source_prompt": "agents/07_driver_device.md",
+      "platform_files": {
+        "claude-code": "07_driver_device.md",
+        "code-buddy": "07_driver_device.md",
+        "copilot-cli": "07_driver_device.agent.md",
+        "copilot-ide": "driver.md",
+        "codex": "driver_device_agent"
+      }
+    },
+    {
+      "agent_id": "skeptic_agent",
+      "category": "verifier",
+      "display_name": "Skeptic",
+      "description": "Challenge weak claims and sign off only when proven.",
+      "source_prompt": "agents/08_skeptic.md",
+      "platform_files": {
+        "claude-code": "08_skeptic.md",
+        "code-buddy": "08_skeptic.md",
+        "copilot-cli": "08_skeptic.agent.md",
+        "copilot-ide": "verifier.md",
+        "codex": "skeptic_agent"
+      }
+    },
+    {
+      "agent_id": "curator_agent",
+      "category": "reporter",
+      "display_name": "Report & Knowledge Curator",
+      "description": "Produce BugFull and BugCard outputs and maintain reusable knowledge.",
+      "source_prompt": "agents/09_report_knowledge_curator.md",
+      "platform_files": {
+        "claude-code": "09_report_knowledge_curator.md",
+        "code-buddy": "09_report_knowledge_curator.md",
+        "copilot-cli": "09_report_knowledge_curator.agent.md",
+        "copilot-ide": "report-curator.md",
+        "codex": "curator_agent"
+      }
+    }
+  ]
+}

@@ -23,6 +23,7 @@
 
 - `common/config/platform_adapter.json`
 - `common/config/platform_capabilities.json`
+- `common/config/platform_targets.json`
 - `common/config/model_routing.json`
 - `common/docs/runtime-coordination-model.md`
 
@@ -164,7 +165,9 @@
 - `platforms/code-buddy/agents/`
 - `platforms/copilot-cli/agents/`
 - `platforms/copilot-ide/.github/agents/`
-- `platforms/claude-work/agents/`
+- `platforms/claude-desktop/claude_desktop_config.json`
+- `platforms/codex/AGENTS.md`
+- `platforms/codex/.codex/agents/`
 
 镜像同步命令：
 

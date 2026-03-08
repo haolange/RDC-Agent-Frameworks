@@ -1,109 +1,64 @@
-﻿{
-  "schema_version": 1,
-  "roles": {
-    "team_lead": {
-      "category": "orchestrator",
-      "preferred_models": ["opus-4.6"]
+{
+  "schema_version": 2,
+  "profiles": {
+    "orchestrator": {
+      "goal": "Deep planning, branching control, and verdict gating",
+      "fallback_order": ["high_reasoning", "balanced"],
+      "platform_rendering": {
+        "claude-code": "opus",
+        "code-buddy": "opus-4.6",
+        "copilot-cli": "inherit",
+        "copilot-ide": "gpt-5",
+        "claude-desktop": "inherit",
+        "codex": "gpt-5.4"
+      }
     },
-    "triage_agent": {
-      "category": "investigator",
-      "preferred_models": ["grok-4.1", "sonnet-4.6"]
+    "investigator": {
+      "goal": "Evidence-first investigation with medium latency",
+      "fallback_order": ["balanced", "high_reasoning"],
+      "platform_rendering": {
+        "claude-code": "sonnet",
+        "code-buddy": "sonnet-4.6",
+        "copilot-cli": "inherit",
+        "copilot-ide": "gpt-5",
+        "claude-desktop": "inherit",
+        "codex": "gpt-5.4"
+      }
     },
-    "capture_repro_agent": {
-      "category": "investigator",
-      "preferred_models": ["grok-4.1", "sonnet-4.6"]
+    "verifier": {
+      "goal": "Adversarial review and counterfactual pressure testing",
+      "fallback_order": ["high_reasoning"],
+      "platform_rendering": {
+        "claude-code": "opus",
+        "code-buddy": "gpt-5.4",
+        "copilot-cli": "inherit",
+        "copilot-ide": "gpt-5",
+        "claude-desktop": "inherit",
+        "codex": "gpt-5.4"
+      }
     },
-    "pass_graph_pipeline_agent": {
-      "category": "investigator",
-      "preferred_models": ["grok-4.1", "sonnet-4.6"]
-    },
-    "pixel_forensics_agent": {
-      "category": "investigator",
-      "preferred_models": ["grok-4.1", "sonnet-4.6"]
-    },
-    "shader_ir_agent": {
-      "category": "investigator",
-      "preferred_models": ["grok-4.1", "sonnet-4.6"]
-    },
-    "driver_device_agent": {
-      "category": "investigator",
-      "preferred_models": ["grok-4.1", "sonnet-4.6"]
-    },
-    "skeptic_agent": {
-      "category": "verifier",
-      "preferred_models": ["gpt-5.4"]
-    },
-    "curator_agent": {
-      "category": "reporter",
-      "preferred_models": ["gemini-3.1-pro"]
+    "reporter": {
+      "goal": "Structured reporting and knowledge curation",
+      "fallback_order": ["balanced"],
+      "platform_rendering": {
+        "claude-code": "opus",
+        "code-buddy": "gemini-3.1-pro",
+        "copilot-cli": "inherit",
+        "copilot-ide": "gpt-5",
+        "claude-desktop": "inherit",
+        "codex": "gpt-5.4"
+      }
     }
   },
-  "platform_mappings": {
-    "claude-code": {
-      "team_lead": "opus",
-      "triage_agent": "sonnet",
-      "capture_repro_agent": "sonnet",
-      "pass_graph_pipeline_agent": "sonnet",
-      "pixel_forensics_agent": "sonnet",
-      "shader_ir_agent": "sonnet",
-      "driver_device_agent": "sonnet",
-      "skeptic_agent": "opus",
-      "curator_agent": "opus"
-    },
-    "code-buddy": {
-      "team_lead": "opus-4.6",
-      "triage_agent": "grok-4.1",
-      "capture_repro_agent": "grok-4.1",
-      "pass_graph_pipeline_agent": "grok-4.1",
-      "pixel_forensics_agent": "grok-4.1",
-      "shader_ir_agent": "sonnet-4.6",
-      "driver_device_agent": "sonnet-4.6",
-      "skeptic_agent": "gpt-5.4",
-      "curator_agent": "gemini-3.1-pro"
-    },
-    "copilot-cli": {
-      "team_lead": "inherit",
-      "triage_agent": "inherit",
-      "capture_repro_agent": "inherit",
-      "pass_graph_pipeline_agent": "inherit",
-      "pixel_forensics_agent": "inherit",
-      "shader_ir_agent": "inherit",
-      "driver_device_agent": "inherit",
-      "skeptic_agent": "inherit",
-      "curator_agent": "inherit"
-    },
-    "copilot-ide": {
-      "team_lead": "preferred: opus-4.6",
-      "triage_agent": "preferred: grok-4.1 | sonnet-4.6",
-      "capture_repro_agent": "preferred: grok-4.1 | sonnet-4.6",
-      "pass_graph_pipeline_agent": "preferred: grok-4.1 | sonnet-4.6",
-      "pixel_forensics_agent": "preferred: grok-4.1 | sonnet-4.6",
-      "shader_ir_agent": "preferred: grok-4.1 | sonnet-4.6",
-      "driver_device_agent": "preferred: grok-4.1 | sonnet-4.6",
-      "skeptic_agent": "preferred: gpt-5.4",
-      "curator_agent": "preferred: gemini-3.1-pro"
-    },
-    "claude-work": {
-      "team_lead": "inherit",
-      "triage_agent": "inherit",
-      "capture_repro_agent": "inherit",
-      "pass_graph_pipeline_agent": "inherit",
-      "pixel_forensics_agent": "inherit",
-      "shader_ir_agent": "inherit",
-      "driver_device_agent": "inherit",
-      "skeptic_agent": "inherit",
-      "curator_agent": "inherit"
-    },
-    "manus": {
-      "team_lead": "workflow-level",
-      "triage_agent": "workflow-level",
-      "capture_repro_agent": "workflow-level",
-      "pass_graph_pipeline_agent": "workflow-level",
-      "pixel_forensics_agent": "workflow-level",
-      "shader_ir_agent": "workflow-level",
-      "driver_device_agent": "workflow-level",
-      "skeptic_agent": "workflow-level",
-      "curator_agent": "workflow-level"
-    }
+  "role_profiles": {
+    "team_lead": "orchestrator",
+    "triage_agent": "investigator",
+    "capture_repro_agent": "investigator",
+    "pass_graph_pipeline_agent": "investigator",
+    "pixel_forensics_agent": "investigator",
+    "shader_ir_agent": "investigator",
+    "driver_device_agent": "investigator",
+    "skeptic_agent": "verifier",
+    "curator_agent": "reporter"
   }
 }

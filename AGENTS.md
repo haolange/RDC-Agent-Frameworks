@@ -26,9 +26,9 @@
 
 ## Platform Expectations
 
-- `code-buddy/` 是当前最高完成度参考实现，应保持 `plugin + agents + hooks + skills + MCP` 的完整形态。
+- `code-buddy/` 是当前最高完成度参考实现，应保持 `plugin + agents + hooks + skills + MCP` 的完整形态，并把角色模型与协作元数据落实到宿主入口。
 - `claude-code/`、`copilot-cli/`、`copilot-ide/` 应按各自宿主的最佳能力实现，不要退化成纯 prompt 镜像。
-- `claude-work/` 与 `manus/` 若能力不足，应明确标注为次优适配，而不是伪装成满配实现。
+- `claude-desktop/` 与 `manus/` 若能力不足，应明确标注为次优适配，而不是伪装成满配实现。
 
 ## Model Routing
 

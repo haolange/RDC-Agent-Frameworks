@@ -1,9 +1,8 @@
 # RenderDoc/RDC GPU Debug Skill Wrapper
 
-当前文件是宿主薄包装 skill。Agent 的目标是使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题。
-
-使用前先将根目录 `debugger/common/` 复制到当前模板根的 `common/`。
+当前文件是 Code Buddy 的 skill 入口。Agent 的目标是使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题。
 
 共享 skill 入口：
 
 - `../../../../common/skills/renderdoc-rdc-gpu-debug/SKILL.md`
+- `coordination_mode` 与降级边界以 `../../../../common/config/platform_capabilities.json` 的当前平台定义为准。

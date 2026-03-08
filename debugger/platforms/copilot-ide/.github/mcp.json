@@ -1,4 +1,4 @@
-﻿{
+{
   "servers": {
     "renderdoc-platform-mcp": {
       "command": "python",

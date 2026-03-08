@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "servers": {
+    "renderdoc-platform-mcp": {
+      "transport": "stdio",
+      "command": "python",
+      "args": [
+        "${DEBUGGER_PLATFORM_TOOLS_ROOT}/mcp/run_mcp.py"
+      ],
+      "cwd": "${DEBUGGER_PLATFORM_TOOLS_ROOT}",
+      "required": true,
+      "enabled_tools": ["rd.*"]
+    }
+  }
+}

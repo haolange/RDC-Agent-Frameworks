@@ -1,5 +1,5 @@
-﻿{
-  "description": "RenderDoc/RDC GPU Debug - Claude Code adaptation",
+{
+  "description": "RenderDoc/RDC GPU Debug - Claude Code direct-reference adaptation",
   "hooks": {
     "PostToolUse": [
       {
@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python common/hooks/utils/codebuddy_hook_dispatch.py write-bugcard",
+            "command": "uv run --with pyyaml python ../../common/hooks/utils/codebuddy_hook_dispatch.py write-bugcard",
             "description": "Validate tool contract and BugCard schema before library write",
             "on_failure": "block",
             "failure_message": "BugCard write blocked: tool contract drift or schema validation failed."
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python common/hooks/utils/codebuddy_hook_dispatch.py write-skeptic",
+            "command": "uv run --with pyyaml python ../../common/hooks/utils/codebuddy_hook_dispatch.py write-skeptic",
             "description": "Validate skeptic signoff artifact format",
             "on_failure": "warn",
             "failure_message": "Skeptic signoff file did not pass validation."
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
+            "command": "uv run --with pyyaml python ../../common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
             "description": "Finalization gate for RenderDoc/RDC GPU Debug (causal anchor + counterfactual + skeptic)",
             "on_failure": "block",
             "failure_message": "Finalization blocked by session artifact or contract checks."
@@ -59,5 +59,3 @@
     }
   }
 }
-
-

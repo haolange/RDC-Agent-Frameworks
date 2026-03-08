@@ -1,0 +1,7 @@
+# Shared role prompt: ../../../../common/agents/04_pass_graph_pipeline.md
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+model_verbosity = "medium"
+
+[windows]
+sandbox = "elevated"
