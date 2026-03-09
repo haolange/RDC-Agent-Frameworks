@@ -6,7 +6,7 @@
 
 - 存放 `case_id/run_id` 级运行现场
 - 承载 `captures/`、`screenshots/`、`artifacts/`、`logs/`、`notes/`
-- 承载第二层交付物 `reports/report.md` 与 `reports/summary.html`
+- 承载第二层交付物 `reports/report.md` 与 `reports/visual_report.html`
 
 约束：
 

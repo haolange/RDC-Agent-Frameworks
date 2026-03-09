@@ -32,3 +32,4 @@ d.remote.connect -> rd.remote.ping -> rd.capture.open_file -> rd.capture.open_re
 - 若需要跨轮次继续调查，必须依赖可重建的 
 untime_baton，不得凭记忆续跑 live runtime。
 - 如需动态 tool discovery，应停止 workflow 并切回支持 MCP 的平台。
+- 在 workflow 平台上，只有 rtifacts/run_compliance.yaml 为 status=passed 时，结案才算合规。

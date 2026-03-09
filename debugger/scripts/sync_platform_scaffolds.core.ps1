@@ -9,6 +9,7 @@ $ModelRouting = ConvertFrom-Json (Get-Content (Join-Path $ConfigRoot "model_rout
 $McpServers = ConvertFrom-Json (Get-Content (Join-Path $ConfigRoot "mcp_servers.json") -Raw)
 $PlatformTargets = ConvertFrom-Json (Get-Content (Join-Path $ConfigRoot "platform_targets.json") -Raw)
 $PlatformCaps = ConvertFrom-Json (Get-Content (Join-Path $ConfigRoot "platform_capabilities.json") -Raw)
+$FrameworkCompliance = ConvertFrom-Json (Get-Content (Join-Path $ConfigRoot "framework_compliance.json") -Raw)
 $CopyNotice = "未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。"
 $Specs = @(
  @{ Key = "claude-code"; ManagedDirs = @(".claude", "common", "workspace"); ManagedFiles = @("README.md", "AGENTS.md") },
@@ -108,6 +109,47 @@ function Role-Skill-DirName($Role) {
  return Split-Path (Split-Path $Role.role_skill_path -Parent) -Leaf
 }
 
+function Compliance-Profile([string]$PlatformKey) {
+ return $FrameworkCompliance.platforms.$PlatformKey
+}
+
+function Platform-Compliance-Notes([string]$PlatformKey) {
+ $profile = $(Compliance-Profile $PlatformKey)
+ $notes = New-Object System.Collections.Generic.List[string]
+ if ($profile.enforcement_mode -eq "audit_only_gate") {
+  $null = $notes.Add("- 当前宿主没有 native hooks；只有生成 `artifacts/run_compliance.yaml` 且 `status=passed` 后，结案才算合规。")
+ } elseif ($profile.enforcement_mode -eq "workflow_audit_gate") {
+  $null = $notes.Add("- 当前宿主按 `workflow_stage` 降级运行；最终仍必须生成 `artifacts/run_compliance.yaml` 才算合规结案。")
+  $null = $notes.Add("- 不得在该宿主上模拟实时 multi-agent handoff。")
+ } else {
+  $null = $notes.Add("- native hooks 会阻断未通过 gate 的结案；同时仍要求生成 `artifacts/run_compliance.yaml` 作为统一合规裁决。")
+ }
+ return @($notes)
+}
+
+function Role-Compliance-Notes([string]$PlatformKey, [string]$AgentId) {
+ $profile = $(Compliance-Profile $PlatformKey)
+ $notes = New-Object System.Collections.Generic.List[string]
+ if ($AgentId -eq "team_lead") {
+  if ($profile.enforcement_mode -eq "audit_only_gate") {
+   $null = $notes.Add("在 `run_compliance.yaml(status=passed)` 生成前，你只能输出阶段性 brief，不得宣称最终裁决。")
+  } else {
+   $null = $notes.Add("只有在 session artifacts 完整且 gate/audit 通过后，你才能输出最终裁决。")
+  }
+ }
+ if ($AgentId -eq "curator_agent") {
+  if ($profile.enforcement_mode -eq "audit_only_gate") {
+   $null = $notes.Add("在 `run_compliance.yaml(status=passed)` 生成前，你只能产出 draft report，不得把报告视为正式结案。")
+  } else {
+   $null = $notes.Add("只有在 `session_evidence.yaml`、`skeptic_signoff.yaml`、`action_chain.jsonl` 完整后，你才能产出 final report。")
+  }
+ }
+ if ($profile.coordination_mode -eq "workflow_stage") {
+  $null = $notes.Add("当前平台只允许 `workflow_stage`；不得模拟实时 team-agent 并发 handoff。")
+ }
+ return @($notes)
+}
+
 function Role-Entry-Notice($Role) {
  if ($Role.formal_user_entry) {
  return '该角色是当前 framework 的唯一正式用户入口。正常用户请求必须从 `team_lead` 发起。'
@@ -169,7 +211,7 @@ function Workspace-Placeholder-Files([string]$PlatformKey) {
 
 - 存放 `case_id/run_id` 级运行现场
 - 承载 `captures/`、`screenshots/`、`artifacts/`、`logs/`、`notes/`
-- 承载第二层交付物 `reports/report.md` 与 `reports/summary.html`
+- 承载第二层交付物 `reports/report.md` 与 `reports/visual_report.html`
 
 约束：
 
@@ -233,6 +275,7 @@ function Readme([string]$PlatformKey) {
  "- `workspace/` 预生成空骨架；真实运行产物在平台使用阶段按 case/run 写入。",
  "- 维护者若重跑 scaffold，必须继续产出 platform-local `common/` 最小占位目录，不得回退到跨级引用。"
  )
+ foreach ($note in $(Platform-Compliance-Notes $PlatformKey)) { $lines += $note }
  return ($lines -join "`n")
 }
 
@@ -265,6 +308,7 @@ function PlatformAgentsMd([string]$PlatformKey, [string]$TargetFile) {
  '',
  '运行时工作区固定为：`../workspace`'
  )
+ foreach ($note in $(Platform-Compliance-Notes $PlatformKey)) { $lines += $note }
  return ($lines -join "`n")
 }
 
@@ -295,9 +339,10 @@ function AgentBody([string]$PlatformKey, $Role, [string]$TargetFile) {
  "5. $p4",
  "",
  "$CopyNotice",
- "",
- '运行时工作区固定为：`../workspace`'
+ ""
  )
+ foreach ($note in $(Role-Compliance-Notes $PlatformKey $Role.agent_id)) { $lines += $note }
+ $lines += '运行时工作区固定为：`../workspace`'
  return ($lines -join "`n")
 }
 
@@ -362,9 +407,10 @@ function RoleSkillWrapper([string]$PlatformKey, $Role, [string]$TargetFile) {
  "3. $capRef",
  "",
  "$CopyNotice",
- "",
- '运行时 case/run 现场与第二层报告统一写入：`../workspace`'
+ ""
  )
+ foreach ($note in $(Role-Compliance-Notes $PlatformKey $Role.agent_id)) { $lines += $note }
+ $lines += '运行时 case/run 现场与第二层报告统一写入：`../workspace`'
  return ($lines -join "`n")
 }
 
@@ -426,9 +472,10 @@ function ReferencesEntry([string]$PlatformKey, [string]$TargetFile) {
  "2. $p2",
  "",
  "$CopyNotice",
- "",
- '运行时工作区固定为：`../workspace`'
+ ""
  )
+ foreach ($note in $(Platform-Compliance-Notes $PlatformKey)) { $lines += $note }
+ $lines += '运行时工作区固定为：`../workspace`'
  return ($lines -join "`n")
 }
 
@@ -466,6 +513,7 @@ function ManusWorkflow() {
 - remote 阶段由单一 runtime owner 顺序完成 `rd.remote.connect -> rd.remote.ping -> rd.capture.open_file -> rd.capture.open_replay -> re-anchor -> collect evidence`。
 - 若需要跨轮次继续调查，必须依赖可重建的 `runtime_baton`，不得凭记忆续跑 live runtime。
 - 如需动态 tool discovery，应停止 workflow 并切回支持 `MCP` 的平台。
+- 在 workflow 平台上，只有 `artifacts/run_compliance.yaml` 为 `status=passed` 时，结案才算合规。
 "@
 }
 function Mcp-Payload() {
@@ -522,7 +570,9 @@ function ClaudeCodeSettings() {
 }
 
 function CopilotIdePlugin() {
- return @{ name = "renderdoc-rdc-gpu-debug-ide"; description = "RenderDoc/RDC GPU Debug 的 Copilot IDE platform-local common 适配包。"; agentsRoot = ".github/agents"; notes = @("Start normal user requests from team_lead / orchestrator.", "Preserve role routing and evidence gates even when the host ignores model preference.", "Read references/entrypoints.md before attempting a CLI-style flow inside the IDE host.") }
+ $notes = @("Start normal user requests from team_lead / orchestrator.", "Preserve role routing and evidence gates even when the host ignores model preference.", "Read references/entrypoints.md before attempting a CLI-style flow inside the IDE host.")
+ $notes += $(Platform-Compliance-Notes "copilot-ide")
+ return @{ name = "renderdoc-rdc-gpu-debug-ide"; description = "RenderDoc/RDC GPU Debug 的 Copilot IDE platform-local common 适配包。"; agentsRoot = ".github/agents"; notes = $notes }
 }
 
 function ClaudeDesktopConfig() {
@@ -531,7 +581,7 @@ function ClaudeDesktopConfig() {
  return @{ mcpServers = $servers }
 }
 function CodexReadme() {
-@"
+ $base = @"
 # Codex Template
 
 当前目录是 Codex 的 workspace-native 模板。Agent 的目标是使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题。
@@ -554,6 +604,7 @@ function CodexReadme() {
 - workspace/ 预生成空骨架；真实运行产物在平台使用阶段按 case/run 写入。
 - multi_agent 当前按 experimental / CLI-first 理解，但共享规则与 role config 已完整生成。
 "@
+ return ($base.TrimEnd() + "`n" + [string]::Join("`n", $(Platform-Compliance-Notes "codex")))
 }
 
 function CodexConfig() {
@@ -742,7 +793,7 @@ function Sync-Spec($Spec) {
 }
 
 function Validate-SourceTree() {
- $required = @($Common, (Join-Path $Common "agents"), (Join-Path $Common "skills\renderdoc-rdc-gpu-debug\SKILL.md"), (Join-Path $Common "docs\workspace-layout.md"), (Join-Path $Common "knowledge\proposals\README.md"), (Join-Path $ConfigRoot "role_manifest.json"), (Join-Path $ConfigRoot "role_policy.json"), (Join-Path $ConfigRoot "model_routing.json"), (Join-Path $ConfigRoot "mcp_servers.json"), (Join-Path $ConfigRoot "platform_adapter.json"), (Join-Path $ConfigRoot "platform_capabilities.json"), (Join-Path $ConfigRoot "platform_targets.json"))
+ $required = @($Common, (Join-Path $Common "agents"), (Join-Path $Common "skills\renderdoc-rdc-gpu-debug\SKILL.md"), (Join-Path $Common "docs\workspace-layout.md"), (Join-Path $Common "knowledge\proposals\README.md"), (Join-Path $ConfigRoot "role_manifest.json"), (Join-Path $ConfigRoot "role_policy.json"), (Join-Path $ConfigRoot "model_routing.json"), (Join-Path $ConfigRoot "mcp_servers.json"), (Join-Path $ConfigRoot "platform_adapter.json"), (Join-Path $ConfigRoot "platform_capabilities.json"), (Join-Path $ConfigRoot "platform_targets.json"), (Join-Path $ConfigRoot "framework_compliance.json"), (Join-Path $ConfigRoot "tool_catalog.snapshot.json"))
  $findings = @()
  foreach ($path in $required) { if (-not (Test-Path $path)) { $findings += "missing shared source: $path" } }
  foreach ($role in (Roles)) { $source = Join-Path $Common $role.source_prompt; if (-not (Test-Path $source)) { $findings += "missing shared agent source: $source" } }

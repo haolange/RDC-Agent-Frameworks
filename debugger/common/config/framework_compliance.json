@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "runtime_artifact_contract": {
+    "run_root_layout": "workspace/cases/<case_id>/runs/<run_id>",
+    "required_case_files": [
+      "workspace/cases/<case_id>/case.yaml"
+    ],
+    "required_run_files": [
+      "run.yaml",
+      "notes/hypothesis_board.yaml",
+      "reports/report.md",
+      "reports/visual_report.html"
+    ],
+    "required_session_files": [
+      "session_evidence.yaml",
+      "skeptic_signoff.yaml",
+      "action_chain.jsonl"
+    ],
+    "required_final_refs": [
+      "BugCard/BugFull reference or DEBUGGER_FINAL_VERDICT"
+    ],
+    "run_compliance_artifact": "artifacts/run_compliance.yaml",
+    "allowed_live_library_session_entries": [
+      ".current_session",
+      "README.md"
+    ]
+  },
+  "platforms": {
+    "code-buddy": {
+      "formal_entry_role": "team_lead",
+      "coordination_mode": "concurrent_team",
+      "required_surfaces": [
+        "agents",
+        "skills",
+        "hooks",
+        "mcp"
+      ],
+      "workflow_required": false,
+      "enforcement_mode": "native_hook_gate",
+      "requires_run_compliance_artifact": true
+    },
+    "claude-code": {
+      "formal_entry_role": "team_lead",
+      "coordination_mode": "concurrent_team",
+      "required_surfaces": [
+        "agents",
+        "skills",
+        "hooks",
+        "mcp"
+      ],
+      "workflow_required": false,
+      "enforcement_mode": "native_hook_gate",
+      "requires_run_compliance_artifact": true
+    },
+    "copilot-cli": {
+      "formal_entry_role": "team_lead",
+      "coordination_mode": "staged_handoff",
+      "required_surfaces": [
+        "agents",
+        "skills",
+        "hooks",
+        "mcp"
+      ],
+      "workflow_required": false,
+      "enforcement_mode": "native_hook_gate",
+      "requires_run_compliance_artifact": true
+    },
+    "copilot-ide": {
+      "formal_entry_role": "team_lead",
+      "coordination_mode": "staged_handoff",
+      "required_surfaces": [
+        "agents",
+        "skills",
+        "mcp"
+      ],
+      "workflow_required": false,
+      "enforcement_mode": "audit_only_gate",
+      "requires_run_compliance_artifact": true
+    },
+    "claude-desktop": {
+      "formal_entry_role": "team_lead",
+      "coordination_mode": "workflow_stage",
+      "required_surfaces": [
+        "mcp",
+        "workflow"
+      ],
+      "workflow_required": true,
+      "enforcement_mode": "workflow_audit_gate",
+      "requires_run_compliance_artifact": true
+    },
+    "manus": {
+      "formal_entry_role": "team_lead",
+      "coordination_mode": "workflow_stage",
+      "required_surfaces": [
+        "workflow"
+      ],
+      "workflow_required": true,
+      "enforcement_mode": "workflow_audit_gate",
+      "requires_run_compliance_artifact": true
+    },
+    "codex": {
+      "formal_entry_role": "team_lead",
+      "coordination_mode": "concurrent_team",
+      "required_surfaces": [
+        "agents",
+        "skills",
+        "mcp"
+      ],
+      "workflow_required": false,
+      "enforcement_mode": "audit_only_gate",
+      "requires_run_compliance_artifact": true
+    }
+  }
+}

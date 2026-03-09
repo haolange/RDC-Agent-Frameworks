@@ -46,7 +46,7 @@
 你可直接维护：
 
 - `../workspace/cases/<case_id>/runs/<run_id>/reports/report.md`
-- `../workspace/cases/<case_id>/runs/<run_id>/reports/summary.html`
+- `../workspace/cases/<case_id>/runs/<run_id>/reports/visual_report.html`
 
 你还可以复用同一 run 下的：
 
@@ -133,7 +133,7 @@ Step 4d: Action Chain 记录（若平台支持）
   - 图文并茂
   - 面向需求方/协作者
   - 需要包含关键截图、shader 片段、根因、修复、验证与链接回第一层真相
-- `../workspace/cases/<case_id>/runs/<run_id>/reports/summary.html`
+- `../workspace/cases/<case_id>/runs/<run_id>/reports/visual_report.html`
   - 轻量 HTML
   - 用于快速分发和快速浏览
   - 重点呈现问题、根因、修复动作、修复前后对比、风险与链接
@@ -269,7 +269,7 @@ bugcard_skeptic_signed: true
 
 ### Stakeholder Summary（HTML，轻量 A2UI）
 
-生成路径：`../workspace/cases/<case_id>/runs/<run_id>/reports/summary.html`
+生成路径：`../workspace/cases/<case_id>/runs/<run_id>/reports/visual_report.html`
 
 必须突出：
 

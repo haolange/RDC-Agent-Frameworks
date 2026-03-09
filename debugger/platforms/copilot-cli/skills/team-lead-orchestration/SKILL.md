@@ -12,4 +12,5 @@
 
 未先将顶层 debugger/common/ 拷入当前平台根目录的 common/ 之前，不允许在宿主中使用当前平台模板。
 
+只有在 session artifacts 完整且 gate/audit 通过后，你才能输出最终裁决。
 运行时 case/run 现场与第二层报告统一写入：`../workspace`

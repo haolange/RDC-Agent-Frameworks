@@ -2,6 +2,11 @@
 
 Quality Hooks 系统将 Debugger 框架的质量门槛从「被建议的」提升为「被强制执行的」。
 
+补充说明：
+
+- 对拥有 native hooks 的宿主，Hook 负责阻断不合规结案。
+- 对没有 native hooks 的宿主，最终以 `workspace/cases/<case_id>/runs/<run_id>/artifacts/run_compliance.yaml` 为统一审计裁决。
+
 ---
 
 ## 架构
@@ -13,9 +18,13 @@ common/hooks/
 │   ├── bugcard_validator.py         # BugCard 完整性检查（12 项规则）
 │   ├── counterfactual_validator.py  # 反事实验证记录检查
 │   └── skeptic_signoff_checker.py   # Skeptic 五把刀签署验证
+├── utils/
+│   ├── run_compliance_audit.py      # run 级合规审计与统一裁决产物写入
+│   └── validate_tool_contract_runtime.py # 平台包内 tool contract 校验
 └── schemas/
     ├── bugcard_required_fields.yaml # BugCard 必填字段 Schema
     └── skeptic_signoff_schema.yaml  # Skeptic 签署记录 Schema
+    └── run_compliance_schema.yaml   # run_compliance.yaml 结构定义
 ```
 
 Claude Code 与其他宿主的 Hook 配置都应位于各自的平台包内；在源码树中请查看 `platforms/claude-code/.claude/settings.json` 与对应平台包目录。
@@ -95,6 +104,11 @@ python3 common/hooks/validators/skeptic_signoff_checker.py skeptic_output.yaml -
 | Claude Work | Agent Prompt 内嵌「质量门槛检查」清单 | Prompt 层软约束 |
 | Copilot | Agent Prompt 内嵌「质量门槛检查」清单 | Prompt 层软约束 |
 | Manus | 工作流 Step 5 和 Step 8 作为显式质量关卡 | 工作流层中等强制 |
+
+所有平台最终都要落到同一个 `run_compliance_audit.py`：
+
+- native hook 平台：可在 Stop/PostToolUse 中触发或补写统一审计产物
+- audit-only / workflow 平台：无 `run_compliance.yaml(status=passed)` 即不算合规结案
 
 ---
 

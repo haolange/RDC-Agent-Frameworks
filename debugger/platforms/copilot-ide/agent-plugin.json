@@ -5,6 +5,7 @@
     "notes":  [
                   "Start normal user requests from team_lead / orchestrator.",
                   "Preserve role routing and evidence gates even when the host ignores model preference.",
-                  "Read references/entrypoints.md before attempting a CLI-style flow inside the IDE host."
+                  "Read references/entrypoints.md before attempting a CLI-style flow inside the IDE host.",
+                  "- 当前宿主没有 native hooks；只有生成 \u0007rtifacts/run_compliance.yaml 且 status=passed 后，结案才算合规。"
               ]
 }

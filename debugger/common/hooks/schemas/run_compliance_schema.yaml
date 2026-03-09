@@ -1,0 +1,44 @@
+schema_version: 1
+
+required_fields:
+  - field: schema_version
+    type: string
+    pattern: "^1$"
+  - field: platform
+    type: string
+    min_length: 3
+  - field: run_root
+    type: string
+    min_length: 10
+  - field: status
+    type: string
+    allowed_values: [passed, failed]
+  - field: generated_by
+    type: string
+    allowed_values: [run_compliance_audit]
+  - field: generated_at
+    type: string
+    min_length: 10
+  - field: checks
+    type: list
+    min_items: 1
+  - field: summary
+    type: object
+    required_subfields:
+      - passed
+      - failed
+
+check_schema:
+  required:
+    - id
+    - result
+    - detail
+  optional:
+    - path
+    - severity
+    - refs
+
+allowed_check_results:
+  - pass
+  - fail
+  - warn

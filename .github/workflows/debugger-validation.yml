@@ -1,0 +1,40 @@
+name: Debugger Validation
+
+on:
+  push:
+    paths:
+      - "debugger/**"
+      - ".github/workflows/debugger-validation.yml"
+  pull_request:
+    paths:
+      - "debugger/**"
+      - ".github/workflows/debugger-validation.yml"
+
+jobs:
+  validate-debugger:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install hook/test dependencies
+        run: python -m pip install -r debugger/common/hooks/requirements.txt
+
+      - name: Scaffold check
+        run: python debugger/scripts/sync_platform_scaffolds.py --check
+
+      - name: Layout check
+        run: python debugger/scripts/validate_platform_layout.py --strict
+
+      - name: Tool contract source check
+        run: python debugger/scripts/validate_tool_contract.py --mode source --strict
+
+      - name: Repo validation
+        run: python debugger/scripts/validate_debugger_repo.py --strict
+
+      - name: Run compliance audit tests
+        run: python -m unittest discover -s debugger/tests -p "test_*.py"

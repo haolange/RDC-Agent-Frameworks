@@ -16,6 +16,7 @@ TOOL_RE = re.compile(r"rd\.[A-Za-z0-9_]+\.[A-Za-z0-9_\.]+")
 CALL_RE = re.compile(r"(rd\.[A-Za-z0-9_]+\.[A-Za-z0-9_\.]+)\s*\(([^)]*)\)")
 ENV_CATALOG = "DEBUGGER_PLATFORM_CATALOG"
 PLACEHOLDER_PREFIX = "__CONFIGURE_"
+SNAPSHOT_PATH = Path("common") / "config" / "tool_catalog.snapshot.json"
 
 
 @dataclass
@@ -69,6 +70,10 @@ def default_catalog(cur):
  return (resolve_tools_root(cur) / "spec" / "tool_catalog.json").resolve()
 
 
+def source_snapshot(cur):
+ return (cur / SNAPSHOT_PATH).resolve()
+
+
 def load_catalog(path):
  payload = read_json(path)
  names = {str(item.get("name", "")).strip() for item in payload.get("tools", []) if str(item.get("name", "")).strip()}
@@ -101,10 +106,18 @@ def print_findings(findings):
 def main():
  parser = argparse.ArgumentParser(description="Validate debugger tool contract")
  parser.add_argument("--catalog", type=Path, default=None, help=f"Path to platform tool catalog (default: adapter config or {ENV_CATALOG})")
+ parser.add_argument("--mode", choices=("source", "package"), default=None, help="Validate against the source snapshot or a configured platform package")
  parser.add_argument("--strict", action="store_true", help="Return non-zero when findings exist")
  args = parser.parse_args()
  cur = root()
- try: catalog = args.catalog.resolve() if args.catalog else default_catalog(cur)
+ mode = args.mode or ("source" if is_source_root(cur) else "package")
+ try:
+  if args.catalog:
+   catalog = args.catalog.resolve()
+  elif mode == "source":
+   catalog = source_snapshot(cur)
+  else:
+   catalog = default_catalog(cur)
  except Exception as exc: print(str(exc)); return 2
  if not catalog.is_file(): print(f"catalog not found: {catalog}"); return 2
  known_tools, requires_session = load_catalog(catalog)

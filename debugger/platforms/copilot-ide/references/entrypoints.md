@@ -9,4 +9,5 @@
 
 未先将顶层 debugger/common/ 拷入当前平台根目录的 common/ 之前，不允许在宿主中使用当前平台模板。
 
+- 当前宿主没有 native hooks；只有生成 rtifacts/run_compliance.yaml 且 status=passed 后，结案才算合规。
 运行时工作区固定为：`../workspace`

@@ -21,4 +21,5 @@ model: "sonnet"
 
 未先将顶层 debugger/common/ 拷入当前平台根目录的 common/ 之前，不允许在宿主中使用当前平台模板。
 
+只有在 session_evidence.yaml、skeptic_signoff.yaml、ction_chain.jsonl 完整后，你才能产出 final report。
 运行时工作区固定为：`../workspace`

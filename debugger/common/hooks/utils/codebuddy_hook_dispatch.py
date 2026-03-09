@@ -88,7 +88,7 @@ def _validator_paths(root: Path) -> tuple[Path, Path, Path, Path]:
 
 def _script_paths(root: Path) -> tuple[Path, Path]:
     resolve_artifact = root / "common" / "hooks" / "utils" / "resolve_session_artifact.py"
-    validate_contract = root / "scripts" / "validate_tool_contract.py"
+    validate_contract = root / "common" / "hooks" / "utils" / "validate_tool_contract_runtime.py"
     return resolve_artifact, validate_contract
 
 
@@ -255,6 +255,7 @@ def _cmd_stop_gate(root: Path, force: bool = False) -> int:
 
     _, causal_anchor_validator, counterfactual_validator, skeptic_checker = _validator_paths(root)
     _, validate_contract = _script_paths(root)
+    run_audit = root / "common" / "hooks" / "utils" / "run_compliance_audit.py"
 
     errors: list[str] = []
 
@@ -290,6 +291,17 @@ def _cmd_stop_gate(root: Path, force: bool = False) -> int:
         _relay(r2)
         if r2.returncode != 0:
             errors.append("skeptic signoff checker failed")
+
+    platform_key = root.name
+    run_root = str(os.environ.get("DEBUGGER_RUN_ROOT", "")).strip()
+    if not errors and run_audit.is_file():
+        audit_cmd = _py_cmd(str(run_audit), "--platform", platform_key, "--strict")
+        if run_root:
+            audit_cmd.extend(["--run-root", run_root])
+        audit_proc = _run(audit_cmd)
+        _relay(audit_proc)
+        if audit_proc.returncode != 0:
+            errors.append("run compliance audit failed")
 
     if errors:
         _emit_block("Finalization blocked: " + "; ".join(errors))

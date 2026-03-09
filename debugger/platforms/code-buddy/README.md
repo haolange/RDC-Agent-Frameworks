@@ -18,3 +18,4 @@
 - 未完成 platform_adapter.json 配置或 	ools_root 校验前，Agent 必须拒绝执行依赖平台真相的工作。
 - workspace/ 预生成空骨架；真实运行产物在平台使用阶段按 case/run 写入。
 - 维护者若重跑 scaffold，必须继续产出 platform-local common/ 最小占位目录，不得回退到跨级引用。
+- native hooks 会阻断未通过 gate 的结案；同时仍要求生成 rtifacts/run_compliance.yaml 作为统一合规裁决。

@@ -19,3 +19,4 @@
 未先将顶层 debugger/common/ 拷入当前平台根目录的 common/ 之前，不允许在宿主中使用当前平台模板。
 
 运行时工作区固定为：`../workspace`
+- native hooks 会阻断未通过 gate 的结案；同时仍要求生成 rtifacts/run_compliance.yaml 作为统一合规裁决。

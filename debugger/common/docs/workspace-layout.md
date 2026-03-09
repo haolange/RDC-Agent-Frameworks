@@ -65,7 +65,7 @@ workspace/
 最小规则：
 
 - 同一 case 只允许一个 `current_run`
-- `reports/` 只放 `report.md` 与 `summary.html`
+- `reports/` 只放 `report.md` 与 `visual_report.html`
 - 图片默认复用 `screenshots/`
 - 第一层 gate artifacts 不复制到 `workspace/`，只在 `run.yaml` 中记录引用
 
@@ -93,7 +93,7 @@ workspace/
 可直接维护：
 
 - `../workspace/cases/<case_id>/runs/<run_id>/reports/report.md`
-- `../workspace/cases/<case_id>/runs/<run_id>/reports/summary.html`
+- `../workspace/cases/<case_id>/runs/<run_id>/reports/visual_report.html`
 - `../workspace/cases/<case_id>/runs/<run_id>/screenshots/`
 - `../workspace/cases/<case_id>/runs/<run_id>/notes/`
 - `../workspace/cases/<case_id>/runs/<run_id>/artifacts/`
