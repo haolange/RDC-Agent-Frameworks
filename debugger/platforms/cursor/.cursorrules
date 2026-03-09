@@ -1,0 +1,119 @@
+# RenderDoc/RDC GPU Debug Framework - Cursor Project Rules
+
+## 项目身份
+
+- **项目**：RenderDoc/RDC GPU Debug Framework
+- **目标**：使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题
+- **平台**：Cursor IDE
+
+## 工作模式
+
+1. **调试流程**：
+   - 接收 `.rdc` 捕获文件作为调试入口
+   - 使用 platform tools 分析 GPU 渲染问题
+   - 遵循 session-model 和 agent-model 定义的工作流程
+
+2. **Agent 角色**：
+   - `team_lead`：主入口，负责 triage 和协调
+   - `debugger`：执行具体调试任务
+   - `skeptic`：质疑和验证结论
+   - `librarian`：管理知识库和 BugCard
+
+## 约束条件
+
+### 前置检查（必须满足）
+
+1. **工具根路径验证**：
+   - 必须配置 `common/config/platform_adapter.json` 中的 `paths.tools_root`
+   - 必须验证 `validation.required_paths` 在 `<tools_root>/` 下全部存在
+   - 未完成配置前，禁止执行依赖平台真相的工作
+
+2. **RDC 捕获文件**：
+   - 正式调试前，用户必须提供至少一份 `.rdc` 文件
+   - 未提供时，必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断
+   - 禁止在缺少 `.rdc` 时初始化 case/run 或继续 triage、investigation、planning
+
+3. **Common 目录覆盖**：
+   - 使用前必须将顶层 `debugger/common/` 覆盖到当前平台 `common/` 目录
+   - 未完成覆盖前，当前平台模板不可用
+
+### 运行时约束
+
+- 使用 `workspace/` 作为运行区，按 case/run 组织输出
+- 所有工具调用必须通过 platform_adapter 解析的 `tools_root`
+- 禁止直接引用平台外部的工具或配置
+
+## 质量门槛
+
+### 结案前必须满足
+
+1. **BugCard 完整性**（12 项检查）：
+   - 必填字段：bug_id、title、description、severity、status
+   - 因果分析：root_cause、cause_type、evidence_chain
+   - 修复信息：fix_commit、fix_verified
+   - 元数据：created_at、updated_at、signatures
+
+2. **Skeptic 签署**（五把刀）：
+   - 假设审查：assumptions_reviewed
+   - 因果验证：causality_validated
+   - 工具合约：tool_contracts_checked
+   - 证据链：evidence_chain_complete
+   - 反事实测试：counterfactual_tested
+   - 所有检查必须通过且 `sign_off.signed=true`
+
+3. **反事实验证**：
+   - 必须包含至少一个反事实测试记录
+   - 测试结果必须为 `passed`
+   - 必须包含量化数据支持结论
+
+4. **因果锚点**：
+   - `session_evidence.yaml` 必须包含 `causal_anchor`
+   - 必须提供 `causal_anchor_evidence`
+   - 视觉 fallback 不得越权替代因果锚点
+
+### 合规裁决
+
+- 所有 run 必须生成 `artifacts/run_compliance.yaml`
+- 该文件是统一审计裁决依据
+- Native hooks 会阻断未通过 gate 的结案
+
+## MCP 配置
+
+### MCP 服务器
+
+- **服务器名称**：`renderdoc-platform-mcp`
+- **启动命令**：`python`
+- **参数**：`${DEBUGGER_PLATFORM_TOOLS_ROOT}/mcp/run_mcp.py`
+- **配置文件**：`.cursor/mcp.json`（项目级）或 `%USERPROFILE%/.cursor/mcp.json`（用户级）
+
+### MCP 工具使用规则
+
+1. **工具发现**：
+   - Cursor 会自动从 MCP 服务器发现可用工具
+   - 工具列表显示在 AI 面板的工具区域
+
+2. **工具调用**：
+   - 优先使用 MCP 提供的工具进行平台操作
+   - 工具调用失败时，检查 `DEBUGGER_PLATFORM_TOOLS_ROOT` 环境变量
+
+3. **工具验证**：
+   - 调用前验证 `platform_adapter.json` 中的 `tools_root` 已配置
+   - 验证 `mcp/run_mcp.py` 文件存在且可执行
+
+## 文件引用
+
+- 工具目录：`common/config/platform_adapter.json` 中定义的 `tools_root`
+- 会话模型：`docs/session-model.md`
+- Agent 模型：`docs/agent-model.md`
+- 工具目录：`spec/tool_catalog.json`
+- CLI 参考：`debugger/docs/cli-mode-reference.md`
+- MCP 配置：`.cursor/mcp.json`
+
+## 阻断代码
+
+| 代码 | 含义 | 处理 |
+|------|------|------|
+| `BLOCKED_MISSING_CAPTURE` | 缺少 `.rdc` 文件 | 要求用户提供捕获文件 |
+| `BLOCKED_INVALID_TOOLS_ROOT` | 工具根路径未配置或无效 | 检查 platform_adapter.json 配置 |
+| `BLOCKED_MISSING_COMMON` | 未覆盖 common 目录 | 执行覆盖操作 |
+| `BLOCKED_QUALITY_GATE` | 未通过质量门槛 | 补充缺失的验证或签署 |

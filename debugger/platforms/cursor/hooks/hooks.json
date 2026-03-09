@@ -1,0 +1,25 @@
+{
+    "_description": "Cursor Platform Quality Hooks for RenderDoc/RDC GPU Debug Framework",
+    "_notes": [
+        "本文件作为hooks配置的补充说明，实际hooks配置以 .cursor/settings.json 为准",
+        "settings.json 中定义了 preToolUse, postToolUse, preCommit, stop 等事件的hooks",
+        "本文件保留环境变量说明和脚本路径参考"
+    ],
+    "_reference": {
+        "primary_config": ".cursor/settings.json",
+        "validators_path": "${DEBUGGER_ROOT}/common/hooks/validators/",
+        "dispatch_script": "${DEBUGGER_ROOT}/platforms/cursor/hooks/utils/cursor_hook_dispatch.py"
+    },
+    "_environment_variables": {
+        "DEBUGGER_ROOT": "Path to debugger root directory",
+        "CURSOR_WRITE_PATH": "Path to file being written (set by Cursor IDE)",
+        "CURSOR_SESSION_ID": "Current session ID (optional, falls back to .current_session marker)",
+        "DEBUGGER_PLATFORM_TOOLS_ROOT": "Path to platform tools root (used by MCP server)"
+    },
+    "_validators": {
+        "bugcard_validator": "${DEBUGGER_ROOT}/common/hooks/validators/bugcard_validator.py",
+        "skeptic_signoff_checker": "${DEBUGGER_ROOT}/common/hooks/validators/skeptic_signoff_checker.py",
+        "causal_anchor_validator": "${DEBUGGER_ROOT}/common/hooks/validators/causal_anchor_validator.py",
+        "counterfactual_validator": "${DEBUGGER_ROOT}/common/hooks/validators/counterfactual_validator.py"
+    }
+}

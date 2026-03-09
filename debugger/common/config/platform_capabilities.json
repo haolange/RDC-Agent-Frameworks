@@ -297,6 +297,47 @@
         "platforms/codex/.codex/agents/team_lead.toml",
         "platforms/codex/.agents/skills/renderdoc-rdc-gpu-debug/SKILL.md"
       ]
+    },
+    "cursor": {
+      "display_name": "Cursor",
+      "status_label": "full",
+      "packaging": "project-config-plus-rules",
+      "capabilities": {
+        "custom_agents": {
+          "supported": true,
+          "rendered": "native"
+        },
+        "skills": {
+          "supported": true,
+          "rendered": "native"
+        },
+        "hooks": {
+          "supported": true,
+          "rendered": "rules-config"
+        },
+        "mcp": {
+          "supported": true,
+          "rendered": "native"
+        },
+        "per_agent_model": {
+          "supported": true,
+          "rendered": "explicit"
+        },
+        "handoffs": {
+          "supported": true,
+          "rendered": "prompt-directed"
+        }
+      },
+      "coordination_mode": "concurrent_team",
+      "degradation_mode": "limited-hooks",
+      "cli_discovery_policy": "mcp-discovery-ok,cli-reference-required",
+      "required_paths": [
+        "platforms/cursor/README.md",
+        "platforms/cursor/AGENTS.md",
+        "platforms/cursor/.cursorrules",
+        "platforms/cursor/.cursor/mcp.json",
+        "platforms/cursor/agents/01_team_lead.md"
+      ]
     }
   }
 }

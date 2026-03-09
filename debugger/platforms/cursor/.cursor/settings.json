@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "description": "Cursor IDE settings for RenderDoc/RDC GPU Debug Framework",
+  "ai": {
+    "agent": {
+      "systemPrompt": "你是 RenderDoc/RDC GPU Debug Framework 的调试助手。\n\n## 核心职责\n协助调试 GPU 渲染问题，使用 platform tools 分析 RenderDoc 捕获文件。\n\n## 前置检查（必须）\n1. 验证 `common/config/platform_adapter.json` 中的 `paths.tools_root` 已配置\n2. 验证 `validation.required_paths` 在 tools_root 下存在\n3. 确认用户已提供至少一份 `.rdc` 文件\n4. 确认 `common/` 目录已完成从顶层 `debugger/common/` 的覆盖\n\n## 质量门槛（结案前必须满足）\n- BugCard 完整性（12 项字段检查）\n- Skeptic 五把刀签署全部通过\n- 反事实验证记录存在且通过\n- 因果锚点已确立并有证据支持\n\n## Agent 角色\n- team_lead: 主入口，负责 triage 和协调\n- debugger: 执行具体调试任务\n- skeptic: 质疑和验证结论\n- librarian: 管理知识库和 BugCard\n\n## 阻断代码\n- BLOCKED_MISSING_CAPTURE: 缺少 .rdc 文件\n- BLOCKED_INVALID_TOOLS_ROOT: 工具根路径无效\n- BLOCKED_MISSING_COMMON: 未覆盖 common 目录\n- BLOCKED_QUALITY_GATE: 未通过质量门槛\n\n未完成前置检查前，禁止执行依赖平台真相的工作。",
+      "context": {
+        "includeGitHistory": false,
+        "includeFileStructure": true
+      }
+    }
+  },
+  "mcpServers": {
+    "renderdoc-platform-mcp": {
+      "command": "python",
+      "args": [
+        "${DEBUGGER_PLATFORM_TOOLS_ROOT}/mcp/run_mcp.py"
+      ]
+    }
+  },
+  "hooks": {
+    "preToolUse": [],
+    "postToolUse": [
+      {
+        "name": "bugcard_validator",
+        "description": "Validate BugCard YAML completeness",
+        "command": "python",
+        "args": ["common/hooks/validators/bugcard_validator.py", "${file}"],
+        "pattern": "knowledge/library/*.yaml",
+        "blocking": true
+      }
+    ],
+    "preCommit": [],
+    "stop": [
+      {
+        "name": "causal_anchor_validator",
+        "description": "Validate causal anchor before case closure",
+        "command": "python",
+        "args": ["common/hooks/validators/causal_anchor_validator.py", "${workspace}/cases/${case_id}/runs/${run_id}/artifacts/session_evidence.yaml"],
+        "blocking": true
+      },
+      {
+        "name": "counterfactual_validator",
+        "description": "Validate counterfactual tests before final verdict",
+        "command": "python",
+        "args": ["common/hooks/validators/counterfactual_validator.py", "${workspace}/cases/${case_id}/runs/${run_id}/artifacts/session_evidence.yaml"],
+        "blocking": true
+      },
+      {
+        "name": "skeptic_signoff_checker",
+        "description": "Validate skeptic sign-off before case closure",
+        "command": "python",
+        "args": ["common/hooks/validators/skeptic_signoff_checker.py", "${workspace}/cases/${case_id}/runs/${run_id}/artifacts/skeptic_output.yaml"],
+        "blocking": true
+      }
+    ]
+  },
+  "files": {
+    "exclude": [
+      "workspace/**",
+      "**/*.rdc",
+      "**/*.exe",
+      "**/*.dll"
+    ]
+  }
+}

@@ -1,0 +1,78 @@
+# Run Compliance Schema - Cursor平台适配版本
+# 本文件继承自 common/hooks/schemas/run_compliance_schema.yaml
+# 用于Cursor平台的运行合规性验证
+
+# 继承自common的定义，此处仅作引用标记
+_inherits: "common/hooks/schemas/run_compliance_schema.yaml"
+
+schema_version: 1
+description: "Run Compliance Schema（Cursor平台适配）"
+
+# Cursor平台特定配置
+cursor_platform:
+  # Cursor特定的合规检查增强
+  compliance_enhancements:
+    check_ide_integration: true
+    validate_workspace_paths: true
+
+  # 与Cursor编辑器集成的提示信息
+  editor_hints:
+    compliance_failed_prompt: "Cursor: 运行合规检查失败，请查看详细报告"
+    validation_error_display: "panel"
+
+required_fields:
+  - field: schema_version
+    type: string
+    pattern: "^1$"
+  - field: platform
+    type: string
+    allowed_values: [cursor]
+  - field: run_root
+    type: string
+    min_length: 10
+  - field: status
+    type: string
+    allowed_values: [passed, failed]
+  - field: generated_by
+    type: string
+    allowed_values: [run_compliance_audit]
+  - field: generated_at
+    type: string
+    min_length: 10
+  - field: checks
+    type: list
+    min_items: 1
+  - field: summary
+    type: object
+    required_subfields:
+      - passed
+      - failed
+
+check_schema:
+  required:
+    - id
+    - result
+    - detail
+  optional:
+    - path
+    - severity
+    - refs
+
+allowed_check_results:
+  - pass
+  - fail
+  - warn
+
+# Cursor平台特定的检查项
+cursor_specific_checks:
+  - id: cursor_ide_integration
+    description: "Cursor IDE集成状态检查"
+    severity: warn
+
+  - id: cursor_workspace_paths
+    description: "Cursor工作区路径有效性检查"
+    severity: error
+
+  - id: cursor_settings_sync
+    description: "Cursor设置同步状态检查"
+    severity: warn

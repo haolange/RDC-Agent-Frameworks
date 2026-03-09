@@ -97,6 +97,21 @@
         "per_role_config",
         "multi_agent"
       ]
+    },
+    "cursor": {
+      "workspace_root": "platforms/cursor",
+      "status_label": "full",
+      "agent_dir": "agents",
+      "skill_dir": "skills/renderdoc-rdc-gpu-debug",
+      "role_config_dir": null,
+      "entrypoint_file": ".cursorrules",
+      "native_surfaces": [
+        "agents",
+        "skills",
+        "mcp",
+        "per_agent_model",
+        "handoffs"
+      ]
     }
   }
 }
