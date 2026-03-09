@@ -7,9 +7,9 @@
       "platform_rendering": {
         "claude-code": "opus",
         "code-buddy": "opus-4.6",
-        "copilot-cli": "inherit",
-        "copilot-ide": "gpt-5",
-        "claude-desktop": "inherit",
+        "copilot-cli": "opus-4.6",
+        "copilot-ide": "opus-4.6",
+        "claude-desktop": "opus",
         "codex": "gpt-5.4"
       }
     },
