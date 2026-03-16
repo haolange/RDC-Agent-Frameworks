@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "description": "Mandatory framework-to-tools binding. Agents must resolve tools_root, validate the required platform-truth files, and then use daemon-backed CLI/MCP adapters against the same daemon-owned runtime.",
+  "description": "Framework-to-tools binding. tools_root is fixed to the relative path 'tools'; users must copy RDC-Agent-Tools into the platform root tools/ directory before use.",
   "paths": {
-    "tools_root": "__CONFIGURE_TOOLS_ROOT__"
+    "tools_root": "tools"
   },
   "validation": {
     "mode": "hard_fail",

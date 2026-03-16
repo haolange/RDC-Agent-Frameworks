@@ -8,18 +8,16 @@
 
 开始使用 `debugger/` 之前，必须先完成：
 
-1. 在复制后的平台包根目录中配置 `common/config/platform_adapter.json`
-2. 将 `paths.tools_root` 指向有效的 `RDC-Agent-Tools` 根目录
-3. 确认 `validation.required_paths` 中的文件在 `<resolved tools_root>/` 下存在
-4. 运行 `python common/config/validate_binding.py --strict`
-5. 在当前对话提交至少一份 `.rdc`
+1. 将仓库根目录 `debugger/common/` 整包拷贝到平台根目录的 `common/`。
+2. 将 RDC-Agent-Tools 根目录整包拷贝到平台根目录的 `tools/`。
+3. 确认 `tools/` 下存在 `validation.required_paths` 中列出的文件（README.md、docs/tools.md、docs/session-model.md、docs/agent-model.md、spec/tool_catalog.json）。
+4. 运行 `python common/config/validate_binding.py --strict`，确认 `tools/`、snapshot 与宿主文档入口均已对齐。
+5. 在当前对话提交至少一份 `.rdc`。
 
 补充约束：
 
-- source repo 中的 `common/config/platform_adapter.json` 故意保留占位值，用于 fail-closed；不要把 source root 当成直接绑定目标。
-- `platform_adapter.json` 是 JSON 文件；Windows 路径必须写成合法 JSON，例如：
-  - `"D:/Projects/Native/RDX/RDC-Agent-Tools"`
-  - `"D:\\Projects\\Native\\RDX\\RDC-Agent-Tools"`
+- `tools_root` 已固定为相对路径 `tools`；无需手动编辑 `platform_adapter.json`。
+- source repo 中的 `tools/` 目录不存在，平台模板中的 `tools/` 默认为最小占位目录，用于 fail-closed；不要把 source repo 当成直接使用目标。
 
 未完成以上步骤前：
 
@@ -55,18 +53,18 @@
 平台模板位于 `platforms/<platform>/`。用户工作流：
 
 1. 选择目标平台模板目录。
-2. 将根目录 `debugger/common/` 拷贝到该平台根的 `common/`。
-3. 在复制后的平台包根目录 `common/config/platform_adapter.json` 中配置 `paths.tools_root`。
-4. 确认 `validation.required_paths` 校验通过。
-5. 运行 `python common/config/validate_binding.py --strict`，确认 `tools_root`、snapshot 与宿主文档入口都已对齐。
-6. 完成覆盖后，在对应宿主中打开该平台根目录。
-7. 正常用户请求从 `team_lead` 发起；其他 specialist 角色默认是 internal/debug-only。
-8. 发起 debug 任务时，用户必须在当前对话提交一份或多份 `.rdc`。
+2. 将仓库根目录 `debugger/common/` 整包拷贝到该平台根的 `common/`。
+3. 将 RDC-Agent-Tools 根目录整包拷贝到该平台根的 `tools/`。
+4. 运行 `python common/config/validate_binding.py --strict`，确认 `tools/`、snapshot 与宿主文档入口都已对齐。
+5. 完成覆盖后，在对应宿主中打开该平台根目录。
+6. 正常用户请求从 `team_lead` 发起；其他 specialist 角色默认是 internal/debug-only。
+7. 发起 debug 任务时，用户必须在当前对话提交一份或多份 `.rdc`。
 
 说明：
 
-- 平台内 `common/` 默认只保留最小占位目录，用来等待整包覆盖。
-- 未完成 `debugger/common/ -> platforms/<platform>/common/` 覆盖前，平台模板不可用。
+- 平台内 `common/` 与 `tools/` 默认均只保留最小占位目录，用来等待整包覆盖。
+- 未同时完成两项覆盖前，平台模板不可用。
+- `tools_root` 已固定为相对路径 `tools`；无需手动编辑 `platform_adapter.json`。
 - 平台入口选择必须遵循 shared docs 中的统一规则：可直达本地环境的宿主默认 local-first / daemon-backed `CLI`，不能直达本地环境的宿主默认 `MCP`。
 - 任务开始时，Agent 必须向用户说明当前采用的入口模式；若所选入口的前置条件未满足，必须先阻断。
 - 缺少 `.rdc` 时，Agent 必须像 `tools_root` 未配置一样直接阻断，不得继续做 triage、investigation 或 planning。

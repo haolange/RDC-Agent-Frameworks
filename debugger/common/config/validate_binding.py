@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-PLACEHOLDER_PREFIX = "__CONFIGURE_"
 ESSENTIAL_COMMON_DOCS = [
     "README.md",
     "common/AGENT_CORE.md",
@@ -78,10 +77,18 @@ def _snapshot_path(root: Path) -> Path:
 
 def _resolve_tools_root(root: Path, payload: dict[str, Any]) -> Path:
     raw = str(payload.get("paths", {}).get("tools_root", "")).strip()
-    if not raw or raw.startswith(PLACEHOLDER_PREFIX):
-        raise ValueError("platform_adapter.json missing configured paths.tools_root")
+    if not raw:
+        raise ValueError("platform_adapter.json missing paths.tools_root")
     candidate = Path(raw)
     return candidate if candidate.is_absolute() else (root / candidate).resolve()
+
+
+def _is_tools_placeholder(tools_root: Path) -> bool:
+    """Return True if tools_root exists but is only a placeholder (README.md only, no subdirs)."""
+    if not tools_root.is_dir():
+        return False
+    children = list(tools_root.iterdir())
+    return len(children) == 1 and children[0].name == "README.md"
 
 
 def validate_binding(root: Path, *, platform: str = "") -> list[str]:
@@ -95,6 +102,12 @@ def validate_binding(root: Path, *, platform: str = "") -> list[str]:
         tools_root = _resolve_tools_root(root, payload)
     except ValueError as exc:
         findings.append(str(exc))
+        return findings
+
+    if _is_tools_placeholder(tools_root):
+        findings.append(
+            "tools/ is a placeholder directory — copy RDC-Agent-Tools into the platform root tools/ then re-run"
+        )
         return findings
 
     required_paths = [

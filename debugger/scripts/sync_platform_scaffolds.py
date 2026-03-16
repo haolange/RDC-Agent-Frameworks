@@ -60,6 +60,26 @@ def common_placeholder_text() -> str:
 """
 
 
+def tools_placeholder_text() -> str:
+    return """# Platform Local Tools Placeholder（本地 `tools/` 占位说明）
+
+当前目录是平台本地 `tools/` 的最小占位目录，不是正式运行时内容。
+
+使用方式：
+
+1. 选择一个 `debugger/platforms/<platform>/` 模板。
+2. 将 RDC-Agent-Tools 根目录整包拷贝到该平台根目录的 `tools/`，覆盖当前目录。
+3. 完成覆盖后，运行 `python common/config/validate_binding.py --strict` 确认绑定有效。
+4. 确认通过后，再在对应宿主中打开该平台根目录使用。
+
+约束：
+
+- 平台内所有 agent / skill / config 引用工具时，只允许引用当前平台根目录的 `tools/`。
+- 未完成覆盖前，当前平台模板不可用。
+- 不为未覆盖状态提供伪完整 placeholder 文件；正式工具真相只来自 RDC-Agent-Tools。
+"""
+
+
 def workspace_placeholder_text() -> str:
     return """# Platform Local Workspace Placeholder
 
@@ -155,6 +175,7 @@ def expected_files(ctx: dict[str, Any], platform_key: str) -> set[Path]:
         package / "README.md",
         package / "AGENTS.md",
         package / "common" / "README.md",
+        package / "tools" / "README.md",
         package / "workspace" / "README.md",
         package / "workspace" / "cases" / "README.md",
     }
@@ -202,6 +223,7 @@ def compare_placeholder(package: Path, rel_path: str, expected_text: str) -> lis
 def compare_common_and_workspace(package: Path) -> list[str]:
     findings: list[str] = []
     findings.extend(compare_placeholder(package, "common/README.md", common_placeholder_text()))
+    findings.extend(compare_placeholder(package, "tools/README.md", tools_placeholder_text()))
     findings.extend(compare_placeholder(package, "workspace/README.md", workspace_placeholder_text()))
     findings.extend(compare_placeholder(package, "workspace/cases/README.md", cases_placeholder_text()))
 
@@ -210,6 +232,12 @@ def compare_common_and_workspace(package: Path) -> list[str]:
         children = {child.name for child in common_dir.iterdir()}
         for name in sorted(children - {"README.md"}):
             findings.append(f"unexpected platform-common content: {common_dir / name}")
+
+    tools_dir = package / "tools"
+    if tools_dir.exists():
+        children = {child.name for child in tools_dir.iterdir()}
+        for name in sorted(children - {"README.md"}):
+            findings.append(f"unexpected platform-tools content: {tools_dir / name}")
 
     workspace_dir = package / "workspace"
     if workspace_dir.exists():
@@ -256,6 +284,7 @@ def sync_placeholders(platform_key: str) -> None:
         if target.exists():
             shutil.rmtree(target)
     write_text(package / "common" / "README.md", common_placeholder_text())
+    write_text(package / "tools" / "README.md", tools_placeholder_text())
     write_text(package / "workspace" / "README.md", workspace_placeholder_text())
     write_text(package / "workspace" / "cases" / "README.md", cases_placeholder_text())
 

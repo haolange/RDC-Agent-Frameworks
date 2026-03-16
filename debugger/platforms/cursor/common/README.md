@@ -1,4 +1,4 @@
-# Platform Local Common Placeholder（本地 `common/` 占位说明）
+﻿# Platform Local Common Placeholder
 
 当前目录是平台本地 `common/` 的最小占位目录，不是正式运行时内容。
 

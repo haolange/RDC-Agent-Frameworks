@@ -27,29 +27,37 @@
 - `causal_anchor`、workspace、artifact/gate 的硬约束
 - 多平台能力差异下的降级编排原则
 
-## 2. Mandatory Tools Resolution
+## 2. Mandatory Setup Verification
 
-所有需要平台真相的工作在开始前，必须先读取并校验：
+所有需要平台真相的工作在开始前，必须先验证以下两项均已就绪：
 
-- `common/config/platform_adapter.json`
+**检查 1：`common/` 已正确覆盖**
+
+- 验证 `common/AGENT_CORE.md` 是否存在。
+- 不存在则说明 `common/` 仍为占位目录，尚未从 `debugger/common/` 整包覆盖。
+
+**检查 2：`tools/` 已正确覆盖**
+
+- 验证 `tools/spec/tool_catalog.json` 是否存在。
+- 不存在则说明 `tools/` 仍为占位目录，尚未从 RDC-Agent-Tools 整包覆盖。
+- `tools/` 下应至少包含：
+  - `README.md`
+  - `docs/tools.md`
+  - `docs/session-model.md`
+  - `docs/agent-model.md`
+  - `spec/tool_catalog.json`
 
 强制规则：
 
-1. `paths.tools_root` 必须由用户显式配置，不允许保留占位值。
-2. Agent 必须验证 `tools_root` 下至少存在：
-   - `README.md`
-   - `docs/tools.md`
-   - `docs/session-model.md`
-   - `docs/agent-model.md`
-   - `spec/tool_catalog.json`
-3. 任一项缺失、路径不存在或 `tools_root` 未配置时，必须立即停止，不得继续做 debug / investigation / tool planning。
-4. 停止时统一输出：
+1. 任一检查失败，必须立即停止，不得继续做 debug / investigation / tool planning。
+2. 停止时统一输出：
 
 ```text
-Tools 平台真相未配置：请先在 `common/config/platform_adapter.json` 中设置 `paths.tools_root` 指向有效的 `RDC-Agent-Tools` 根目录，并确认必需文档与 `spec/tool_catalog.json` 存在后，再重新发起任务。
+前置环境未就绪：请确认 (1) 已将 debugger/common/ 整包覆盖到平台根 common/；(2) 已将 RDC-Agent-Tools 整包覆盖到平台根 tools/；(3) 在平台根目录运行 python common/config/validate_binding.py --strict 通过后，再重新发起任务。
 ```
 
-5. 不允许把 `CLI` wrapper、skill 文本、平台模板说明或模型记忆当成 Tools 真相替代品。
+3. 不允许把 `CLI` wrapper、skill 文本、平台模板说明或模型记忆当成 Tools 真相替代品。
+4. 不允许尝试搜索替代工具路径、降级处理或用其他方式绕过本检查。
 
 ## 3. Mandatory Capture Intake
 

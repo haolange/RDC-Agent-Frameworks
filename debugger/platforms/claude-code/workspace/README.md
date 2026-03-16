@@ -1,4 +1,4 @@
-﻿# Platform Local Workspace Placeholder（本地 `workspace/` 占位说明）
+﻿# Platform Local Workspace Placeholder
 
 当前目录是平台本地 `workspace/` 运行区骨架。
 
