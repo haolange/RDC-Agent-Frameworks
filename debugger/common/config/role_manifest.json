@@ -17,6 +17,9 @@
         "copilot-ide": "orchestrator.md",
         "codex": "team_lead",
         "cursor": "01_team_lead.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "team-lead"
       }
     },
     {
@@ -35,6 +38,9 @@
         "copilot-ide": "triage.md",
         "codex": "triage_agent",
         "cursor": "02_triage_taxonomy.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "triage-taxonomy"
       }
     },
     {
@@ -53,6 +59,9 @@
         "copilot-ide": "capture.md",
         "codex": "capture_repro_agent",
         "cursor": "03_capture_repro.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "capture-repro"
       }
     },
     {
@@ -71,6 +80,9 @@
         "copilot-ide": "pipeline.md",
         "codex": "pass_graph_pipeline_agent",
         "cursor": "04_pass_graph_pipeline.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "pass-graph-pipeline"
       }
     },
     {
@@ -89,6 +101,9 @@
         "copilot-ide": "forensics.md",
         "codex": "pixel_forensics_agent",
         "cursor": "05_pixel_value_forensics.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "pixel-value-forensics"
       }
     },
     {
@@ -107,6 +122,9 @@
         "copilot-ide": "shader.md",
         "codex": "shader_ir_agent",
         "cursor": "06_shader_ir.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "shader-ir"
       }
     },
     {
@@ -125,6 +143,9 @@
         "copilot-ide": "driver.md",
         "codex": "driver_device_agent",
         "cursor": "07_driver_device.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "driver-device"
       }
     },
     {
@@ -143,6 +164,9 @@
         "copilot-ide": "verifier.md",
         "codex": "skeptic_agent",
         "cursor": "08_skeptic.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "skeptic"
       }
     },
     {
@@ -161,6 +185,9 @@
         "copilot-ide": "report-curator.md",
         "codex": "curator_agent",
         "cursor": "09_report_knowledge_curator.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "report-knowledge-curator"
       }
     }
   ]

@@ -1,5 +1,7 @@
-﻿---
-description: "Analyze shader source, IR evidence, and suspicious fingerprints."
+---
+name: shader-ir
+description: "Internal specialist for shader source, SPIR-V or IR evidence, and suspicious expression fingerprints. Use when a first_bad_event is bound to shader execution."
+disallowedTools: Bash, Agent
 model: "sonnet"
 ---
 
@@ -9,7 +11,7 @@ model: "sonnet"
 
 本文件只负责宿主入口与角色元数据；共享正文统一从当前平台根目录的 `common/` 读取。
 
-该角色默认是 internal/debug-only specialist。正常用户请求应先交给 `team_lead` 路由，只有调试 framework 本身时才直接使用该角色。
+该角色默认是 internal/debug-only specialist。正常用户请求应先交给 session-wide `team-lead`（shared `team_lead`）路由，只有调试 framework 本身时才直接使用该角色。
 
 按顺序阅读：
 
@@ -20,5 +22,7 @@ model: "sonnet"
 5. ../../common/skills/shader-ir/SKILL.md
 
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
+
+需要 live RenderDoc 访问时，只使用当前会话已配置的 MCP server；不要回退到 Bash/CLI 包装。
 
 运行时工作区固定为：`../workspace`

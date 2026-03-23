@@ -273,6 +273,42 @@
 - 第一层真相产物继续写入 `common/knowledge/library/**`
 - 第二层交付层写入 `../workspace/cases/<case_id>/runs/<run_id>/reports/`
 
+角色写入边界（write scopes）：
+
+- `workspace_control`
+  - `case.yaml`
+  - `case_input.yaml`
+  - capture/reference manifests
+  - `run.yaml`
+  - `capture_refs.yaml`
+  - `notes/hypothesis_board.yaml`
+- `workspace_notes`
+  - `runs/<run_id>/artifacts/`
+  - `runs/<run_id>/notes/`
+  - `runs/<run_id>/screenshots/`
+- `session_signoff`
+  - `common/knowledge/library/sessions/<session_id>/skeptic_signoff.yaml`
+- `workspace_reports`
+  - `reports/report.md`
+  - `reports/visual_report.html`
+- `session_artifacts`
+  - `.current_session`
+  - `session_evidence.yaml`
+  - `action_chain.jsonl`
+- `knowledge_library`
+  - `bugcards/`
+  - `bugfull/`
+  - `bugcard_index.yaml`
+  - `cross_device_fingerprint_graph.yaml`
+  - `proposals/`
+
+角色分工约束：
+
+- `team_lead` 只允许写 `workspace_control` 范围，不直接执行 live `rd.*`，也不写最终报告或知识对象
+- `triage_agent`、`capture_repro_agent`、`pass_graph_pipeline_agent`、`pixel_forensics_agent`、`shader_ir_agent`、`driver_device_agent` 只允许写 `workspace_notes` 范围
+- `skeptic_agent` 只允许写 `session_signoff`
+- `curator_agent` 负责 `workspace_reports`、`session_artifacts` 与 `knowledge_library`
+
 ### 7.5 Artifact / Gate Contract
 
 结案前必须具备：

@@ -20,6 +20,41 @@
       "BugCard/BugFull reference or DEBUGGER_FINAL_VERDICT"
     ],
     "run_compliance_artifact": "artifacts/run_compliance.yaml",
+    "write_scope_paths": {
+      "workspace_control": [
+        "workspace/cases/<case_id>/case.yaml",
+        "workspace/cases/<case_id>/case_input.yaml",
+        "workspace/cases/<case_id>/inputs/captures/manifest.yaml",
+        "workspace/cases/<case_id>/inputs/references/manifest.yaml",
+        "workspace/cases/<case_id>/runs/<run_id>/run.yaml",
+        "workspace/cases/<case_id>/runs/<run_id>/capture_refs.yaml",
+        "workspace/cases/<case_id>/runs/<run_id>/notes/hypothesis_board.yaml"
+      ],
+      "workspace_notes": [
+        "workspace/cases/<case_id>/runs/<run_id>/artifacts/",
+        "workspace/cases/<case_id>/runs/<run_id>/notes/",
+        "workspace/cases/<case_id>/runs/<run_id>/screenshots/"
+      ],
+      "session_signoff": [
+        "common/knowledge/library/sessions/<session_id>/skeptic_signoff.yaml"
+      ],
+      "workspace_reports": [
+        "workspace/cases/<case_id>/runs/<run_id>/reports/report.md",
+        "workspace/cases/<case_id>/runs/<run_id>/reports/visual_report.html"
+      ],
+      "session_artifacts": [
+        "common/knowledge/library/sessions/.current_session",
+        "common/knowledge/library/sessions/<session_id>/session_evidence.yaml",
+        "common/knowledge/library/sessions/<session_id>/action_chain.jsonl"
+      ],
+      "knowledge_library": [
+        "common/knowledge/library/bugcards/",
+        "common/knowledge/library/bugfull/",
+        "common/knowledge/library/bugcard_index.yaml",
+        "common/knowledge/library/cross_device_fingerprint_graph.yaml",
+        "common/knowledge/proposals/"
+      ]
+    },
     "allowed_live_library_session_entries": [
       ".current_session",
       "README.md"

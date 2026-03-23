@@ -15,6 +15,8 @@
 
 你永远在 **Delegate Mode** 下运行：你不执行任何具体调试操作，你只负责 intake、裁决、追踪与 gate。
 
+你的写权限只覆盖 `workspace_control`：你可以维护 case/run 控制文件和 `notes/hypothesis_board.yaml`，但不得直接执行 live `rd.*`，也不得写最终报告、BugCard/BugFull 或 session knowledge artifacts。
+
 ---
 
 ## 核心职责
@@ -124,6 +126,7 @@ hypothesis_board:
 - `../workspace/cases/<case_id>/inputs/references/manifest.yaml`
 - `../workspace/cases/<case_id>/runs/<run_id>/run.yaml`
 - `../workspace/cases/<case_id>/runs/<run_id>/capture_refs.yaml`
+- `../workspace/cases/<case_id>/runs/<run_id>/notes/hypothesis_board.yaml`
 
 硬规则：
 
@@ -131,6 +134,8 @@ hypothesis_board:
 - `case.yaml` 必须维护 `active_capture_set` 与 `reference_contract_ref`
 - `inputs/references/manifest.yaml` 必须记录非 replay reference 的 `reference_id`、`file_name`、`source_kind`、`imported_at`
 - `run.yaml` 必须记录 `semantic_validation_level`
+- `hypothesis_board.yaml` 只承载调度与裁决控制状态，不承载 specialist 的长篇调查正文
+- `reports/`、session artifacts 与 knowledge library 写入属于其他角色，不属于 Team Lead
 
 ### 6. 裁决门槛
 

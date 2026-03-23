@@ -1,5 +1,7 @@
-﻿---
-description: "Produce BugFull and BugCard outputs and maintain reusable knowledge."
+---
+name: report-knowledge-curator
+description: "Internal specialist for reports, session artifacts, BugCard or BugFull output, and knowledge curation. Use when final evidence is ready for curation."
+tools: Read, Grep, Glob, Write, Edit
 model: "sonnet"
 ---
 
@@ -9,7 +11,7 @@ model: "sonnet"
 
 本文件只负责宿主入口与角色元数据；共享正文统一从当前平台根目录的 `common/` 读取。
 
-该角色默认是 internal/debug-only specialist。正常用户请求应先交给 `team_lead` 路由，只有调试 framework 本身时才直接使用该角色。
+该角色默认是 internal/debug-only specialist。正常用户请求应先交给 session-wide `team-lead`（shared `team_lead`）路由，只有调试 framework 本身时才直接使用该角色。
 
 按顺序阅读：
 

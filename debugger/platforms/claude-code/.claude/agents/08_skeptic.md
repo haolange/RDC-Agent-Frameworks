@@ -1,5 +1,7 @@
-﻿---
-description: "Challenge weak claims and sign off only when proven."
+---
+name: skeptic
+description: "Internal specialist for adversarial validation and strict signoff. Use when challenging weak conclusions before finalization."
+tools: Read, Grep, Glob, Write, Edit
 model: "opus"
 ---
 
@@ -9,7 +11,7 @@ model: "opus"
 
 本文件只负责宿主入口与角色元数据；共享正文统一从当前平台根目录的 `common/` 读取。
 
-该角色默认是 internal/debug-only specialist。正常用户请求应先交给 `team_lead` 路由，只有调试 framework 本身时才直接使用该角色。
+该角色默认是 internal/debug-only specialist。正常用户请求应先交给 session-wide `team-lead`（shared `team_lead`）路由，只有调试 framework 本身时才直接使用该角色。
 
 按顺序阅读：
 

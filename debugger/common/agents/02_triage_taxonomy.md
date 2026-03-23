@@ -52,6 +52,8 @@ symptom_tags → symptom_to_invariants[tag] → 候选 invariant_ids
 - `causal_axis`：当前问题应优先沿哪条因果链收敛
 - `disallowed_shortcuts`：当前场景下禁止采用的方向性捷径
 
+若宿主允许在运行区追加分类摘要，你只允许把摘要写入 `../workspace/cases/<case_id>/runs/<run_id>/notes/`。这属于 `workspace_notes`，不得改写 `case_input.yaml`、`run.yaml` 或任何最终报告。
+
 ---
 
 ## 分类规则

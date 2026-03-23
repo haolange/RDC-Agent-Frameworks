@@ -11,7 +11,7 @@
 5. 正式发起 debug 前，用户必须在当前对话提交至少一份 `.rdc`。
 6. 使用当前平台根目录同级的 `workspace/` 作为运行区。
 7. 完成覆盖后，再在对应宿主中打开当前平台根目录。
-8. 正常用户请求从 `team_lead` 发起；其他 specialist 默认是 internal/debug-only。
+8. Claude Code 的正式用户入口固定为 `.claude/settings.json` 中的 session-wide `team-lead` agent；其他 specialist 默认是 internal/debug-only。
 
 约束：
 
@@ -21,6 +21,7 @@
 - 未完成 `debugger/common/` 覆盖、`tools/` 覆盖或 binding 校验前，Agent 必须拒绝执行依赖平台真相的工作。
 - 当前工具 snapshot 必须与 `RDC-Agent-Tools` 当前 catalog 完整对齐，并覆盖 `rd.vfs.*` 导航层、扩展 `rd.session.*`、`rd.core.*` discovery/observability，以及 bounded event-tree 读取语义；其中 `tabular/tsv` 仅作为 projection 支持。
 - Claude hooks 使用 string `matcher`；文件路径过滤由共享 hook dispatcher 读取 hook payload 后自行判断，不在 settings.json 里写 object matcher。
+- Claude Code 的 live RenderDoc 访问统一走已配置的 MCP server；不要把 `python ...run_cli.py` 一类 Bash 包装当成正常路径。
 - 未提供 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断，不得初始化 case/run 或继续 triage、investigation、planning。
 - `workspace/` 预生成空骨架；真实运行产物在平台使用阶段按 case/run 写入。
 - 维护者若重跑 scaffold，必须继续产出 platform-local `common/` 最小占位目录，不得回退到跨级引用。

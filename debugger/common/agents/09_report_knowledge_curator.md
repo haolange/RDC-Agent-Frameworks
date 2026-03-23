@@ -30,6 +30,8 @@
 - `../workspace/cases/<case_id>/runs/<run_id>/reports/report.md`
 - `../workspace/cases/<case_id>/runs/<run_id>/reports/visual_report.html`
 
+这些范围分别对应 `knowledge_library`、`session_artifacts` 与 `workspace_reports`；除此之外的写入一律不属于你。
+
 你不得直接改写：
 
 - `common/agents/`

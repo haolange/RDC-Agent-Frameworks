@@ -27,6 +27,10 @@
       "allow_live_tools": false,
       "tool_classes": ["planning", "delegation", "artifact_review"]
     },
+    "taxonomy": {
+      "allow_live_tools": false,
+      "tool_classes": ["artifact_review", "classification"]
+    },
     "investigation": {
       "allow_live_tools": true,
       "tool_classes": ["rd_runtime", "artifact_review", "brief_handoff"]
@@ -49,7 +53,7 @@
       "model_profile": "orchestrator",
       "tool_policy": "coordination_only",
       "hook_policy": "none",
-      "writable_artifacts": false,
+      "write_scopes": ["workspace_control"],
       "delegates_to": [
         "triage_agent",
         "capture_repro_agent",
@@ -63,58 +67,58 @@
     },
     "triage_agent": {
       "model_profile": "investigator",
-      "tool_policy": "investigation",
+      "tool_policy": "taxonomy",
       "hook_policy": "none",
-      "writable_artifacts": false,
+      "write_scopes": ["workspace_notes"],
       "delegates_to": ["team_lead"]
     },
     "capture_repro_agent": {
       "model_profile": "investigator",
       "tool_policy": "investigation",
       "hook_policy": "none",
-      "writable_artifacts": false,
+      "write_scopes": ["workspace_notes"],
       "delegates_to": ["team_lead"]
     },
     "pass_graph_pipeline_agent": {
       "model_profile": "investigator",
       "tool_policy": "investigation",
       "hook_policy": "none",
-      "writable_artifacts": false,
+      "write_scopes": ["workspace_notes"],
       "delegates_to": ["team_lead"]
     },
     "pixel_forensics_agent": {
       "model_profile": "investigator",
       "tool_policy": "investigation",
       "hook_policy": "none",
-      "writable_artifacts": false,
+      "write_scopes": ["workspace_notes"],
       "delegates_to": ["team_lead"]
     },
     "shader_ir_agent": {
       "model_profile": "investigator",
       "tool_policy": "investigation",
       "hook_policy": "none",
-      "writable_artifacts": false,
+      "write_scopes": ["workspace_notes"],
       "delegates_to": ["team_lead"]
     },
     "driver_device_agent": {
       "model_profile": "investigator",
       "tool_policy": "investigation",
       "hook_policy": "none",
-      "writable_artifacts": false,
+      "write_scopes": ["workspace_notes"],
       "delegates_to": ["team_lead"]
     },
     "skeptic_agent": {
       "model_profile": "verifier",
       "tool_policy": "review_only",
       "hook_policy": "none",
-      "writable_artifacts": false,
+      "write_scopes": ["session_signoff"],
       "delegates_to": ["team_lead"]
     },
     "curator_agent": {
       "model_profile": "reporter",
       "tool_policy": "curation",
       "hook_policy": "write_and_stop_gate",
-      "writable_artifacts": true,
+      "write_scopes": ["workspace_reports", "session_artifacts", "knowledge_library"],
       "delegates_to": ["team_lead"]
     }
   }

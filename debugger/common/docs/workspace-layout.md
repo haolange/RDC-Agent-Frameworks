@@ -119,3 +119,42 @@ workspace/
 - 不得把原始 `.rdc` 复制到 `runs/<run_id>/`
 - 不得把 reference 图片写进 capture manifest
 - 不得创造第一层不存在的新事实
+
+## 5. 角色写入范围
+
+共享 `write_scope` 只允许以下几类：
+
+- `workspace_control`
+  - `case.yaml`
+  - `case_input.yaml`
+  - `inputs/captures/manifest.yaml`
+  - `inputs/references/manifest.yaml`
+  - `run.yaml`
+  - `capture_refs.yaml`
+  - `notes/hypothesis_board.yaml`
+- `workspace_notes`
+  - `runs/<run_id>/artifacts/`
+  - `runs/<run_id>/notes/`
+  - `runs/<run_id>/screenshots/`
+- `workspace_reports`
+  - `reports/report.md`
+  - `reports/visual_report.html`
+- `session_signoff`
+  - `common/knowledge/library/sessions/<session_id>/skeptic_signoff.yaml`
+- `session_artifacts`
+  - `common/knowledge/library/sessions/.current_session`
+  - `common/knowledge/library/sessions/<session_id>/session_evidence.yaml`
+  - `common/knowledge/library/sessions/<session_id>/action_chain.jsonl`
+- `knowledge_library`
+  - `common/knowledge/library/bugcards/`
+  - `common/knowledge/library/bugfull/`
+  - `common/knowledge/library/bugcard_index.yaml`
+  - `common/knowledge/library/cross_device_fingerprint_graph.yaml`
+  - `common/knowledge/proposals/`
+
+角色边界：
+
+- `team_lead` 只写 `workspace_control`
+- investigators 只写 `workspace_notes`
+- `skeptic_agent` 只写 `session_signoff`
+- `curator_agent` 写 `workspace_reports`、`session_artifacts` 与 `knowledge_library`

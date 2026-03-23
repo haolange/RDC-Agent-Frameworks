@@ -1,4 +1,5 @@
-﻿{
+{
+    "agent":  "team-lead",
     "mcpServers":  {
                        "renderdoc-platform-mcp":  {
                                                       "args":  [
@@ -7,7 +8,7 @@
                                                       "command":  "python"
                                                   }
                    },
-    "description":  "RenderDoc/RDC GPU Debug - Claude Code platform-local common adaptation",
+    "description":  "RenderDoc/RDC GPU Debug - Claude Code platform-local common adaptation with session-wide team-lead entry",
     "hooks":  {
                   "PostToolUse":  [
                                       {

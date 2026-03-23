@@ -29,6 +29,7 @@
 
 强制规则：
 
+- 当前平台的正式用户入口由 `.claude/settings.json` 中的 `agent: team-lead` 固定；不要在通用主线程中临时拼装 prompt-only Team Lead。
 - 正常用户入口只有 `team_lead`
 - 其他 specialist 默认是 internal/debug-only，由 `team_lead` 决定是否分派
 - 用户未提交 `.rdc` 时，必须以 `BLOCKED_MISSING_CAPTURE` 停止，不得初始化 case/run 或继续做 debug、investigation、tool planning

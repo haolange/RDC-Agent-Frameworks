@@ -63,6 +63,14 @@
 3. `overall_result` 是否由前两者正确派生
 4. 若语义是 `fallback_only` → 直接 challenge，不得签署
 
+### 落盘边界
+
+你的唯一写权限是 `session_signoff`：
+
+- `common/knowledge/library/sessions/<session_id>/skeptic_signoff.yaml`
+
+除该 signoff 外，你不得写 `workspace/` 控制文件、notes、reports 或知识库其他对象。
+
 ### 当 Curator 提交 BugCard 草稿时
 
 重点检查：
@@ -127,6 +135,8 @@ sign_off:
   semantic_verdict: pass
   declaration: "结构修复与语义修复均已通过，允许 strict finalization。"
 ```
+
+当输出 `SKEPTIC_SIGN_OFF` 时，必须把同等语义的结构化结果写入 `common/knowledge/library/sessions/<session_id>/skeptic_signoff.yaml`，供 finalization gate 和 Curator 复用。
 
 ---
 

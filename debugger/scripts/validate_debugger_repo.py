@@ -83,6 +83,21 @@ def _platform_is_inherit_only(platform_caps: dict) -> bool:
     return (not bool(slot.get("supported"))) or rendered in {"inherit", "workflow-level", "not-supported"}
 
 
+def _claude_code_subagent_name(role: dict) -> str | None:
+    platform_names = role.get("platform_subagent_names") or {}
+    value = str(platform_names.get("claude-code", "")).strip()
+    return value or None
+
+
+def _agent_allowlist(value: str | None) -> set[str]:
+    if not value:
+        return set()
+    match = re.search(r"Agent\(([^)]*)\)", value)
+    if not match:
+        return set()
+    return {item.strip() for item in match.group(1).split(",") if item.strip()}
+
+
 def _expected_rendered_model(root: Path, platform_key: str, agent_id: str) -> tuple[Path, str] | None:
     manifest = _read_json(root / "common" / "config" / "role_manifest.json")
     routing = _read_json(root / "common" / "config" / "model_routing.json")
@@ -426,6 +441,174 @@ def _claude_settings_findings(root: Path) -> list[str]:
     return findings
 
 
+def _claude_code_agent_findings(root: Path) -> list[str]:
+    findings: list[str] = []
+    manifest = _read_json(root / "common" / "config" / "role_manifest.json")
+    role_policy = _read_json(root / "common" / "config" / "role_policy.json")
+    settings = _read_json(root / "platforms" / "claude-code" / ".claude" / "settings.json")
+
+    roles = manifest.get("roles") or []
+    role_rows = role_policy.get("roles") or {}
+    tool_policies = role_policy.get("tool_policies") or {}
+    claude_agents_root = root / "platforms" / "claude-code" / ".claude" / "agents"
+
+    formal_entry_name = None
+    for role in roles:
+        if role.get("formal_user_entry"):
+            formal_entry_name = _claude_code_subagent_name(role)
+            break
+    if not formal_entry_name:
+        findings.append("role_manifest.json missing claude-code formal entry subagent name")
+    else:
+        actual_agent = str(settings.get("agent", "")).strip()
+        if actual_agent != formal_entry_name:
+            findings.append(
+                f"claude-code settings agent mismatch ({actual_agent} != {formal_entry_name})"
+            )
+
+    for role in roles:
+        platform_file = (role.get("platform_files") or {}).get("claude-code")
+        if not platform_file:
+            continue
+        expected_name = _claude_code_subagent_name(role)
+        if not expected_name:
+            findings.append(f"{role.get('agent_id')}: missing platform_subagent_names.claude-code")
+            continue
+
+        path = claude_agents_root / platform_file
+        if not path.is_file():
+            findings.append(f"claude-code agent file missing: {path}")
+            continue
+
+        actual_name = _frontmatter_string(path, "name")
+        if actual_name != expected_name:
+            findings.append(f"claude-code {role.get('agent_id')} name mismatch ({actual_name} != {expected_name})")
+
+        description = _frontmatter_string(path, "description")
+        if not description:
+            findings.append(f"claude-code {role.get('agent_id')} missing description")
+
+    team_lead_role = next((role for role in roles if role.get("agent_id") == "team_lead"), None)
+    if team_lead_role:
+        team_lead_path = claude_agents_root / str((team_lead_role.get("platform_files") or {}).get("claude-code", ""))
+        if not team_lead_path.is_file():
+            findings.append(f"claude-code team_lead file missing: {team_lead_path}")
+        else:
+            team_lead_tools = _frontmatter_string(team_lead_path, "tools")
+            if not team_lead_tools or "Agent(" not in team_lead_tools:
+                findings.append("claude-code team_lead must expose Agent(...) in tools allowlist")
+            if team_lead_tools and "Bash" in team_lead_tools:
+                findings.append("claude-code team_lead must not expose Bash")
+
+            expected_specialists = {
+                _claude_code_subagent_name(role)
+                for role in roles
+                if not role.get("formal_user_entry")
+            }
+            actual_specialists = _agent_allowlist(team_lead_tools)
+            if actual_specialists != expected_specialists:
+                findings.append("claude-code team_lead Agent allowlist does not match specialist subagents")
+
+    triage_role = next((role for role in roles if role.get("agent_id") == "triage_agent"), None)
+    if triage_role:
+        triage_path = claude_agents_root / str((triage_role.get("platform_files") or {}).get("claude-code", ""))
+        if not triage_path.is_file():
+            findings.append(f"claude-code triage_agent file missing: {triage_path}")
+        else:
+            triage_tools = _frontmatter_string(triage_path, "tools")
+            if not triage_tools:
+                findings.append("claude-code triage_agent must use an explicit tools allowlist")
+            if triage_tools and ("Bash" in triage_tools or "Agent(" in triage_tools):
+                findings.append("claude-code triage_agent must not expose Bash or Agent")
+
+    for role in roles:
+        agent_id = str(role.get("agent_id", "")).strip()
+        policy_name = str((role_rows.get(agent_id) or {}).get("tool_policy", "")).strip()
+        policy = tool_policies.get(policy_name) or {}
+        allow_live_tools = bool(policy.get("allow_live_tools"))
+        if not allow_live_tools or role.get("formal_user_entry"):
+            continue
+        platform_file = (role.get("platform_files") or {}).get("claude-code")
+        if not platform_file:
+            continue
+        path = claude_agents_root / platform_file
+        if not path.is_file():
+            continue
+        disallowed = _frontmatter_string(path, "disallowedTools")
+        if not disallowed or "Bash" not in disallowed or "Agent" not in disallowed:
+            findings.append(f"claude-code {agent_id} must deny Bash and Agent fallback")
+
+    return findings
+
+
+def _write_scope_findings(root: Path) -> list[str]:
+    findings: list[str] = []
+    compliance = _read_json(root / "common" / "config" / "framework_compliance.json")
+    role_policy = _read_json(root / "common" / "config" / "role_policy.json")
+    scope_contract = (compliance.get("runtime_artifact_contract") or {}).get("write_scope_paths") or {}
+    role_rows = role_policy.get("roles") or {}
+
+    required_scopes = {
+        "workspace_control",
+        "workspace_notes",
+        "session_signoff",
+        "workspace_reports",
+        "session_artifacts",
+        "knowledge_library",
+    }
+    missing_scopes = required_scopes - set(scope_contract)
+    if missing_scopes:
+        findings.append(f"framework_compliance.json missing write_scope_paths entries: {sorted(missing_scopes)}")
+
+    expected_role_scopes = {
+        "team_lead": {"workspace_control"},
+        "triage_agent": {"workspace_notes"},
+        "capture_repro_agent": {"workspace_notes"},
+        "pass_graph_pipeline_agent": {"workspace_notes"},
+        "pixel_forensics_agent": {"workspace_notes"},
+        "shader_ir_agent": {"workspace_notes"},
+        "driver_device_agent": {"workspace_notes"},
+        "skeptic_agent": {"session_signoff"},
+        "curator_agent": {"workspace_reports", "session_artifacts", "knowledge_library"},
+    }
+
+    for agent_id, row in sorted(role_rows.items()):
+        if "writable_artifacts" in row:
+            findings.append(f"{agent_id}: writable_artifacts must not remain in role_policy.json")
+        actual_scopes = set(row.get("write_scopes") or [])
+        if agent_id in expected_role_scopes and actual_scopes != expected_role_scopes[agent_id]:
+            findings.append(f"{agent_id}: write_scopes mismatch ({sorted(actual_scopes)} != {sorted(expected_role_scopes[agent_id])})")
+        undefined_scopes = actual_scopes - set(scope_contract)
+        if undefined_scopes:
+            findings.append(f"{agent_id}: write_scopes reference undefined contract scopes {sorted(undefined_scopes)}")
+
+    doc_checks = [
+        ("team_lead", root / "common" / "agents" / "01_team_lead.md", ["case.yaml", "run.yaml", "notes/hypothesis_board.yaml"]),
+        ("triage_agent", root / "common" / "agents" / "02_triage_taxonomy.md", ["runs/<run_id>/notes/"]),
+        ("capture_repro_agent", root / "common" / "agents" / "03_capture_repro.md", ["runs/<run_id>/notes/"]),
+        ("pass_graph_pipeline_agent", root / "common" / "agents" / "04_pass_graph_pipeline.md", ["runs/<run_id>/notes/"]),
+        ("pixel_forensics_agent", root / "common" / "agents" / "05_pixel_value_forensics.md", ["runs/<run_id>/notes/"]),
+        ("shader_ir_agent", root / "common" / "agents" / "06_shader_ir.md", ["runs/<run_id>/notes/"]),
+        ("driver_device_agent", root / "common" / "agents" / "07_driver_device.md", ["runs/<run_id>/notes/"]),
+        ("skeptic_agent", root / "common" / "agents" / "08_skeptic.md", ["skeptic_signoff.yaml"]),
+        (
+            "curator_agent",
+            root / "common" / "agents" / "09_report_knowledge_curator.md",
+            ["reports/report.md", "reports/visual_report.html", "session_evidence.yaml", "action_chain.jsonl", "common/knowledge/library/bugcards/"],
+        ),
+    ]
+    for agent_id, path, required_markers in doc_checks:
+        if not path.is_file():
+            findings.append(f"missing agent contract doc: {path}")
+            continue
+        text = path.read_text(encoding="utf-8-sig")
+        for marker in required_markers:
+            if marker not in text:
+                findings.append(f"{agent_id}: agent contract missing write-scope marker '{marker}'")
+
+    return findings
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate debugger repo")
     parser.add_argument("--strict", action="store_true", help="return non-zero when findings exist")
@@ -452,6 +635,8 @@ def main() -> int:
     findings.extend(_role_manifest_findings(root))
     findings.extend(_doc_contract_findings(root))
     findings.extend(_claude_settings_findings(root))
+    findings.extend(_claude_code_agent_findings(root))
+    findings.extend(_write_scope_findings(root))
 
     if findings:
         print("[debugger repo findings]")
