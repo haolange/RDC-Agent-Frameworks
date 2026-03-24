@@ -1,4 +1,4 @@
-﻿---
+---
 name: capture-repro
 description: "Internal specialist for capture normalization, replay verification, and runtime batons. Use when establishing anomalous, baseline, or fixed capture anchors."
 disallowedTools: Bash, Agent
@@ -15,11 +15,11 @@ model: "sonnet"
 
 按顺序阅读：
 
-1. AGENTS.md
-2. common/AGENT_CORE.md
-3. common/agents/03_capture_repro.md
-4. common/skills/rdc-debugger/SKILL.md
-5. common/skills/capture-repro/SKILL.md
+1. ../../AGENTS.md
+2. ../../common/AGENT_CORE.md
+3. ../../common/agents/03_capture_repro.md
+4. ../../common/skills/rdc-debugger/SKILL.md
+5. ../../common/skills/capture-repro/SKILL.md
 
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
 

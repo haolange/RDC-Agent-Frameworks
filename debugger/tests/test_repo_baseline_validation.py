@@ -26,7 +26,7 @@ class RepoBaselineValidationTests(unittest.TestCase):
         findings = validator._doc_contract_findings(DEBUGGER_ROOT)
         self.assertEqual(findings, [])
 
-    def test_platform_wrappers_do_not_use_upward_relative_shared_paths(self) -> None:
+    def test_platform_wrappers_do_not_escape_platform_roots(self) -> None:
         validator = _load_module(
             DEBUGGER_ROOT / "scripts" / "validate_debugger_repo.py",
             "validate_debugger_repo_platform_paths_module",
@@ -129,6 +129,27 @@ class RepoBaselineValidationTests(unittest.TestCase):
             path = DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "agents" / platform_file
             self.assertEqual(validator._frontmatter_string(path, "name"), expected_name)
             self.assertTrue(validator._frontmatter_string(path, "description"))
+
+    def test_claude_code_agent_wrappers_are_bom_free(self) -> None:
+        manifest = json.loads((DEBUGGER_ROOT / "common" / "config" / "role_manifest.json").read_text(encoding="utf-8-sig"))
+
+        for role in manifest.get("roles") or []:
+            platform_file = (role.get("platform_files") or {}).get("claude-code")
+            path = DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "agents" / platform_file
+            self.assertFalse(path.read_bytes().startswith(b"\xef\xbb\xbf"), path)
+
+    def test_claude_code_agent_wrappers_use_platform_relative_shared_paths(self) -> None:
+        scaffold = _load_module(DEBUGGER_ROOT / "scripts" / "sync_platform_scaffolds.py", "sync_platform_scaffolds_claude_module")
+        ctx = scaffold.load_context(DEBUGGER_ROOT)
+        manifest = json.loads((DEBUGGER_ROOT / "common" / "config" / "role_manifest.json").read_text(encoding="utf-8-sig"))
+
+        for role in manifest.get("roles") or []:
+            platform_file = role["platform_files"]["claude-code"]
+            path = DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "agents" / platform_file
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("../../AGENTS.md", text)
+            self.assertIn("../../common/AGENT_CORE.md", text)
+            self.assertEqual(text.split("---", 2)[2].lstrip("\r\n"), scaffold.agent_wrapper_body_text(ctx, "claude-code", role))
 
     def test_claude_code_team_lead_tools_are_restricted(self) -> None:
         validator = _load_module(DEBUGGER_ROOT / "scripts" / "validate_debugger_repo.py", "validate_debugger_repo_tooling_module")

@@ -1,8 +1,9 @@
-﻿---
+---
 name: team-lead
 description: "Orchestration bootstrap and delegate coordinator. Use after rdc-debugger finishes preflight and intake normalization, or when the host requires a team-lead bootstrap agent."
 tools: Agent(triage-taxonomy, capture-repro, pass-graph-pipeline, pixel-value-forensics, shader-ir, driver-device, skeptic, report-knowledge-curator), Read, Grep, Glob, Write, Edit
-model: "opus"
+model: opus
+color: blue
 ---
 
 # RenderDoc/RDC Agent Wrapper（宿主入口）
@@ -15,11 +16,11 @@ model: "opus"
 
 按顺序阅读：
 
-1. AGENTS.md
-2. common/AGENT_CORE.md
-3. common/agents/01_team_lead.md
-4. common/skills/rdc-debugger/SKILL.md
-5. common/skills/team-lead-orchestration/SKILL.md
+1. ../../AGENTS.md
+2. ../../common/AGENT_CORE.md
+3. ../../common/agents/01_team_lead.md
+4. ../../common/skills/rdc-debugger/SKILL.md
+5. ../../common/skills/team-lead-orchestration/SKILL.md
 
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
 

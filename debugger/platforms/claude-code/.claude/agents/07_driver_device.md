@@ -1,4 +1,4 @@
-﻿---
+---
 name: driver-device
 description: "Internal specialist for cross-device attribution, API trace differences, and driver or compiler evidence. Use when validating device-specific behavior."
 disallowedTools: Bash, Agent
@@ -15,11 +15,11 @@ model: "sonnet"
 
 按顺序阅读：
 
-1. AGENTS.md
-2. common/AGENT_CORE.md
-3. common/agents/07_driver_device.md
-4. common/skills/rdc-debugger/SKILL.md
-5. common/skills/driver-device/SKILL.md
+1. ../../AGENTS.md
+2. ../../common/AGENT_CORE.md
+3. ../../common/agents/07_driver_device.md
+4. ../../common/skills/rdc-debugger/SKILL.md
+5. ../../common/skills/driver-device/SKILL.md
 
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
 

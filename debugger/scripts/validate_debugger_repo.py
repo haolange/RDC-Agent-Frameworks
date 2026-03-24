@@ -156,29 +156,30 @@ def _platform_wrapper_path_findings(root: Path) -> list[str]:
     findings: list[str] = []
     platform_root = root / "platforms"
     text_exts = {".md", ".txt", ".json", ".toml", ".yaml", ".yml"}
-    forbidden_markers = (
-        "../workspace",
-        "../../workspace",
-        "../../../workspace",
-        "../common/",
-        "../../common/",
-        "../../../common/",
-        "../AGENTS.md",
-        "../../AGENTS.md",
-        "../../../AGENTS.md",
-    )
+    relative_ref_pattern = re.compile(r"(?P<ref>(?:\.\./)+[A-Za-z0-9_.-][A-Za-z0-9_./-]*)")
 
     for path in platform_root.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in text_exts:
             continue
         text = path.read_text(encoding="utf-8-sig")
+        try:
+            platform_dir = path.relative_to(platform_root).parts[0]
+        except ValueError:
+            continue
+        package_root = (platform_root / platform_dir).resolve()
         for lineno, line in enumerate(text.splitlines(), 1):
             stripped = line.strip()
             if stripped.startswith("@"):
                 continue
-            for marker in forbidden_markers:
-                if marker in line:
-                    findings.append(f"{path}:{lineno}: platform wrapper must not use upward-relative shared path '{marker}'")
+            for match in relative_ref_pattern.finditer(line):
+                marker = match.group("ref")
+                resolved = (path.parent / marker).resolve()
+                try:
+                    resolved.relative_to(package_root)
+                except ValueError:
+                    findings.append(
+                        f"{path}:{lineno}: platform wrapper relative path escapes platform root '{marker}'"
+                    )
 
     cursor_rules = (platform_root / "cursor" / ".cursorrules").read_text(encoding="utf-8-sig")
     if "正常用户请求只能从 `team_lead` 进入" in cursor_rules:

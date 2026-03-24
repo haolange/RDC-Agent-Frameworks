@@ -27,9 +27,9 @@ def read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
-def write_text(path: Path, text: str) -> None:
+def write_text(path: Path, text: str, *, encoding: str = "utf-8-sig") -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(normalize(text), encoding="utf-8-sig")
+    path.write_text(normalize(text), encoding=encoding)
 
 
 def load_context(root: Path = ROOT) -> dict[str, Any]:
@@ -349,13 +349,24 @@ def _split_frontmatter(text: str) -> tuple[str, str]:
     return f"---{parts[1]}---\n\n", parts[2].lstrip("\r\n")
 
 
+def _path_prefix_to_package_root(relative_dir: str) -> str:
+    parts = [part for part in Path(relative_dir).parts if part not in {"", "."}]
+    return "../" * len(parts)
+
+
+def _agent_wrapper_encoding(platform_key: str) -> str:
+    return "utf-8" if platform_key == "claude-code" else "utf-8-sig"
+
+
 def agent_wrapper_body_text(ctx: dict[str, Any], platform_key: str, role: dict[str, Any]) -> str:
     display_name = str((ctx["platform_capabilities"]["platforms"][platform_key] or {}).get("display_name", platform_key)).strip()
+    target = ctx["platform_targets"]["platforms"][platform_key]
     public_entry_skill = _public_entry_skill(ctx)
     orchestration_role = _orchestration_role(ctx)
     source_prompt = str(role["source_prompt"]).replace("\\", "/")
     role_skill = str(role["role_skill_path"]).replace("\\", "/")
     agent_id = str(role.get("agent_id", "")).strip()
+    package_prefix = _path_prefix_to_package_root(str(target.get("agent_dir") or ""))
 
     if platform_key == "cursor":
         host_name = "Cursor IDE"
@@ -383,11 +394,11 @@ def agent_wrapper_body_text(ctx: dict[str, Any], platform_key: str, role: dict[s
 
 按顺序阅读：
 
-1. AGENTS.md
-2. common/AGENT_CORE.md
-3. common/{source_prompt}
-4. common/skills/{public_entry_skill}/SKILL.md
-5. common/{role_skill}
+1. {package_prefix}AGENTS.md
+2. {package_prefix}common/AGENT_CORE.md
+3. {package_prefix}common/{source_prompt}
+4. {package_prefix}common/skills/{public_entry_skill}/SKILL.md
+5. {package_prefix}common/{role_skill}
 
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。{tail}
 
@@ -458,7 +469,11 @@ def sync_agent_wrappers(ctx: dict[str, Any], platform_key: str) -> None:
         if not path.is_file():
             continue
         frontmatter, _ = _split_frontmatter(path.read_text(encoding="utf-8-sig"))
-        write_text(path, frontmatter + agent_wrapper_body_text(ctx, platform_key, role))
+        write_text(
+            path,
+            frontmatter + agent_wrapper_body_text(ctx, platform_key, role),
+            encoding=_agent_wrapper_encoding(platform_key),
+        )
 
 
 def main(argv: list[str] | None = None) -> int:
