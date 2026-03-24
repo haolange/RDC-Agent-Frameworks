@@ -23,3 +23,4 @@
 - `codex` 保留 per-agent 配置文件，但当前批准的路由模型族统一为 GPT。
 - remote / live bridge 只保留为 `experimental` 协作合同，不计入本矩阵的当前正式支持能力。
 - remote live-debug 的 owner 仍遵守共享 runtime 规则：每条 live 链路只能有一个 runtime owner。
+- remote live-debug 即便仍是 `experimental`，也应按 same-event truthful failure 解释：成功 trace 与结构化 blocked/runtime failure 都是当前可依赖的结果面，不能再把“没拿到 trace”误写成平台 silent fallback。

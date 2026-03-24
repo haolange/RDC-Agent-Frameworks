@@ -66,6 +66,15 @@ class RepoBaselineValidationTests(unittest.TestCase):
 
         self.assertIn("inputs/captures/manifest.yaml` 是 capture 导入 provenance 的唯一 SSOT", core_text)
 
+    def test_shader_ir_agent_uses_event_bound_shader_queries_and_truthful_debug_failures(self) -> None:
+        text = (DEBUGGER_ROOT / "common" / "agents" / "06_shader_ir.md").read_text(encoding="utf-8-sig")
+        self.assertIn('rd.pipeline.get_shader(session_id=<session_id>, event_id=<first_bad_event>, stage="PS")', text)
+        self.assertIn("data.shader.shader_id", text)
+        self.assertIn("failure_stage", text)
+        self.assertIn("failure_reason", text)
+        self.assertIn("attempts", text)
+        self.assertIn("结构化 blocked/runtime failure", text)
+
     def test_rdc_debugger_docs_declare_minimal_noninteractive_preflight(self) -> None:
         skill_text = (DEBUGGER_ROOT / "common" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
         intake_text = (DEBUGGER_ROOT / "common" / "docs" / "intake" / "README.md").read_text(encoding="utf-8-sig")

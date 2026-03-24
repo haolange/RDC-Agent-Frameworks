@@ -26,6 +26,29 @@ def _load_module(path: Path, module_name: str):
 
 
 class ConfigConsistencyTests(unittest.TestCase):
+    def test_tool_catalog_snapshot_reflects_shader_replace_and_debug_contracts(self) -> None:
+        snapshot = _read_json(DEBUGGER_ROOT / "common" / "config" / "tool_catalog.snapshot.json")
+        tools = {str(item.get("name") or ""): item for item in snapshot.get("tools") or []}
+
+        replace_tool = tools["rd.shader.edit_and_replace"]
+        self.assertIn("event_id", replace_tool.get("param_names") or [])
+        self.assertIn("ops", replace_tool.get("param_names") or [])
+        self.assertIn("replacement_id", replace_tool.get("returns_raw") or "")
+        self.assertIn("resolved_event_id", replace_tool.get("returns_raw") or "")
+        self.assertIn("compile_flags", replace_tool.get("returns_raw") or "")
+        self.assertIn("mock_applied", replace_tool.get("returns_raw") or "")
+
+        debug_tool = tools["rd.shader.debug_start"]
+        self.assertIn("resolved_context", debug_tool.get("returns_raw") or "")
+        self.assertIn("resolved_event_id", debug_tool.get("returns_raw") or "")
+        self.assertIn("failure_stage", debug_tool.get("returns_raw") or "")
+        self.assertIn("failure_reason", debug_tool.get("returns_raw") or "")
+        self.assertIn("attempts", debug_tool.get("returns_raw") or "")
+
+        pipeline_tool = tools["rd.pipeline.get_shader"]
+        self.assertIn("event_id", pipeline_tool.get("param_names") or [])
+        self.assertIn("resolved_event_id", pipeline_tool.get("returns_raw") or "")
+
     def test_platform_keys_and_cursor_alignment(self) -> None:
         compliance = _read_json(DEBUGGER_ROOT / "common" / "config" / "framework_compliance.json")
         capabilities = _read_json(DEBUGGER_ROOT / "common" / "config" / "platform_capabilities.json")

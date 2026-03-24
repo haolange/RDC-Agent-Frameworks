@@ -11,6 +11,7 @@
 ## 最低对齐要求
 
 - `tool_catalog.snapshot.json` 的 `tool_count` 必须等于 `Tools/spec/tool_catalog.json`。
+- `tool_catalog.snapshot.json` 的关键 public contract 也必须反映当前正式 tool 语义，不能继续保留旧的返回形状或 mock 成功口径。
 - snapshot 中必须包含：
   - `rd.vfs.ls`
   - `rd.vfs.cat`

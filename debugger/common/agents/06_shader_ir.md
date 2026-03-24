@@ -26,7 +26,7 @@
 
 ```
 rd.event.set_active(session_id=<session_id>, event_id=<first_bad_event>)
-rd.pipeline.get_shader(session_id=<session_id>, stage="PS")  → 获取 `shader_id`
+rd.pipeline.get_shader(session_id=<session_id>, event_id=<first_bad_event>, stage="PS")  → 从 `data.shader.shader_id` 获取 `shader_id`
 rd.shader.get_source(session_id=<session_id>, shader_id=<shader_id>, prefer_original=true)
 ```
 
@@ -54,7 +54,7 @@ rd.shader.get_messages(session_id=<session_id>, severity_min="warning")  → 检
 当 trigger_tags 包含 `Adreno_GPU` 或 `RelaxedPrecision`，或 Pixel Forensics 判定为精度问题时：
 
 ```
-rd.pipeline.get_shader(session_id=<session_id>, stage="PS")  → 获取 `shader_id`
+rd.pipeline.get_shader(session_id=<session_id>, event_id=<first_bad_event>, stage="PS")  → 从 `data.shader.shader_id` 获取 `shader_id`
 rd.shader.extract_binary(session_id=<session_id>, shader_id=<shader_id>, output_path=<spirv_path>, container="spirv")  → 获取 SPIR-V 或 IR
 ```
 
@@ -80,9 +80,18 @@ rd.shader.extract_binary(session_id=<session_id>, shader_id=<shader_id>, output_
 rd.shader.debug_start(session_id=<session_id>, mode="pixel", event_id=<first_bad_event>, params={"x": <X>, "y": <Y>}, timeout_ms=10000)
 ```
 
-单步执行到可疑代码行，读取：
+若成功，单步执行到可疑代码行，读取：
 - 可疑表达式的输入值（如 `normalize()` 的参数向量长度）
 - 可疑表达式的输出值（如 `half` 计算的实际结果 vs float 计算的预期结果）
+
+若失败，必须记录结构化失败证据，而不是静默跳过：
+- `error.code`
+- `error.details.resolved_context`
+- `error.details.failure_stage`
+- `error.details.failure_reason`
+- `error.details.attempts`
+
+只有当这些失败细节已经证明工具在同一个 `event_id` 内做了真实尝试，才可以把本阶段结论标记为结构化 blocked；否则不得把缺失的 debug 值写成“已验证”。
 
 ### 步骤 6：引擎模块反推（若有 project_plugin）
 
@@ -109,7 +118,7 @@ rd.shader.debug_start(session_id=<session_id>, mode="pixel", event_id=<first_bad
 □ 1. 可疑代码表达式已定位（具体代码行，含代码引用，不得是"大概在光照计算里"）
 □ 2. 若为精度类问题，当前表达式已绑定到 `first_bad_event` 或 `root_drawcall`
 □ 3. 若为精度类问题，SPIR-V RelaxedPrecision decoration 扫描结果已提供
-□ 4. 可疑表达式的实际输入值已通过 rd.shader.debug_start 获取（不得是估算值）
+□ 4. 可疑表达式的实际输入值已通过 rd.shader.debug_start 获取；若未获取，则必须记录同一 `event_id` 的结构化 blocked/runtime failure（含 `failure_stage` / `failure_reason` / `attempts`），不得写成估算值
 □ 5. 若有 A/B 两份 Shader，已明确说明差异在哪一层（HLSL/SPIR-V/ISA）
 □ 6. 若证据仅来自 screen-space shader 或视觉 fallback，已明确标记为线索而非最终归因
 □ 7. 输出的代码指纹格式可被 Driver Agent 和 Skeptic 直接引用验证
