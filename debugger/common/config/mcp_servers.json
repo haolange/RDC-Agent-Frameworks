@@ -2,6 +2,7 @@
   "schema_version": 1,
   "servers": {
     "renderdoc-platform-mcp": {
+      "activation": "explicit_opt_in_only",
       "transport": "stdio",
       "command": "python",
       "args": [

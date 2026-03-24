@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate fixed package-local debugger-to-tools binding for source and copied platform layouts."""
+"""Validate fixed debugger-to-tools binding for source and copied platform layouts."""
 
 from __future__ import annotations
 
@@ -44,7 +44,8 @@ COMMON_PLACEHOLDER_MARKERS = (
     "Platform Local Common Placeholder",
     "当前目录是平台本地 `common/` 的最小占位目录",
 )
-EXPECTED_TOOLS_ROOT = "tools"
+EXPECTED_TOOLS_SOURCE_ROOT = "tools"
+EXPECTED_RUNTIME_MODE = "worker_staged"
 
 
 def _default_root() -> Path:
@@ -75,12 +76,17 @@ def _common_readme_path(root: Path) -> Path:
 
 
 def _resolve_tools_root(root: Path, payload: dict[str, Any]) -> Path:
-    raw = str(payload.get("paths", {}).get("tools_root", "")).strip()
-    if raw != EXPECTED_TOOLS_ROOT:
+    raw = str(payload.get("paths", {}).get("tools_source_root", "")).strip()
+    if raw != EXPECTED_TOOLS_SOURCE_ROOT:
         raise ValueError(
-            f"platform_adapter.json must keep paths.tools_root='{EXPECTED_TOOLS_ROOT}' and use the package-local tools/ directory"
+            f"platform_adapter.json must keep paths.tools_source_root='{EXPECTED_TOOLS_SOURCE_ROOT}' and treat tools/ as a package-local source payload"
         )
-    return (root / EXPECTED_TOOLS_ROOT).resolve()
+    runtime_mode = str(payload.get("runtime", {}).get("mode", "")).strip()
+    if runtime_mode != EXPECTED_RUNTIME_MODE:
+        raise ValueError(
+            f"platform_adapter.json must keep runtime.mode='{EXPECTED_RUNTIME_MODE}' for daemon-owned worker staging"
+        )
+    return (root / EXPECTED_TOOLS_SOURCE_ROOT).resolve()
 
 
 def _is_tools_placeholder(tools_root: Path) -> bool:
@@ -120,7 +126,7 @@ def validate_binding(root: Path, *, platform: str = "") -> list[str]:
 
     if _is_tools_placeholder(tools_root):
         findings.append(
-            "tools/ is a placeholder directory - copy RDC-Agent-Tools into the platform root tools/ then re-run"
+            "tools/ is a placeholder source payload directory - copy RDC-Agent-Tools into the platform root tools/ then re-run"
         )
         return findings
 
@@ -133,7 +139,7 @@ def validate_binding(root: Path, *, platform: str = "") -> list[str]:
         findings.append("platform_adapter.json missing validation.required_paths")
     for rel in required_paths:
         if not (tools_root / rel).is_file():
-            findings.append(f"package-local tools validation failed: missing {tools_root / rel}")
+            findings.append(f"package-local tools source payload validation failed: missing {tools_root / rel}")
 
     for rel in ESSENTIAL_COMMON_DOCS:
         if not (root / rel).is_file():
@@ -172,7 +178,7 @@ def validate_binding(root: Path, *, platform: str = "") -> list[str]:
             missing_spec_tools = REQUIRED_FRAMEWORK_TOOLS - spec_names
             if missing_spec_tools:
                 findings.append(
-                    "framework-required tool missing from package-local tools catalog: "
+                    "framework-required tool missing from package-local tools source payload catalog: "
                     + ", ".join(sorted(missing_spec_tools))
                 )
 
@@ -200,7 +206,7 @@ def validate_binding(root: Path, *, platform: str = "") -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Validate fixed debugger binding against the package-local tools/ directory")
+    parser = argparse.ArgumentParser(description="Validate fixed debugger binding against the package-local tools/ source payload")
     parser.add_argument("--root", default=str(_default_root()))
     parser.add_argument("--platform", default="", help="Optional platform key when validating the source repo")
     parser.add_argument("--strict", action="store_true", help="Return non-zero when findings exist")

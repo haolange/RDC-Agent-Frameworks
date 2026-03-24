@@ -75,7 +75,8 @@ def tools_placeholder_text() -> str:
 
 约束：
 
-- 平台内所有 agent / skill / config 引用工具时，只允许引用当前平台根目录的 `tools/`。
+- 平台内所有 agent / skill / config 引用工具时，只允许引用当前平台根目录的 `tools/` source payload。
+- `tools/` 只表示 source payload；live runtime 由 daemon-owned worker 物化到独立 cache 后再加载。
 - 未完成覆盖前，当前平台模板不可用。
 - 不为未覆盖状态提供伪完整 placeholder 文件；正式工具真相只来自 RDC-Agent-Tools。
 """

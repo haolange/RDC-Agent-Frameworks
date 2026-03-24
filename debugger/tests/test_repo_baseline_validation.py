@@ -117,6 +117,26 @@ class RepoBaselineValidationTests(unittest.TestCase):
             for entry in entries:
                 self.assertIsInstance(entry.get("matcher"), str, f"{event_name} matcher must be string")
 
+    def test_default_platform_configs_do_not_pre_register_mcp(self) -> None:
+        claude_settings = json.loads(
+            (DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "settings.json").read_text(
+                encoding="utf-8-sig"
+            )
+        )
+        codex_config = (DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "config.toml").read_text(encoding="utf-8-sig")
+        cursor_mcp = json.loads(
+            (DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "mcp.json").read_text(
+                encoding="utf-8-sig"
+            )
+        )
+
+        self.assertEqual((claude_settings.get("mcpServers") or {}), {})
+        self.assertNotIn("[mcp_servers.renderdoc-platform-mcp]", codex_config)
+        self.assertEqual((cursor_mcp.get("mcpServers") or {}), {})
+        self.assertTrue((DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "settings.mcp.opt-in.json").is_file())
+        self.assertTrue((DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "config.mcp.opt-in.toml").is_file())
+        self.assertTrue((DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "mcp.opt-in.json").is_file())
+
     def test_cursor_rules_use_rdc_debugger_as_normal_user_entry(self) -> None:
         text = (DEBUGGER_ROOT / "platforms" / "cursor" / ".cursorrules").read_text(encoding="utf-8-sig")
         self.assertNotIn("正常用户请求只能从 `team_lead` 进入", text)

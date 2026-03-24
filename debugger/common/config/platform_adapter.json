@@ -1,8 +1,11 @@
 {
-  "schema_version": 2,
-  "description": "Framework-to-tools binding. paths.tools_root is fixed to the package-local directory 'tools'; copy RDC-Agent-Tools into the platform root tools/ directory before use and do not hand-edit this binding.",
+  "schema_version": 3,
+  "description": "Framework-to-tools binding. paths.tools_source_root is fixed to the package-local directory 'tools'; it is a source payload only, while live runtime is staged into a daemon-owned worker cache.",
   "paths": {
-    "tools_root": "tools"
+    "tools_source_root": "tools"
+  },
+  "runtime": {
+    "mode": "worker_staged"
   },
   "validation": {
     "mode": "hard_fail",
@@ -12,13 +15,6 @@
       "docs/session-model.md",
       "docs/agent-model.md",
       "spec/tool_catalog.json"
-    ]
-  },
-  "mcp": {
-    "server_name": "renderdoc-platform-mcp",
-    "launch_command": [
-      "python",
-      "mcp/run_mcp.py"
     ]
   },
   "cli": {

@@ -8,6 +8,7 @@
 - 当前平台只允许通过 `MCP` 进入平台真相，不允许尝试 `CLI`。
 - 任务开始时，Agent 必须向用户说明当前采用的是 `MCP`，并先完成 MCP preflight。
 - 用户提供可导入的 `.rdc` 后，只能按 `workflow_stage` 串行推进；若需要并发 live owners、per-agent model control 或 experimental remote rehydrate，必须切回更高能力平台。
+- 当前模板默认不预注册 MCP；启用时应显式填充 `claude_desktop_config.opt-in.json` 的示例配置。
 
 使用方式：
 

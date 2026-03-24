@@ -16,7 +16,7 @@
 ## Hard Rules
 
 - 正常用户请求应先从 `rdc-debugger` 进入；`team_lead` 与其他 specialist 只作为 internal/debug-only。
-- 进入平台真相相关工作前，必须先校验 `paths.tools_root` 与 `validation.required_paths`。
+- 进入平台真相相关工作前，必须先校验 `paths.tools_source_root` 与 `validation.required_paths`，并将 `tools/` 视为 package-local source payload。
 - 用户未提供至少一份 `.rdc` 前，必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断。
 - 当前正式支持能力是 local-first 调试、native agents/skills、rules-config hooks 与 `run_compliance.yaml` 合规裁决。
 - experimental remote / live bridge / rehydrate 不属于当前正式默认路径；若任务依赖它，必须显式回报限制。

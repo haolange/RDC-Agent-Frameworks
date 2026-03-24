@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import importlib.util
 import json
@@ -22,6 +22,23 @@ def _load_validator_module():
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def _adapter_payload(*, tools_source_root: str = "tools", runtime_mode: str = "worker_staged", required_paths: list[str] | None = None) -> dict:
+    return {
+        "paths": {"tools_source_root": tools_source_root},
+        "runtime": {"mode": runtime_mode},
+        "validation": {
+            "required_paths": required_paths
+            or [
+                "README.md",
+                "docs/tools.md",
+                "docs/session-model.md",
+                "docs/agent-model.md",
+                "spec/tool_catalog.json",
+            ]
+        },
+    }
 
 
 class BindingValidationTests(unittest.TestCase):
@@ -52,22 +69,7 @@ class BindingValidationTests(unittest.TestCase):
 
             _write(
                 root / "common" / "config" / "platform_adapter.json",
-                json.dumps(
-                    {
-                        "paths": {"tools_root": "tools"},
-                        "validation": {
-                            "required_paths": [
-                                "README.md",
-                                "docs/tools.md",
-                                "docs/session-model.md",
-                                "docs/agent-model.md",
-                                "spec/tool_catalog.json",
-                            ]
-                        },
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                ),
+                json.dumps(_adapter_payload(), ensure_ascii=False, indent=2),
             )
             _write(
                 root / "common" / "config" / "platform_capabilities.json",
@@ -126,10 +128,7 @@ class BindingValidationTests(unittest.TestCase):
             _write(
                 root / "common" / "config" / "platform_adapter.json",
                 json.dumps(
-                    {
-                        "paths": {"tools_root": "__CONFIGURE_TOOLS_ROOT__"},
-                        "validation": {"required_paths": ["README.md"]},
-                    },
+                    _adapter_payload(tools_source_root="__CONFIGURE_TOOLS_ROOT__", required_paths=["README.md"]),
                     ensure_ascii=False,
                     indent=2,
                 ),
@@ -139,7 +138,7 @@ class BindingValidationTests(unittest.TestCase):
 
             self.assertEqual(
                 findings,
-                ["platform_adapter.json must keep paths.tools_root='tools' and use the package-local tools/ directory"],
+                ["platform_adapter.json must keep paths.tools_source_root='tools' and treat tools/ as a package-local source payload"],
             )
 
     def test_validate_binding_rejects_non_package_local_tools_root(self) -> None:
@@ -149,10 +148,7 @@ class BindingValidationTests(unittest.TestCase):
             _write(
                 root / "common" / "config" / "platform_adapter.json",
                 json.dumps(
-                    {
-                        "paths": {"tools_root": str(Path(tmp) / "external-tools")},
-                        "validation": {"required_paths": ["README.md"]},
-                    },
+                    _adapter_payload(tools_source_root=str(Path(tmp) / "external-tools"), required_paths=["README.md"]),
                     ensure_ascii=False,
                     indent=2,
                 ),
@@ -162,7 +158,27 @@ class BindingValidationTests(unittest.TestCase):
 
             self.assertEqual(
                 findings,
-                ["platform_adapter.json must keep paths.tools_root='tools' and use the package-local tools/ directory"],
+                ["platform_adapter.json must keep paths.tools_source_root='tools' and treat tools/ as a package-local source payload"],
+            )
+
+    def test_validate_binding_rejects_non_worker_staged_runtime_mode(self) -> None:
+        validator = _load_validator_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "debugger"
+            _write(
+                root / "common" / "config" / "platform_adapter.json",
+                json.dumps(
+                    _adapter_payload(runtime_mode="direct", required_paths=["README.md"]),
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+            )
+
+            findings = validator.validate_binding(root)
+
+            self.assertEqual(
+                findings,
+                ["platform_adapter.json must keep runtime.mode='worker_staged' for daemon-owned worker staging"],
             )
 
     def test_validate_binding_rejects_placeholder_common_readme(self) -> None:
@@ -221,22 +237,7 @@ class BindingValidationTests(unittest.TestCase):
             )
             _write(
                 root / "common" / "config" / "platform_adapter.json",
-                json.dumps(
-                    {
-                        "paths": {"tools_root": "tools"},
-                        "validation": {
-                            "required_paths": [
-                                "README.md",
-                                "docs/tools.md",
-                                "docs/session-model.md",
-                                "docs/agent-model.md",
-                                "spec/tool_catalog.json",
-                            ]
-                        },
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                ),
+                json.dumps(_adapter_payload(), ensure_ascii=False, indent=2),
             )
 
             findings = validator.validate_binding(root)
@@ -252,7 +253,7 @@ class BindingValidationTests(unittest.TestCase):
             root = Path(tmp) / "debugger"
             _write(
                 root / "common" / "config" / "platform_adapter.json",
-                '{"paths":{"tools_root":"tools",}}\n',
+                '{"paths":{"tools_source_root":"tools",}}\n',
             )
 
             findings = validator.validate_binding(root)

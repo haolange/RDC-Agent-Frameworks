@@ -1,54 +1,47 @@
 {
-    "agent":  "team-lead",
-    "mcpServers":  {
-                       "renderdoc-platform-mcp":  {
-                                                      "args":  [
-                                                                   "${DEBUGGER_PLATFORM_TOOLS_ROOT}/mcp/run_mcp.py"
-                                                               ],
-                                                      "command":  "python"
-                                                  }
-                   },
-    "description":  "RenderDoc/RDC GPU Debug - Claude Code platform-local common adaptation with rdc-debugger public entry and team-lead orchestration bootstrap",
-    "hooks":  {
-                  "PostToolUse":  [
-                                      {
-                                          "hooks":  [
-                                                        {
-                                                            "failure_message":  "BugCard write blocked: tool contract drift or schema validation failed.",
-                                                            "command":  "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py write-bugcard",
-                                                            "description":  "Validate tool contract and BugCard schema before library write",
-                                                            "type":  "command",
-                                                            "on_failure":  "block"
-                                                        }
-                                                    ],
-                                          "matcher":  "Write"
-                                      },
-                                      {
-                                          "hooks":  [
-                                                        {
-                                                            "failure_message":  "Skeptic signoff file did not pass validation.",
-                                                            "command":  "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py write-skeptic",
-                                                            "description":  "Validate skeptic signoff artifact format",
-                                                            "type":  "command",
-                                                            "on_failure":  "warn"
-                                                        }
-                                                    ],
-                                          "matcher":  "Write"
-                                      }
-                                  ],
-                  "Stop":  [
-                               {
-                                   "hooks":  [
-                                                 {
-                                                     "failure_message":  "Finalization blocked by session artifact or contract checks.",
-                                                     "command":  "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
-                                                     "description":  "Finalization gate for RenderDoc/RDC GPU Debug (causal anchor + counterfactual + skeptic)",
-                                                     "type":  "command",
-                                                     "on_failure":  "block"
-                                                 }
-                                             ],
-                                   "matcher":  ""
-                               }
-                           ]
-              }
+  "agent": "team-lead",
+  "mcpServers": {},
+  "description": "RenderDoc/RDC GPU Debug - Claude Code platform-local common adaptation with rdc-debugger public entry and team-lead orchestration bootstrap",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "failure_message": "BugCard write blocked: tool contract drift or schema validation failed.",
+            "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py write-bugcard",
+            "description": "Validate tool contract and BugCard schema before library write",
+            "type": "command",
+            "on_failure": "block"
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "failure_message": "Skeptic signoff file did not pass validation.",
+            "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py write-skeptic",
+            "description": "Validate skeptic signoff artifact format",
+            "type": "command",
+            "on_failure": "warn"
+          }
+        ],
+        "matcher": "Write"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "failure_message": "Finalization blocked by session artifact or contract checks.",
+            "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
+            "description": "Finalization gate for RenderDoc/RDC GPU Debug (causal anchor + counterfactual + skeptic)",
+            "type": "command",
+            "on_failure": "block"
+          }
+        ],
+        "matcher": ""
+      }
+    ]
+  }
 }

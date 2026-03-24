@@ -9,6 +9,7 @@
 - 默认入口是 daemon-backed `CLI`；只有用户明确要求按 `MCP` 接入时，才切换到 `MCP`。
 - 任务开始时，Agent 必须向用户说明当前采用的是 `CLI` 还是 `MCP`。
 - 若用户要求 `MCP`，但宿主未配置对应 MCP server，必须直接阻断并提示配置。
+- 当前模板默认不预注册 MCP；若要启用，使用 `.cursor/mcp.opt-in.json` 的示例配置显式接入。
 - 当前宿主的正式支持路径是 local-first 调试与 `run_compliance.yaml` 合规裁决；`experimental remote rehydrate` 不属于默认支持能力。
 
 使用方式：

@@ -10,6 +10,7 @@
 - 任务开始时，Agent 必须向用户说明当前采用的是 `workflow_stage` 串行流程，而不是 live team handoff。
 - 当前平台只允许消费已经准备好的共享文档、workspace 与 artifact contract；若 MCP server 未配置完成，必须直接阻断。
 - 当前宿主不支持 custom agents、native hooks 与 per-agent model control，但当前模板仍提供 wrapper skills 来统一入口语义。
+- 当前模板默认不预注册 MCP；启用时必须按平台接线说明显式填入 opt-in MCP 配置。
 
 使用方式：
 

@@ -47,7 +47,7 @@ framework 必须把以下三层分开理解：
 
 固定阻断规则：
 
-- local-first 路径下，如 `tools_root` 未配置或必需路径校验未通过，必须阻断。
+- local-first 路径下，如 `tools_source_root` 未配置、source payload 校验未通过或 `runtime.mode` 不是 `worker_staged`，必须阻断。
 - `MCP` 路径下，如宿主没有配置对应 MCP server，必须阻断。
 - 阻断时不允许假设工具可用，也不允许继续编造平台能力面。
 - 对 `claude-desktop` 与 `manus`，不得尝试 `CLI` fallback；它们的工具入口固定是 `MCP`。

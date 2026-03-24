@@ -17,13 +17,14 @@ TEXT_EXTS = {".md", ".yaml", ".yml", ".json", ".jsonl", ".py", ".toml"}
 TOOL_RE = re.compile(r"rd\.[A-Za-z0-9_]+\.[A-Za-z0-9_\.]+")
 CALL_RE = re.compile(r"(rd\.[A-Za-z0-9_]+\.[A-Za-z0-9_\.]+)\s*\(([^)]*)\)")
 EXPECTED_TOOLS_ROOT = "tools"
+EXPECTED_RUNTIME_MODE = "worker_staged"
 BANNED_SNIPPETS = {
     "--connect": "legacy CLI connect flag removed; CLI is always daemon-backed",
     "error_message": "use canonical error.message instead of legacy error_message",
-    "鐩存帴鏈湴 runtime": "framework docs must not describe direct runtime ownership",
-    "__CONFIGURE_TOOLS_ROOT__": "legacy configurable tools_root flow removed; use the package-local tools/ directory",
-    "配置 `paths.tools_root`": "legacy manual tools_root configuration removed; use the package-local tools/ directory",
-    "configure `paths.tools_root`": "legacy manual tools_root configuration removed; use the package-local tools/ directory",
+    "直接本地 runtime": "framework docs must not describe direct runtime ownership",
+    "__CONFIGURE_TOOLS_ROOT__": "legacy configurable tools_root flow removed; use the package-local tools/ source payload",
+    "配置 `paths.tools_root`": "legacy manual tools_root configuration removed; use the package-local tools/ source payload",
+    "configure `paths.tools_root`": "legacy manual tools_root configuration removed; use the package-local tools/ source payload",
 }
 
 
@@ -44,10 +45,15 @@ def _read_text(path: Path) -> str:
 
 def _resolve_tools_root(root: Path) -> Path:
     adapter = _read_json(root / "common" / "config" / "platform_adapter.json")
-    raw_root = str((adapter.get("paths") or {}).get("tools_root", "")).strip()
+    raw_root = str((adapter.get("paths") or {}).get("tools_source_root", "")).strip()
     if raw_root != EXPECTED_TOOLS_ROOT:
         raise ValueError(
-            f"platform_adapter.json must keep paths.tools_root='{EXPECTED_TOOLS_ROOT}' and use the package-local tools/ directory"
+            f"platform_adapter.json must keep paths.tools_source_root='{EXPECTED_TOOLS_ROOT}' and treat tools/ as a package-local source payload"
+        )
+    runtime_mode = str((adapter.get("runtime") or {}).get("mode", "")).strip()
+    if runtime_mode != EXPECTED_RUNTIME_MODE:
+        raise ValueError(
+            f"platform_adapter.json must keep runtime.mode='{EXPECTED_RUNTIME_MODE}' for daemon-owned worker staging"
         )
     tools_root = (root / EXPECTED_TOOLS_ROOT).resolve()
     required_paths = [
@@ -60,7 +66,7 @@ def _resolve_tools_root(root: Path) -> Path:
     missing = [rel for rel in required_paths if not (tools_root / rel).is_file()]
     if missing:
         paths = ", ".join(str(tools_root / rel) for rel in missing)
-        raise ValueError(f"package-local tools validation failed: missing {paths}")
+        raise ValueError(f"package-local tools source payload validation failed: missing {paths}")
     return tools_root
 
 

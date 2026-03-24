@@ -18,7 +18,7 @@
   - `rd.vfs.resolve`
 - `debugger` 文档中涉及探索面时，应按“只读 VFS + canonical `rd.*` tools”口径编写，不得把 `rd.vfs.*` 写成第二套平台真相。
 - `tabular/tsv` 只能按 projection/support surface 描述，不得写成独立能力面或重要度排序结果。
-- `platform_adapter.json` 必须保持 `paths.tools_root="tools"`；不再支持手工配置绝对路径或占位值替换。
+- `platform_adapter.json` 必须保持 `paths.tools_source_root="tools"` 且 `runtime.mode="worker_staged"`；不再支持手工配置绝对路径、live runtime 目录或占位值替换。
 - 当前已验证的配对范围是 package-local `tools/` + local-first flow；remote workflow 本轮未重新验证。
 
 ## 接线前必跑

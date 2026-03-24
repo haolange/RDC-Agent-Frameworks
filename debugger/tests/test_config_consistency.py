@@ -69,7 +69,7 @@ class ConfigConsistencyTests(unittest.TestCase):
         module = _load_module(DEBUGGER_ROOT / "scripts" / "validate_tool_contract.py", "validate_tool_contract_module")
         with tempfile.TemporaryDirectory() as tmp:
             bad_json = Path(tmp) / "platform_adapter.json"
-            bad_json.write_text('{"paths":{"tools_root":"tools",}}\n', encoding="utf-8")
+            bad_json.write_text('{"paths":{"tools_source_root":"tools",}}\n', encoding="utf-8")
 
             with self.assertRaises(ValueError) as exc:
                 module.read_json(bad_json)
@@ -84,7 +84,7 @@ class ConfigConsistencyTests(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as tmp:
             bad_json = Path(tmp) / "platform_adapter.json"
-            bad_json.write_text('{"paths":{"tools_root":"tools",}}\n', encoding="utf-8")
+            bad_json.write_text('{"paths":{"tools_source_root":"tools",}}\n', encoding="utf-8")
 
             with self.assertRaises(ValueError) as exc:
                 module._read_json(bad_json)

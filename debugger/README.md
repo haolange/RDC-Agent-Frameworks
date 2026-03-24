@@ -16,7 +16,7 @@
 
 补充约束：
 
-- `platform_adapter.json` 中的 `paths.tools_root` 固定为 `tools`；它是共享 adapter manifest，不是手工绑定步骤。
+- `platform_adapter.json` 中的 `paths.tools_source_root` 固定为 `tools`；它只表示 package-local source payload，不是 live runtime 目录或手工绑定步骤。
 - source repo 中的 `tools/` 仍是平台模板占位目录；正式工具真相只来自复制后的平台包根目录 `tools/`。
 - `rd.vfs.*` 是只读导航层，用于 browse-only 结构探索；精确调试、导出与状态变更必须回到 canonical `rd.*`。
 - `tabular/tsv` 只是 projection/summary 格式，用于提升扫描效率，不表示语义重要度排序。

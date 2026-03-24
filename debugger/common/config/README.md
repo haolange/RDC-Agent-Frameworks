@@ -7,7 +7,8 @@
 - `debugger/common/` 是唯一长期存在的共享源目录。
 - `debugger/platforms/*` 是生成后的平台产物。
 - 只有在共享正文被拷入后，平台本地 wrapper 才允许引用平台本地的 `common/` 目录。
-- `platform_adapter.json` 中的 `paths.tools_root` 固定为 `tools`；它是 shared adapter manifest，不再承担手工绑定职责。
+- `platform_adapter.json` 中的 `paths.tools_source_root` 固定为 `tools`；它只表示 package-local source payload，不代表 live runtime 目录。
+- `platform_adapter.json` 中的 `runtime.mode` 固定为 `worker_staged`；live runtime 由 daemon-owned worker 物化到独立 cache 后再加载。
 - `RDC-Agent-Tools` 必须以 package-local 目录形式复制到平台根的 `tools/`，而不是通过绝对路径或用户自定义路径接线。
 
 ## 文件说明

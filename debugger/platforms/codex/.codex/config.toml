@@ -1,4 +1,4 @@
-﻿model = "gpt-5.4"
+model = "gpt-5.4"
 model_reasoning_effort = "high"
 model_verbosity = "medium"
 
@@ -7,10 +7,6 @@ multi_agent = true
 
 [windows]
 sandbox = "elevated"
-
-[mcp_servers.renderdoc-platform-mcp]
-command = "python"
-args = ["${DEBUGGER_PLATFORM_TOOLS_ROOT}/mcp/run_mcp.py"]
 
 [agents.team_lead]
 config_file = ".codex/agents/team_lead.toml"

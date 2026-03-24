@@ -22,7 +22,7 @@
   - 如果不能，或用户明确要求按 `MCP` 接入，则切换到 `MCP`。
 - 任务开始时，Agent 必须向用户说明当前采用的是 `CLI` 还是 `MCP`。
 - 对默认 `CLI` 的平台，只有用户明确要求按 `MCP` 接入时，才允许切换入口模式。
-- 如果当前选择 `MCP`，但宿主没有配置对应 MCP server，必须像 `tools_root` 未配置一样直接阻断。
+- 如果当前选择 `MCP`，但宿主没有显式启用对应 MCP server，必须像 `tools_source_root` 校验失败一样直接阻断。
 - `CLI` 的业务命令都经 daemon / context 执行。
 - daemon 是长生命周期 runtime / context 持有层，不是 `CLI` 或 `MCP` 的附属模式。
 
