@@ -17,6 +17,7 @@
 - `.rdc -> capture_file_id -> session_id -> frame/event context` 的最小状态链路
 - `remote_id`、`capture_file_id`、`session_id`、`active_event_id` 等 handle 的生命周期
 - `context`、daemon、artifact、context snapshot 的平台语义
+- preview observer 的平台语义，以及 `rd.session.get_context.preview` 作为唯一公开状态源的口径
 - `spec/runtime_mode_truth.json` 对应的 transport/runtime 模式真相
 - 错误分类与恢复面
 
@@ -337,6 +338,7 @@
 - `session_id` 必须来自 replay session 打开链路
 - 进入根因分析前必须先建立 `causal_anchor`
 - `capture_file_id`、`session_id`、`active_event_id`、`remote_id` 都是短生命周期 handle
+- preview 只允许作为人类同步观察面；不得把 `rd.session.get_context.preview` 当成 runtime truth、gate 输入或 fix verification 证据
 - `CLI` 与 `MCP` 共用同一套 daemon / context 机制
 - 同一 `context` 不得并行维护多条 live 调试链路
 - 同一 `context` 可以保留多条本地 session 记录，但这只表示持久化 / 恢复能力，不表示允许多个 owner 并发共享 live runtime
@@ -475,6 +477,7 @@
   - `overall_result`
 - `overall_result` 只能由 `structural=passed && semantic=passed` 派生
 - `semantic_verification.status=fallback_only` 时，严格结案无效
+- preview 不进入 `entry_gate.yaml`、`intake_gate.yaml`、`runtime_topology.yaml`、`fix_verification.yaml`、`session_evidence.yaml` 的主裁决字段；如报告里提及，只能是 narrative observation
 
 ## 9. Canonical References
 

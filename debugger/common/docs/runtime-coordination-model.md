@@ -152,6 +152,11 @@ remote run 额外要求：
 - `notes/remote_planning_brief.yaml`
 - `notes/remote_runtime_inconsistency.yaml`
 
+补充约束：
+
+- `rd.session.get_context.preview` 只属于 human observer surface。
+- 它不进入 runtime coordination audit surface，也不改变 `runtime_topology.yaml` / gate 的主真相定义。
+
 ## 9. Role Whitelist Summary
 
 - `rdc-debugger`

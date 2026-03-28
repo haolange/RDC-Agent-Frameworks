@@ -9,6 +9,7 @@
 - 推荐工作流是 `rd.shader.get_disassembly(target="SPIR-V ASM") -> rd.shader.edit_and_replace(source_text|diff_text, source_target="SPIR-V ASM", source_encoding="spirvasm") -> validate -> rd.shader.revert_replacement`。
 - 这条链要配套多点验证。raw asm 精确 patch 成功，只能证明工具链具备等价编辑/应用能力，不代表当前删掉的 `RelaxedPrecision` decoration 一定就是正确修复；样本级 bisect 仍要看多个像素点与回滚后一致性。
 - 这条链解决的是精确 IR patch / apply / revert 语义，不等价于 `qrenderdoc` 主视窗的最终 framebuffer 观察链；若 UI 主视图与 `rd.export.screenshot` 不一致，应单独按 framebuffer 观察问题处理。
+- 当前 `Tools` 已公开 context 绑定 preview：它只给人类同步观察 `current_session_id + active_event_id`，不进入 framework 的 gate / evidence / fix verification 主真相链。
 
 ## 使用前提
 
