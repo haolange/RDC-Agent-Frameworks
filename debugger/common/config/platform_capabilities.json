@@ -474,6 +474,77 @@
                                     "remote_support":  "verified",
                                     "enforcement_layer":  "runtime_owner"
                                 },
+                      "codex_plugin":  {
+                                           "display_name":  "Codex Plugin",
+                                           "status_label":  "installable-plugin",
+                                           "packaging":  "installable-plugin-bundle",
+                                           "default_entry_mode":  "cli",
+                                           "allowed_entry_modes":  [
+                                                                       "cli",
+                                                                       "mcp"
+                                                                   ],
+                                           "capabilities":  {
+                                                                "custom_agents":  {
+                                                                                      "supported":  false,
+                                                                                      "rendered":  "generic-subagent-dispatch"
+                                                                                  },
+                                                                "skills":  {
+                                                                               "supported":  true,
+                                                                               "rendered":  "plugin-bundled"
+                                                                           },
+                                                                "hooks":  {
+                                                                              "supported":  false,
+                                                                              "rendered":  "not-supported"
+                                                                          },
+                                                                "mcp":  {
+                                                                            "supported":  true,
+                                                                            "rendered":  "opt-in-reference"
+                                                                        },
+                                                                "per_agent_model":  {
+                                                                                        "supported":  false,
+                                                                                        "rendered":  "not-packaged"
+                                                                                    },
+                                                                "handoffs":  {
+                                                                                 "supported":  true,
+                                                                                 "rendered":  "generic-subagents"
+                                                                             }
+                                                            },
+                                           "coordination_mode":  "staged_handoff",
+                                           "sub_agent_mode":  "puppet_sub_agents",
+                                           "peer_communication":  "via_main_agent",
+                                           "agent_description_mode":  "skill_files",
+                                           "dispatch_topology":  "hub_and_spoke",
+                                           "specialist_dispatch_requirement":  "required",
+                                           "host_delegation_policy":  "skill_managed",
+                                           "host_delegation_fallback":  "generic_subagents",
+                                           "degradation_mode":  "plugin-cache-install",
+                                           "cli_discovery_policy":  "mcp-discovery-ok,cli-reference-required",
+                                           "required_paths":  [
+                                                                  "platforms/codex_plugin/README.md",
+                                                                  "platforms/codex_plugin/AGENTS.md",
+                                                                  "platforms/codex_plugin/references/personal-marketplace.sample.json",
+                                                                  "platforms/codex_plugin/rdc-debugger/README.md",
+                                                                  "platforms/codex_plugin/rdc-debugger/AGENTS.md",
+                                                                  "platforms/codex_plugin/rdc-debugger/.codex-plugin/plugin.json",
+                                                                  "platforms/codex_plugin/rdc-debugger/references/mcp-opt-in.sample.toml",
+                                                                  "platforms/codex_plugin/rdc-debugger/skills/rdc-debugger/SKILL.md",
+                                                                  "platforms/codex_plugin/rdc-debugger/skills/rdc-debugger/agents/openai.yaml"
+                                                              ],
+                                           "supported_entry_modes":  [
+                                                                         "cli",
+                                                                         "mcp"
+                                                                     ],
+                                           "supported_backends":  [
+                                                                      "local",
+                                                                      "remote"
+                                                                  ],
+                                           "remote_coordination_mode":  "single_runtime_owner",
+                                           "local_live_runtime_policy":  "multi_context_orchestrated",
+                                           "remote_live_runtime_policy":  "single_runtime_owner",
+                                           "local_support":  "verified",
+                                           "remote_support":  "verified",
+                                           "enforcement_layer":  "runtime_owner"
+                                       },
                       "cursor":  {
                                      "display_name":  "Cursor",
                                      "status_label":  "full",

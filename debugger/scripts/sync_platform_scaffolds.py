@@ -41,6 +41,21 @@ def load_context(root: Path = ROOT) -> dict[str, Any]:
     }
 
 
+def platform_target(ctx: dict[str, Any], platform_key: str) -> dict[str, Any]:
+    return ctx["platform_targets"]["platforms"][platform_key]
+
+
+def platform_package_root(ctx: dict[str, Any], platform_key: str) -> Path:
+    return ROOT / Path(str(platform_target(ctx, platform_key)["workspace_root"]))
+
+
+def platform_wrapper_root(ctx: dict[str, Any], platform_key: str) -> Path:
+    package = platform_package_root(ctx, platform_key)
+    if platform_key == "codex_plugin":
+        return package.parent
+    return package
+
+
 def common_placeholder_text() -> str:
     return """# 平台本地 `common/` 占位说明
 
@@ -179,9 +194,9 @@ def validate_source_tree(ctx: dict[str, Any]) -> list[str]:
 
 
 def expected_files(ctx: dict[str, Any], platform_key: str) -> set[Path]:
-    package = ROOT / "platforms" / platform_key
+    package = platform_package_root(ctx, platform_key)
     capabilities = ctx["platform_capabilities"]["platforms"][platform_key]
-    target = ctx["platform_targets"]["platforms"][platform_key]
+    target = platform_target(ctx, platform_key)
     public_entry_skill = str(
         ((ctx.get("framework_compliance") or {}).get("entry_model") or {}).get("public_entry_skill", "")
     ).strip()
@@ -270,7 +285,8 @@ def compare_common_and_workspace(package: Path) -> list[str]:
 
 
 def stale_findings(platform_key: str) -> list[str]:
-    package = ROOT / "platforms" / platform_key
+    ctx = load_context(ROOT)
+    package = platform_package_root(ctx, platform_key)
     findings: list[str] = []
     for rel in FORBIDDEN_DIRS:
         target = package / rel
@@ -321,6 +337,13 @@ def main_skill_wrapper_text(ctx: dict[str, Any], platform_key: str) -> str:
             "- specialist dispatch 后，主 agent 必须进入 `waiting_for_specialist_brief` 并持续汇总阶段回报；短时 silence 不得触发 orchestrator 抢活。",
         ])
     policy_block = "\n".join(policy_notes)
+    host_specific_notes = ""
+    if platform_key == "codex_plugin":
+        host_specific_notes = """
+- 当前插件不依赖 `.codex/config.toml` 或 `.codex/agents/*.toml`。
+- specialist 角色以安装型 `skills/` 提供；当需要 specialist 时，`rdc-debugger` 必须显式要求 Codex 创建通用 sub-agent，并让每个 sub-agent 先加载对应的 `skills/<role>/SKILL.md`。
+- 当前插件默认入口仍是 `CLI`；只有用户明确要求且已手动启用 `references/mcp-opt-in.sample.toml` 中的配置片段时，才允许切换到 `MCP`。
+"""
     return f"""---
 name: {public_entry_skill}
 description: Public main skill for the RenderDoc/RDC GPU debugger framework. Use when the user wants defect diagnosis, root-cause analysis, regression explanation, or fix verification for a GPU rendering issue from one or more `.rdc` captures.
@@ -366,6 +389,7 @@ metadata:
 - 当前平台的 `sub_agent_mode = {sub_agent_mode}`，`peer_communication = {peer_communication}`，`agent_description_mode = {agent_description_mode}`。
 - 当前平台的 `specialist_dispatch_requirement = {specialist_dispatch_requirement}`，`host_delegation_policy = {host_delegation_policy}`，`host_delegation_fallback = {host_delegation_fallback}`。
 - local live policy = `{local_live_runtime_policy}`；remote live policy = `{remote_live_runtime_policy}`。
+{host_specific_notes}
 
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
 
@@ -380,6 +404,13 @@ def role_skill_wrapper_text(ctx: dict[str, Any], platform_key: str, role: dict[s
     role_skill = str(role["role_skill_path"]).replace("\\", "/")
     role_intro = "该角色默认是 internal/debug-only specialist。平台启动后不会自动进入该角色；只有用户手动召唤 `rdc-debugger` 并由它分派时，才进入当前 role。"
     title = "角色技能包装说明"
+    dispatch_note = ""
+    if platform_key == "codex_plugin":
+        role_name = Path(role["role_skill_path"]).parent.name
+        dispatch_note = (
+            f"\n\n当前平台不预注册 `.codex/agents` 自定义 agent；如需进入当前 role，`rdc-debugger` "
+            f"必须显式要求 Codex 创建通用 sub-agent，并让它先加载当前插件内的 `skills/{role_name}/SKILL.md`。"
+        )
     return f"""# {title}
 
 当前文件是 {display_name} 的 role skill 入口。
@@ -393,9 +424,238 @@ def role_skill_wrapper_text(ctx: dict[str, Any], platform_key: str, role: dict[s
 3. common/config/platform_capabilities.json
 
 当前平台的 `coordination_mode = {str(platform_row.get("coordination_mode") or "").strip()}`，`sub_agent_mode = {str(platform_row.get("sub_agent_mode") or "").strip()}`，`peer_communication = {str(platform_row.get("peer_communication") or "").strip()}`。
+{dispatch_note}
 
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
 运行时 case/run 现场与第二层报告统一写入平台根目录下的 `workspace/`
+"""
+
+
+def codex_plugin_manifest_text() -> str:
+    manifest = {
+        "name": "rdc-debugger",
+        "version": "0.1.0",
+        "description": "RenderDoc/RDC GPU Debug 的 Codex plugin 包装层，要求先手动覆盖 common/ 与 tools/ 后再使用。",
+        "author": {
+            "name": "[TODO: maintainer-name]",
+            "email": "[TODO: maintainer-email]",
+            "url": "[TODO: maintainer-url]",
+        },
+        "homepage": "[TODO: homepage-url]",
+        "repository": "[TODO: repository-url]",
+        "license": "[TODO: SPDX-license-id]",
+        "keywords": [
+            "renderdoc",
+            "rdc",
+            "gpu",
+            "debug",
+            "codex",
+            "plugin",
+        ],
+        "skills": "./skills/",
+        "interface": {
+            "displayName": "RDC Debugger",
+            "shortDescription": "RenderDoc/RDC GPU debugging workflow",
+            "longDescription": "CLI-first Codex plugin bundle for RenderDoc/RDC GPU debugging. You still need to copy debugger/common and RDC-Agent-Tools into the plugin before validating and installing it.",
+            "developerName": "RenderDoc/RDC GPU Debug",
+            "category": "Developer Tools",
+            "capabilities": [
+                "Read",
+                "Write",
+            ],
+            "websiteURL": "[TODO: website-url]",
+            "privacyPolicyURL": "[TODO: privacy-policy-url]",
+            "termsOfServiceURL": "[TODO: terms-of-service-url]",
+            "defaultPrompt": [
+                "Use $rdc-debugger to enter the RenderDoc/RDC GPU debugging workflow for this workspace.",
+                "Use $rdc-debugger to diagnose this .rdc capture.",
+                "Use $rdc-debugger to verify whether this render fix is correct."
+            ],
+            "brandColor": "#0F766E",
+        },
+    }
+    return json.dumps(manifest, ensure_ascii=False, indent=2)
+
+
+def codex_plugin_skill_openai_yaml_text() -> str:
+    return """interface:
+  display_name: "RDC Debugger"
+  short_description: "Enter the RenderDoc/RDC GPU debugging workflow for .rdc captures"
+  default_prompt: "Use $rdc-debugger to enter the RenderDoc/RDC GPU debugging workflow for this workspace."
+
+policy:
+  allow_implicit_invocation: true
+"""
+
+
+def codex_plugin_outer_readme_text() -> str:
+    return """# Codex Plugin Wrapper（外层包装目录）
+
+当前目录是 Codex plugin 的外层包装目录，不是可直接安装或运行的 plugin root。
+
+真正符合 Codex plugin 规范的根目录位于同级 `rdc-debugger/`。
+
+## 目录职责
+
+- `rdc-debugger/`：唯一可安装的 Codex plugin bundle。
+- `references/personal-marketplace.sample.json`：个人 marketplace 示例，目标位置是 `~/.agents/plugins/marketplace.json`。
+- 当前外层目录只负责包装说明、安装链路与 marketplace 示例；运行时规则仍以 `rdc-debugger/` 与共享 `debugger/common/` 为准。
+
+## 安装链路
+
+1. 将仓库根目录 `debugger/common/` 整体拷贝到 `rdc-debugger/common/`。
+2. 将 `RDC-Agent-Tools` 根目录整包拷贝到 `rdc-debugger/tools/`。
+3. 在 `rdc-debugger/` 根目录运行 `python common/config/validate_binding.py --strict`。
+4. 将 `rdc-debugger/` 同步到 `~/.agents/plugins/rdc-debugger/`。
+5. 将 `references/personal-marketplace.sample.json` 合并到 `~/.agents/plugins/marketplace.json`。
+6. 在 Codex 中打开 `/plugins`，安装或刷新 `rdc-debugger`。
+7. 安装后在新线程中使用 `@RDC Debugger` 或 `$rdc-debugger` 进入框架。
+
+## 约束
+
+- 不要把当前外层目录当作 plugin root。
+- `common/` 与 `tools/` 仍然是用户手动覆盖的 package-local payload，不会随插件自动内置。
+- Codex 本地插件安装后实际加载的是 cache 副本；每次重新覆盖 `common/` 或 `tools/` 后，都必须重新同步 `~/.agents/plugins/rdc-debugger/`，然后在 `/plugins` 中刷新或重装。
+"""
+
+
+def codex_plugin_outer_agents_text() -> str:
+    return """# Codex Plugin Wrapper Instructions（外层包装约束）
+
+当前目录只负责 Codex plugin 的包装说明，不是运行时 plugin root。
+
+规则：
+
+- 唯一可安装插件根目录固定为同级 `rdc-debugger/`。
+- 运行时约束、skills、workspace 语义、`common/` / `tools/` 占位都只在 `rdc-debugger/` 与共享 `debugger/common/` 中维护。
+- 当前外层目录只允许放包装说明、安装说明与 marketplace 示例，不要在这里复制 framework 运行规则。
+- `references/personal-marketplace.sample.json` 必须继续指向 `./plugins/rdc-debugger`，不要改成旧路径或 source repo 路径。
+"""
+
+
+def codex_plugin_inner_readme_text() -> str:
+    return """# Codex Plugin Bundle（插件包）
+
+当前目录是 Codex 的 installable plugin bundle。Agent 的目标是使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题。
+
+入口规则：
+
+- 当前宿主可直接访问本地进程、文件系统与 workspace，默认采用 local-first。
+- 默认入口是 daemon-backed `CLI`；只有用户明确要求按 `MCP` 接入且已手动启用 `references/mcp-opt-in.sample.toml` 中的配置片段时，才切换到 `MCP`。
+- 任务开始时，Agent 必须向用户说明当前采用的是 `CLI` 还是 `MCP`。
+- 若用户要求 `MCP`，但宿主尚未按 sample 配置对应 server，必须直接阻断并提示配置。
+- 当前插件不会在 manifest 中默认预注册 MCP；`MCP` 只通过文档化 opt-in 提供。
+- 当前平台的 `local_support` / `remote_support` / `enforcement_layer` 以 `common/config/platform_capabilities.json` 中 `codex_plugin` 行为准。
+
+使用方式：
+
+1. 将仓库根目录 `debugger/common/` 整体拷贝到当前插件根目录的 `common/`，覆盖占位内容。
+2. 将 `RDC-Agent-Tools` 根目录整包拷贝到当前插件根目录的 `tools/`，覆盖占位内容。
+3. 确认 `tools/` 下存在 `validation.required_paths` 列出的必需文件。
+4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、snapshot、共享文档与插件包根目录全部对齐。
+5. 使用当前插件根目录下、与 `common/` 和 `tools/` 并列的 `workspace/` 作为运行区。
+6. 将当前目录同步到 `~/.agents/plugins/rdc-debugger/`。
+7. 将 `../references/personal-marketplace.sample.json` 合并到 `~/.agents/plugins/marketplace.json`。
+8. 在 Codex 中打开 `/plugins` 安装或刷新 `rdc-debugger`。
+9. 平台启动后默认保持普通对话态；只有用户手动召唤 `rdc-debugger`，才进入调试框架。除 `rdc-debugger` 之外，其他 specialist 默认都是 internal/debug-only。
+
+约束：
+
+- `common/` 默认只保留一个占位文件；正式共享正文仍由顶层 `debugger/common/` 提供，并由用户显式拷入。
+- 未完成 `debugger/common/` 覆盖、`tools/` 覆盖或 binding 校验前，Agent 必须拒绝执行依赖平台真相的工作。
+- 未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断，不得初始化 case/run 或继续 triage、investigation、planning。
+- 当前插件不依赖 `.codex/config.toml` 或 `.codex/agents/*.toml`；specialist 角色通过安装型 `skills/` 提供，并由 `rdc-debugger` 显式要求 Codex 创建通用 sub-agent 后加载。
+- 当前工具 snapshot 必须与 `RDC-Agent-Tools` 当前 catalog 完整对齐，并覆盖 `rd.vfs.*` 导航层、扩展 `rd.session.*`、`rd.core.*` discovery/observability，以及 bounded event-tree 读取语义；其中 `tabular/tsv` 仅作为 projection 支持。
+- 本地 plugin 安装后实际运行的是 Codex cache 副本，而不是 source repo 当前目录；每次重新覆盖 `common/` 或 `tools/` 后，都必须重新同步 `~/.agents/plugins/rdc-debugger/`，再在 `/plugins` 中刷新或重装。
+"""
+
+
+def codex_plugin_inner_agents_text() -> str:
+    return """# Codex Plugin Workspace Instructions（工作区约束）
+
+当前目录是 Codex 的 installable plugin bundle。所有角色在进入 role-specific 行为前，都必须先服从本文件与共享 `common/` 约束。
+
+## 前置检查（必须先于任何其他步骤执行）
+
+在执行任何工作前，必须验证以下两项均已就绪：
+
+1. `common/` 已正确覆盖：检查 `common/AGENT_CORE.md` 是否存在。
+2. `tools/` 已正确覆盖：检查 `tools/spec/tool_catalog.json` 是否存在。
+
+任一文件不存在时：
+
+- 立即停止，不得继续任何工作。
+- 不得降级处理、搜索替代工具路径、使用模型记忆或以其他方式绕过本检查。
+- 向用户输出：
+
+```
+前置环境未就绪：请确认 (1) 已将 debugger/common/ 整包覆盖到平台根 common/；(2) 已将 RDC-Agent-Tools 整包覆盖到平台根 tools/；(3) 在平台根目录运行 python common/config/validate_binding.py --strict 通过后，再重新发起任务。
+```
+
+验证通过后，按顺序阅读：
+
+1. common/AGENT_CORE.md
+2. common/config/platform_adapter.json
+3. skills/rdc-debugger/SKILL.md
+4. common/docs/platform-capability-model.md
+5. common/docs/model-routing.md
+
+强制规则：
+
+- 平台启动后默认保持普通对话态；只有用户手动召唤 `rdc-debugger`，才进入 RenderDoc/RDC GPU Debug 调试框架。
+- 除 `rdc-debugger` 之外，其他 specialist 默认都是 internal/debug-only，只能由 `rdc-debugger` 在框架内分派。
+- 用户尚未提供可导入的 `.rdc` 时，必须以 `BLOCKED_MISSING_CAPTURE` 停止，不得初始化 case/run 或继续做 debug、investigation、tool planning。
+- 当前插件不预注册 `.codex/agents` 自定义 agent；如需 specialist 角色，`rdc-debugger` 必须显式要求 Codex 创建通用 sub-agent，并让它先加载当前插件内的对应 `skills/<role>/SKILL.md`。
+- `codex_plugin` 的 `local_support` / `remote_support` / `enforcement_layer` 以 `common/config/platform_capabilities.json` 当前行与 `runtime_mode_truth.snapshot.json` 为准。
+
+未先将 `debugger/common/` 整包覆盖到平台根 `common/`、且将 RDC-Agent-Tools 整包覆盖到平台根 `tools/` 之前，不允许在宿主中使用当前插件包。
+
+运行时工作区固定为平台根目录下的 `workspace/`
+
+- 当前宿主没有 native hooks；Codex 的执行门禁固定为：
+  1. `intent_gate`
+  2. `artifacts/entry_gate.yaml`
+  3. binding/preflight + capture import + case/run bootstrap
+  4. `artifacts/intake_gate.yaml` pass
+  5. `artifacts/runtime_topology.yaml`
+  6. `staged_handoff`
+  7. `artifacts/run_compliance.yaml` pass
+- 在 `artifacts/intake_gate.yaml` 通过前，不得执行 specialist dispatch 或 live `rd.*` 调试。
+"""
+
+
+def codex_plugin_marketplace_sample_text() -> str:
+    marketplace = {
+        "name": "local-personal",
+        "interface": {
+            "displayName": "Local Personal Plugins",
+        },
+        "plugins": [
+            {
+                "name": "rdc-debugger",
+                "source": {
+                    "source": "local",
+                    "path": "./plugins/rdc-debugger",
+                },
+                "policy": {
+                    "installation": "AVAILABLE",
+                    "authentication": "ON_INSTALL",
+                },
+                "category": "Developer Tools",
+            }
+        ],
+    }
+    return json.dumps(marketplace, ensure_ascii=False, indent=2)
+
+
+def codex_plugin_mcp_opt_in_text() -> str:
+    return """# Copy this snippet into ~/.codex/config.toml only when you explicitly want to use MCP.
+# Set RDC_DEBUGGER_PLUGIN_ROOT to ~/.agents/plugins/rdc-debugger before using this sample,
+# or replace the variable with the literal absolute path of that directory.
+
+[mcp_servers.renderdoc-platform-mcp]
+command = "python"
+args = ["${RDC_DEBUGGER_PLUGIN_ROOT}/tools/mcp/run_mcp.py"]
 """
 
 
@@ -457,7 +717,7 @@ def agent_wrapper_body_text(ctx: dict[str, Any], platform_key: str, role: dict[s
 
 
 def collect_findings(ctx: dict[str, Any], platform_key: str) -> list[str]:
-    package = ROOT / "platforms" / platform_key
+    package = platform_package_root(ctx, platform_key)
     findings: list[str] = []
     for path in sorted(expected_files(ctx, platform_key)):
         if not path.exists():
@@ -467,8 +727,8 @@ def collect_findings(ctx: dict[str, Any], platform_key: str) -> list[str]:
     return findings
 
 
-def sync_placeholders(platform_key: str) -> None:
-    package = ROOT / "platforms" / platform_key
+def sync_placeholders(ctx: dict[str, Any], platform_key: str) -> None:
+    package = platform_package_root(ctx, platform_key)
     for rel in FORBIDDEN_DIRS:
         target = package / rel
         if target.exists():
@@ -480,8 +740,8 @@ def sync_placeholders(platform_key: str) -> None:
 
 
 def sync_skill_wrappers(ctx: dict[str, Any], platform_key: str) -> None:
-    package = ROOT / "platforms" / platform_key
-    target = ctx["platform_targets"]["platforms"][platform_key]
+    package = platform_package_root(ctx, platform_key)
+    target = platform_target(ctx, platform_key)
     skill_dir = target.get("skill_dir")
     if not skill_dir:
         return
@@ -505,8 +765,8 @@ def sync_skill_wrappers(ctx: dict[str, Any], platform_key: str) -> None:
 
 
 def sync_agent_and_role_configs(ctx: dict[str, Any], platform_key: str) -> None:
-    package = ROOT / "platforms" / platform_key
-    target = ctx["platform_targets"]["platforms"][platform_key]
+    package = platform_package_root(ctx, platform_key)
+    target = platform_target(ctx, platform_key)
     desired_files = {
         str((role.get("platform_files") or {}).get(platform_key, "")).strip()
         for role in ctx["role_manifest"]["roles"]
@@ -532,8 +792,8 @@ def sync_agent_and_role_configs(ctx: dict[str, Any], platform_key: str) -> None:
 
 
 def sync_agent_wrappers(ctx: dict[str, Any], platform_key: str) -> None:
-    package = ROOT / "platforms" / platform_key
-    target = ctx["platform_targets"]["platforms"][platform_key]
+    package = platform_package_root(ctx, platform_key)
+    target = platform_target(ctx, platform_key)
     agent_dir = str(target.get("agent_dir") or "").strip()
     if not agent_dir:
         return
@@ -553,17 +813,51 @@ def sync_agent_wrappers(ctx: dict[str, Any], platform_key: str) -> None:
         )
 
 
+def sync_platform_specific_files(ctx: dict[str, Any], platform_key: str) -> None:
+    if platform_key != "codex_plugin":
+        return
+
+    package = platform_package_root(ctx, platform_key)
+    wrapper_root = platform_wrapper_root(ctx, platform_key)
+    public_entry_skill = _public_entry_skill(ctx)
+
+    write_text(wrapper_root / "README.md", codex_plugin_outer_readme_text())
+    write_text(wrapper_root / "AGENTS.md", codex_plugin_outer_agents_text())
+    write_text(
+        wrapper_root / "references" / "personal-marketplace.sample.json",
+        codex_plugin_marketplace_sample_text(),
+        encoding="utf-8",
+    )
+    write_text(package / "README.md", codex_plugin_inner_readme_text())
+    write_text(package / "AGENTS.md", codex_plugin_inner_agents_text())
+    write_text(
+        package / ".codex-plugin" / "plugin.json",
+        codex_plugin_manifest_text(),
+        encoding="utf-8",
+    )
+    write_text(
+        package / "references" / "mcp-opt-in.sample.toml",
+        codex_plugin_mcp_opt_in_text(),
+        encoding="utf-8",
+    )
+    write_text(
+        package / "skills" / public_entry_skill / "agents" / "openai.yaml",
+        codex_plugin_skill_openai_yaml_text(),
+        encoding="utf-8",
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate or refresh minimal debugger platform scaffolds")
     parser.add_argument("--check", action="store_true", help="Validate scaffold topology without rewriting placeholders")
     args = parser.parse_args(argv)
 
     ctx = load_context(ROOT)
-    findings = validate_source_tree(ctx)
-    for platform_key in ctx["platform_capabilities"]["platforms"]:
-        findings.extend(collect_findings(ctx, platform_key))
 
     if args.check:
+        findings = validate_source_tree(ctx)
+        for platform_key in ctx["platform_capabilities"]["platforms"]:
+            findings.extend(collect_findings(ctx, platform_key))
         if findings:
             print("[platform scaffold findings]")
             for row in findings:
@@ -573,10 +867,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     for platform_key in ctx["platform_capabilities"]["platforms"]:
-        sync_placeholders(platform_key)
+        sync_placeholders(ctx, platform_key)
         sync_skill_wrappers(ctx, platform_key)
+        sync_platform_specific_files(ctx, platform_key)
         sync_agent_and_role_configs(ctx, platform_key)
         sync_agent_wrappers(ctx, platform_key)
+    findings = validate_source_tree(ctx)
+    for platform_key in ctx["platform_capabilities"]["platforms"]:
+        findings.extend(collect_findings(ctx, platform_key))
     if findings:
         print("[platform scaffold findings]")
         for row in findings:

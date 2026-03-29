@@ -1,0 +1,20 @@
+{
+  "name": "local-personal",
+  "interface": {
+    "displayName": "Local Personal Plugins"
+  },
+  "plugins": [
+    {
+      "name": "rdc-debugger",
+      "source": {
+        "source": "local",
+        "path": "./plugins/rdc-debugger"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

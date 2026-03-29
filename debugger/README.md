@@ -66,6 +66,8 @@
 平台模板位于 `platforms/<platform>/`。标准用户工作流：
 
 1. 选择目标平台模板目录。
+   - `codex`：workspace-native 模板，直接使用 `platforms/codex/`。
+   - `codex_plugin`：installable plugin 包装层；真正的 plugin root 是 `platforms/codex_plugin/rdc-debugger/`，外层 `platforms/codex_plugin/` 只负责安装说明与 marketplace 示例。
 2. 将仓库根目录 `debugger/common/` 整体拷贝到该平台根的 `common/`。
 3. 将 `RDC-Agent-Tools` 根目录整包拷贝到该平台根的 `tools/`。
 4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、snapshot 与宿主入口文件都已对齐。
@@ -89,6 +91,7 @@
 
 - 默认 `CLI`，但用户可强制切到 `MCP`
   - `codex`
+  - `codex_plugin`
   - `claude-code`
   - `code-buddy`
   - `copilot-cli`

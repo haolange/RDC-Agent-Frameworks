@@ -102,6 +102,21 @@
         "multi_agent"
       ]
     },
+    "codex_plugin": {
+      "workspace_root": "platforms/codex_plugin/rdc-debugger",
+      "status_label": "installable-plugin",
+      "agent_dir": null,
+      "skill_dir": "skills/rdc-debugger",
+      "role_config_dir": null,
+      "entrypoint_file": "README.md",
+      "native_surfaces": [
+        "plugin",
+        "skills",
+        "marketplace",
+        "mcp_opt_in",
+        "generic_subagents"
+      ]
+    },
     "cursor": {
       "workspace_root": "platforms/cursor",
       "status_label": "full",

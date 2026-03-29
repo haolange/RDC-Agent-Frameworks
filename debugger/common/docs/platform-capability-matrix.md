@@ -11,6 +11,7 @@
 | Claude Desktop | `workflow_stage` | `instruction_only_sub_agents` | `none` | `spawn_instruction_only` | `workflow_serial` | `MCP` | `MCP only` | `single_runtime_owner` | `single_runtime_owner` | `degraded` | `serial_only` | `runtime_owner` |
 | Manus | `workflow_stage` | `instruction_only_sub_agents` | `none` | `spawn_instruction_only` | `workflow_serial` | `MCP` | `MCP only` | `single_runtime_owner` | `single_runtime_owner` | `degraded` | `serial_only` | `runtime_owner` |
 | Codex | `staged_handoff` | `puppet_sub_agents` | `via_main_agent` | `independent_files` | `hub_and_spoke` | `CLI` | `CLI, MCP` | `multi_context_orchestrated` | `single_runtime_owner` | `verified` | `verified` | `runtime_owner` |
+| Codex Plugin | `staged_handoff` | `puppet_sub_agents` | `via_main_agent` | `skill_files` | `hub_and_spoke` | `CLI` | `CLI, MCP` | `multi_context_orchestrated` | `single_runtime_owner` | `verified` | `verified` | `runtime_owner` |
 | Cursor | `staged_handoff` | `puppet_sub_agents` | `via_main_agent` | `independent_files` | `hub_and_spoke` | `CLI` | `CLI, MCP` | `multi_context_orchestrated` | `single_runtime_owner` | `verified` | `verified` | `hooks` |
 
 ## 说明
