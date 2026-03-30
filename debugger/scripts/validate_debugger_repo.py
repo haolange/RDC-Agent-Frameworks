@@ -44,7 +44,7 @@ def _print_proc(proc: subprocess.CompletedProcess[str]) -> None:
         print(proc.stderr, end="", file=sys.stderr)
 
 
-def _surface_supported(platform_caps: dict, surface: str) -> bool:
+def _native_surface_supported(platform_caps: dict, surface: str) -> bool:
     if surface == "workflow":
         return bool(platform_caps.get("coordination_mode") == "workflow_stage" or platform_caps.get("degradation_mode") == "workflow-package")
     if surface == "agents":
@@ -52,6 +52,15 @@ def _surface_supported(platform_caps: dict, surface: str) -> bool:
     caps = platform_caps.get("capabilities") or {}
     slot = caps.get(surface) or {}
     return bool(slot.get("supported"))
+
+
+def _required_surface_supported(platform_caps: dict, surface: str) -> bool:
+    if surface == "hooks":
+        caps = platform_caps.get("capabilities") or {}
+        slot = caps.get("hooks") or {}
+        rendered = str(slot.get("rendered", "")).strip()
+        return bool(slot.get("supported")) or rendered == "pseudo-hooks"
+    return _native_surface_supported(platform_caps, surface)
 
 
 def _frontmatter_string(path: Path, field: str) -> str | None:
@@ -80,7 +89,7 @@ def _platform_renders_per_agent_model(platform_caps: dict) -> bool:
 def _platform_is_inherit_only(platform_caps: dict) -> bool:
     slot = (platform_caps.get("capabilities") or {}).get("per_agent_model") or {}
     rendered = str(slot.get("rendered", "")).strip()
-    return (not bool(slot.get("supported"))) or rendered in {"inherit", "workflow-level", "not-supported"}
+    return (not bool(slot.get("supported"))) or rendered in {"inherit", "workflow-level", "not-supported", "not-packaged"}
 
 
 def _claude_code_subagent_name(role: dict) -> str | None:
@@ -475,7 +484,7 @@ def _compliance_findings(root: Path) -> list[str]:
             findings.append(f"{key}: invalid sub_agent_mode")
         if peer_communication not in {"direct", "via_main_agent", "none"}:
             findings.append(f"{key}: invalid peer_communication")
-        if agent_description_mode not in {"independent_files", "spawn_instruction_only"}:
+        if agent_description_mode not in {"independent_files", "spawn_instruction_only", "skill_files"}:
             findings.append(f"{key}: invalid agent_description_mode")
         if dispatch_topology not in {"mesh", "hub_and_spoke", "workflow_serial"}:
             findings.append(f"{key}: invalid dispatch_topology")
@@ -498,15 +507,15 @@ def _compliance_findings(root: Path) -> list[str]:
         if actual_mode == "concurrent_team":
             if sub_agent_mode != "team_agents" or peer_communication != "direct" or dispatch_topology != "mesh":
                 findings.append(f"{key}: concurrent_team requires team_agents + direct + mesh")
-            if specialist_dispatch_requirement != "required" or host_delegation_policy != "platform_managed" or host_delegation_fallback != "native":
-                findings.append(f"{key}: concurrent_team requires required/platform_managed/native delegation defaults")
+            if specialist_dispatch_requirement != "required" or host_delegation_policy != "platform_managed":
+                findings.append(f"{key}: concurrent_team requires required/platform_managed delegation defaults")
             if local_live_runtime_policy != "multi_context_multi_owner":
                 findings.append(f"{key}: concurrent_team requires multi_context_multi_owner local policy")
         elif actual_mode == "staged_handoff":
             if sub_agent_mode != "puppet_sub_agents" or peer_communication != "via_main_agent" or dispatch_topology != "hub_and_spoke":
                 findings.append(f"{key}: staged_handoff requires puppet_sub_agents + via_main_agent + hub_and_spoke")
-            if specialist_dispatch_requirement != "required" or host_delegation_policy != "platform_managed" or host_delegation_fallback != "none":
-                findings.append(f"{key}: staged_handoff requires required/platform_managed/none delegation defaults")
+            if specialist_dispatch_requirement != "required" or host_delegation_policy != "platform_managed":
+                findings.append(f"{key}: staged_handoff requires required/platform_managed delegation defaults")
             if local_live_runtime_policy != "multi_context_orchestrated":
                 findings.append(f"{key}: staged_handoff requires multi_context_orchestrated local policy")
         elif actual_mode == "workflow_stage":
@@ -514,11 +523,11 @@ def _compliance_findings(root: Path) -> list[str]:
                 findings.append(f"{key}: workflow_stage requires instruction_only_sub_agents + none + workflow_serial")
             if agent_description_mode != "spawn_instruction_only":
                 findings.append(f"{key}: workflow_stage requires spawn_instruction_only agent descriptions")
-            if specialist_dispatch_requirement != "required" or host_delegation_policy != "platform_managed" or host_delegation_fallback != "none":
-                findings.append(f"{key}: workflow_stage requires required/platform_managed/none delegation defaults")
+            if specialist_dispatch_requirement != "required" or host_delegation_policy != "platform_managed":
+                findings.append(f"{key}: workflow_stage requires required/platform_managed delegation defaults")
 
         enforcement_mode = str(rules.get("enforcement_mode", "")).strip()
-        hooks_supported = _surface_supported(platform_caps, "hooks")
+        hooks_supported = _native_surface_supported(platform_caps, "hooks")
         if enforcement_mode not in {"native_hook_harness", "pseudo_hook_harness", "no_hook_audit", "runtime_owner_gate_loop"}:
             findings.append(f"{key}: invalid enforcement_mode")
         if enforcement_mode == "native_hook_harness" and not hooks_supported:
@@ -531,7 +540,7 @@ def _compliance_findings(root: Path) -> list[str]:
             findings.append(f"{key}: runtime_owner_gate_loop requires enforcement_layer=runtime_owner")
 
         for surface in rules.get("required_surfaces") or []:
-            if not _surface_supported(platform_caps, str(surface)):
+            if not _required_surface_supported(platform_caps, str(surface)):
                 findings.append(f"{key}: required surface '{surface}' is not supported by platform_capabilities")
 
         for rel in platform_caps.get("required_paths") or []:
@@ -542,7 +551,7 @@ def _compliance_findings(root: Path) -> list[str]:
         if rules.get("workflow_required") and actual_mode != "workflow_stage":
             findings.append(f"{key}: workflow_required=true but coordination_mode is not workflow_stage")
 
-    expected_cli_first = {"code-buddy", "claude-code", "copilot-cli", "copilot-ide", "codex", "cursor"}
+    expected_cli_first = {"code-buddy", "claude-code", "copilot-cli", "copilot-ide", "codex", "codex_plugin", "cursor"}
     actual_cli_first = {
         key for key, row in cap_platforms.items() if str(row.get("default_entry_mode", "")).strip() == "cli"
     }

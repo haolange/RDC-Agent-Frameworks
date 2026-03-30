@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Validate debugger tool references against the configured platform catalog."""
 
 from __future__ import annotations
@@ -145,12 +145,24 @@ def _tool_refs(text: str) -> set[str]:
     return {match.group("tool") for match in TOOL_RE.finditer(text)}
 
 
+def _is_known_field_path_reference(ref: str, known_tools: set[str]) -> bool:
+    parts = str(ref or "").split(".")
+    if len(parts) <= 3:
+        return False
+    return ".".join(parts[:3]) in known_tools
+
+
 def check_unknown_tools(files: list[Path], known_tools: set[str]) -> dict[str, set[str]]:
-    return {
-        str(path): {ref for ref in _tool_refs(read_text(path)) if ref not in known_tools}
-        for path in files
-        if {ref for ref in _tool_refs(read_text(path)) if ref not in known_tools}
-    }
+    findings: dict[str, set[str]] = {}
+    for path in files:
+        refs = {
+            ref
+            for ref in _tool_refs(read_text(path))
+            if ref not in known_tools and not _is_known_field_path_reference(ref, known_tools)
+        }
+        if refs:
+            findings[str(path)] = refs
+    return findings
 
 
 def check_prerequisite_examples(files: list[Path], prerequisites: dict[str, list[dict[str, str]]]) -> list[str]:

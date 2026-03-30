@@ -1,9 +1,12 @@
 {
   "mcpServers": {
     "renderdoc-platform-mcp": {
-      "command": "python",
+      "command": "cmd",
       "args": [
-        "${DEBUGGER_PLATFORM_TOOLS_ROOT}/mcp/run_mcp.py"
+        "/c",
+        "${DEBUGGER_PLATFORM_TOOLS_ROOT}/rdx.bat",
+        "--non-interactive",
+        "mcp"
       ]
     }
   }

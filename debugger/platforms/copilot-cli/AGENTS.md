@@ -7,7 +7,7 @@
 在执行任何工作前，必须验证以下两项均已就绪：
 
 1. `common/` 已正确覆盖：检查 `common/AGENT_CORE.md` 是否存在。
-2. `tools/` 已正确覆盖：检查 `tools/spec/tool_catalog.json` 是否存在。
+2. `tools/` 已正确覆盖：检查 `tools/spec/tool_catalog.json` 与 `tools/rdx.bat` 是否存在。
 
 任一文件不存在时：
 

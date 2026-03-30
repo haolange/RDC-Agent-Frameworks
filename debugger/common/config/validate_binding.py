@@ -46,6 +46,17 @@ COMMON_PLACEHOLDER_MARKERS = (
 )
 EXPECTED_TOOLS_SOURCE_ROOT = "tools"
 EXPECTED_RUNTIME_MODE = "worker_staged"
+ZERO_INSTALL_REQUIRED_FILES = [
+    "rdx.bat",
+    "binaries/windows/x64/manifest.runtime.json",
+    "binaries/windows/x64/python/python.exe",
+]
+ZERO_INSTALL_REQUIRED_DIRS = [
+    "binaries/windows/x64/python/Lib",
+    "binaries/windows/x64/python/DLLs",
+    "binaries/windows/x64/python/Lib/site-packages",
+]
+ZERO_INSTALL_MANIFEST_KEYS = ("python_version", "python_entry", "stdlib_layout")
 
 
 def _default_root() -> Path:
@@ -103,6 +114,50 @@ def _is_common_placeholder(common_readme: Path) -> bool:
     return any(marker in text for marker in COMMON_PLACEHOLDER_MARKERS)
 
 
+def _validate_zero_install_runtime(tools_root: Path) -> list[str]:
+    findings: list[str] = []
+    for rel in ZERO_INSTALL_REQUIRED_FILES:
+        if not (tools_root / rel).is_file():
+            findings.append(f"missing package-local zero-install runtime file: {tools_root / rel}")
+    for rel in ZERO_INSTALL_REQUIRED_DIRS:
+        if not (tools_root / rel).is_dir():
+            findings.append(f"missing package-local zero-install runtime directory: {tools_root / rel}")
+
+    manifest_path = tools_root / "binaries" / "windows" / "x64" / "manifest.runtime.json"
+    if not manifest_path.is_file():
+        return findings
+
+    try:
+        manifest = _read_json(manifest_path)
+    except ValueError as exc:
+        findings.append(str(exc))
+        return findings
+
+    bundled_python = manifest.get("bundled_python") or {}
+    missing_keys = [key for key in ZERO_INSTALL_MANIFEST_KEYS if not str(bundled_python.get(key) or "").strip()]
+    if missing_keys:
+        findings.append("package-local runtime manifest missing bundled_python keys: " + ", ".join(missing_keys))
+        return findings
+
+    runtime_root = tools_root / "binaries" / "windows" / "x64"
+    python_entry = Path(str(bundled_python.get("python_entry") or "").strip())
+    stdlib_layout = Path(str(bundled_python.get("stdlib_layout") or "").strip())
+    if python_entry.is_absolute() or ".." in python_entry.parts:
+        findings.append("package-local runtime manifest bundled_python.python_entry must stay relative to binaries/windows/x64")
+    elif not (runtime_root / python_entry).is_file():
+        findings.append(f"package-local runtime manifest python_entry missing on disk: {runtime_root / python_entry}")
+    if stdlib_layout.is_absolute() or ".." in stdlib_layout.parts:
+        findings.append("package-local runtime manifest bundled_python.stdlib_layout must stay relative to binaries/windows/x64")
+    elif not (runtime_root / stdlib_layout).is_dir():
+        findings.append(f"package-local runtime manifest stdlib_layout missing on disk: {runtime_root / stdlib_layout}")
+
+    manifest_paths = {str(item.get("path") or "").strip() for item in (manifest.get("files") or [])}
+    if not any(path.startswith("python/") for path in manifest_paths):
+        findings.append("package-local runtime manifest must enumerate bundled python files under python/")
+
+    return findings
+
+
 def validate_binding(root: Path, *, platform: str = "") -> list[str]:
     findings: list[str] = []
     adapter_path = _platform_adapter_path(root)
@@ -140,6 +195,8 @@ def validate_binding(root: Path, *, platform: str = "") -> list[str]:
     for rel in required_paths:
         if not (tools_root / rel).is_file():
             findings.append(f"package-local tools source payload validation failed: missing {tools_root / rel}")
+
+    findings.extend(_validate_zero_install_runtime(tools_root))
 
     for rel in ESSENTIAL_COMMON_DOCS:
         if not (root / rel).is_file():

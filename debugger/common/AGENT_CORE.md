@@ -138,7 +138,7 @@
 
 **检查 2：`tools/` 已正确覆盖**
 
-- 验证 `tools/spec/tool_catalog.json` 是否存在。
+- 验证 `tools/spec/tool_catalog.json` 与 `tools/rdx.bat` 是否存在。
 - 不存在则说明 `tools/` 仍为占位目录，尚未从 RDC-Agent-Tools 整包覆盖。
 - `tools/` 下应至少包含：
   - `README.md`
@@ -146,6 +146,10 @@
   - `docs/session-model.md`
   - `docs/agent-model.md`
   - `spec/tool_catalog.json`
+  - `rdx.bat`
+  - `binaries/windows/x64/manifest.runtime.json`
+  - `binaries/windows/x64/python/python.exe`
+- 当前 `Tools` 的正式用户入口是 `tools/rdx.bat`；宿主按 `MCP` 接入时应包装 `tools/rdx.bat --non-interactive mcp`，而不是继续假设系统 `Python`。
 
 强制规则：
 

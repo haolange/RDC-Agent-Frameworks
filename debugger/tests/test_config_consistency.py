@@ -123,6 +123,30 @@ class ConfigConsistencyTests(unittest.TestCase):
         self.assertEqual(compliance["platforms"]["claude-desktop"]["enforcement_mode"], "no_hook_audit")
         self.assertEqual(compliance["platforms"]["manus"]["enforcement_mode"], "no_hook_audit")
 
+    def test_validate_tool_contract_ignores_known_tool_field_paths(self) -> None:
+        module = _load_module(DEBUGGER_ROOT / "scripts" / "validate_tool_contract.py", "validate_tool_contract_field_path_module")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "sample.md"
+            path.write_text("preview path: rd.session.get_context.preview.display\n", encoding="utf-8")
+            findings = module.check_unknown_tools([path], {"rd.session.get_context"})
+            self.assertEqual(findings, {})
+
+    def test_codex_plugin_model_routing_uses_inherit_for_not_packaged_profiles(self) -> None:
+        routing = _read_json(DEBUGGER_ROOT / "common" / "config" / "model_routing.json")
+        capabilities = _read_json(DEBUGGER_ROOT / "common" / "config" / "platform_capabilities.json")
+        self.assertEqual(((capabilities["platforms"]["codex_plugin"]["capabilities"] or {}).get("per_agent_model") or {}).get("rendered"), "not-packaged")
+        for profile_name in ("orchestrator", "investigator", "verifier", "reporter"):
+            self.assertEqual((routing["profiles"][profile_name]["platform_rendering"] or {}).get("codex_plugin"), "inherit")
+
+    def test_repo_validator_accepts_pseudo_hook_surface_and_skill_files(self) -> None:
+        module = _load_module(DEBUGGER_ROOT / "scripts" / "validate_debugger_repo.py", "validate_debugger_repo_surface_module")
+        capabilities = _read_json(DEBUGGER_ROOT / "common" / "config" / "platform_capabilities.json")
+        self.assertTrue(module._required_surface_supported(capabilities["platforms"]["code-buddy"], "hooks"))
+        self.assertTrue(module._required_surface_supported(capabilities["platforms"]["cursor"], "hooks"))
+        self.assertFalse(module._native_surface_supported(capabilities["platforms"]["code-buddy"], "hooks"))
+        self.assertTrue(module._platform_is_inherit_only(capabilities["platforms"]["codex_plugin"]))
+        self.assertEqual(capabilities["platforms"]["codex_plugin"]["agent_description_mode"], "skill_files")
+
     def test_validate_tool_contract_reader_reports_invalid_adapter_json(self) -> None:
         module = _load_module(DEBUGGER_ROOT / "scripts" / "validate_tool_contract.py", "validate_tool_contract_module")
         with tempfile.TemporaryDirectory() as tmp:
@@ -174,6 +198,54 @@ class ConfigConsistencyTests(unittest.TestCase):
             set(intent_gate.get("decision_allowed") or []),
             {"debugger", "analyst", "optimizer", "out_of_scope_or_ambiguous"},
         )
+
+    def test_platform_adapter_required_paths_include_zero_install_runtime(self) -> None:
+        adapter = _read_json(DEBUGGER_ROOT / "common" / "config" / "platform_adapter.json")
+        required_paths = set(((adapter.get("validation") or {}).get("required_paths") or []))
+        for rel in (
+            "README.md",
+            "docs/tools.md",
+            "docs/session-model.md",
+            "docs/agent-model.md",
+            "spec/tool_catalog.json",
+            "rdx.bat",
+            "binaries/windows/x64/manifest.runtime.json",
+            "binaries/windows/x64/python/python.exe",
+        ):
+            self.assertIn(rel, required_paths)
+        self.assertEqual(((adapter.get("cli") or {}).get("launcher") or ""), "rdx.bat")
+
+    def test_mcp_opt_in_configs_use_zero_install_launcher(self) -> None:
+        shared = _read_json(DEBUGGER_ROOT / "common" / "config" / "mcp_servers.json")
+        shared_server = (shared.get("servers") or {}).get("renderdoc-platform-mcp") or {}
+        self.assertEqual(shared_server.get("command"), "cmd")
+        self.assertEqual(shared_server.get("args"), ["/c", "${DEBUGGER_PLATFORM_TOOLS_ROOT}/rdx.bat", "--non-interactive", "mcp"])
+        self.assertEqual(shared_server.get("cwd"), "${DEBUGGER_PLATFORM_TOOLS_ROOT}")
+        self.assertNotIn("run_mcp.py", json.dumps(shared, ensure_ascii=False))
+
+        for rel in (
+            "platforms/claude-code/.claude/settings.mcp.opt-in.json",
+            "platforms/claude-desktop/claude_desktop_config.opt-in.json",
+            "platforms/code-buddy/.mcp.opt-in.json",
+            "platforms/copilot-cli/.mcp.opt-in.json",
+            "platforms/copilot-ide/.github/mcp.opt-in.json",
+            "platforms/cursor/.cursor/mcp.opt-in.json",
+        ):
+            payload = _read_json(DEBUGGER_ROOT / rel)
+            server = (payload.get("mcpServers") or {}).get("renderdoc-platform-mcp") or {}
+            self.assertEqual(server.get("command"), "cmd", rel)
+            self.assertEqual(server.get("args"), ["/c", "${DEBUGGER_PLATFORM_TOOLS_ROOT}/rdx.bat", "--non-interactive", "mcp"], rel)
+            self.assertNotIn("run_mcp.py", json.dumps(payload, ensure_ascii=False), rel)
+
+        codex_opt_in = (DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "config.mcp.opt-in.toml").read_text(encoding="utf-8-sig")
+        self.assertIn('command = "cmd"', codex_opt_in)
+        self.assertIn('args = ["/c", "${DEBUGGER_PLATFORM_TOOLS_ROOT}/rdx.bat", "--non-interactive", "mcp"]', codex_opt_in)
+        self.assertNotIn('run_mcp.py', codex_opt_in)
+
+        plugin_opt_in = (DEBUGGER_ROOT / "platforms" / "codex_plugin" / "rdc-debugger" / "references" / "mcp-opt-in.sample.toml").read_text(encoding="utf-8-sig")
+        self.assertIn('command = "cmd"', plugin_opt_in)
+        self.assertIn('args = ["/c", "${RDC_DEBUGGER_PLUGIN_ROOT}/tools/rdx.bat", "--non-interactive", "mcp"]', plugin_opt_in)
+        self.assertNotIn('run_mcp.py', plugin_opt_in)
 
     def test_platform_entry_modes_are_consistent(self) -> None:
         capabilities = _read_json(DEBUGGER_ROOT / "common" / "config" / "platform_capabilities.json")

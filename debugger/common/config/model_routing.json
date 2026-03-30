@@ -1,4 +1,4 @@
-{
+﻿{
   "schema_version": 3,
   "global_requirements": {
     "must_be_native_multimodal": true,
@@ -51,7 +51,7 @@
         "claude-desktop": "inherit",
         "manus": "inherit",
         "codex": "gpt-5.4",
-        "codex_plugin": "gpt-5.4"
+        "codex_plugin": "inherit"
       }
     },
     "investigator": {
@@ -74,7 +74,7 @@
         "claude-desktop": "inherit",
         "manus": "inherit",
         "codex": "gpt-5.4",
-        "codex_plugin": "gpt-5.4"
+        "codex_plugin": "inherit"
       }
     },
     "verifier": {
@@ -96,7 +96,7 @@
         "claude-desktop": "inherit",
         "manus": "inherit",
         "codex": "gpt-5.4",
-        "codex_plugin": "gpt-5.4"
+        "codex_plugin": "inherit"
       }
     },
     "reporter": {
@@ -118,7 +118,7 @@
         "claude-desktop": "inherit",
         "manus": "inherit",
         "codex": "gpt-5.4",
-        "codex_plugin": "gpt-5.4"
+        "codex_plugin": "inherit"
       }
     }
   },

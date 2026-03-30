@@ -210,8 +210,10 @@ remote run 额外要求先完成：
 在进入任何平台真相相关工作前，先检查：
 
 - `common/AGENT_CORE.md` 是否存在
-- `tools/spec/tool_catalog.json` 是否存在
+- `tools/spec/tool_catalog.json` 与 `tools/rdx.bat` 是否存在
+- `tools/binaries/windows/x64/manifest.runtime.json` 与 `tools/binaries/windows/x64/python/python.exe` 是否存在
 - `python common/config/validate_binding.py --strict` 是否已通过，或当前对话是否明确说明尚未执行
+- 若宿主按 `MCP` 接入，当前配置是否包装 `tools/rdx.bat --non-interactive mcp`，而不是继续依赖系统 `Python`
 
 任一项失败时：
 

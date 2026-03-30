@@ -16,7 +16,7 @@
 1. 将仓库根目录 `debugger/common/` 整体拷贝到当前插件根目录的 `common/`，覆盖占位内容。
 2. 将 `RDC-Agent-Tools` 根目录整包拷贝到当前插件根目录的 `tools/`，覆盖占位内容。
 3. 确认 `tools/` 下存在 `validation.required_paths` 列出的必需文件。
-4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、snapshot、共享文档与插件包根目录全部对齐。
+4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot、共享文档与插件包根目录全部对齐。
 5. 使用当前插件根目录下、与 `common/` 和 `tools/` 并列的 `workspace/` 作为运行区。
 6. 将当前目录同步到 `~/.agents/plugins/rdc-debugger/`。
 7. 将 `../references/personal-marketplace.sample.json` 合并到 `~/.agents/plugins/marketplace.json`。

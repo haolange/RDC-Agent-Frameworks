@@ -18,14 +18,15 @@
 
 1. 将仓库根目录 `debugger/common/` 整体拷贝到目标平台根目录的 `common/`。
 2. 将 `RDC-Agent-Tools` 根目录整包拷贝到目标平台根目录的 `tools/`。
-3. 确认 `tools/` 下存在 `validation.required_paths` 列出的必需文件：`README.md`、`docs/tools.md`、`docs/session-model.md`、`docs/agent-model.md`、`spec/tool_catalog.json`。
-4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、snapshot 与宿主入口文件全部对齐。
+3. 确认 `tools/` 下存在 `validation.required_paths` 列出的必需文件：`README.md`、`docs/tools.md`、`docs/session-model.md`、`docs/agent-model.md`、`spec/tool_catalog.json`、`rdx.bat`、`binaries/windows/x64/manifest.runtime.json`、`binaries/windows/x64/python/python.exe`。
+4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot 与宿主入口文件全部对齐。
 5. 先提供至少一份 `.rdc`：可在当前对话上传，或提供宿主当前会话可访问的文件路径。
 
 补充约束：
 
 - `platform_adapter.json` 中的 `paths.tools_source_root` 固定为 `tools`；它只表示 package-local source payload，不是 live runtime 目录或手工绑定步骤。
 - source repo 中的 `tools/` 仍是平台模板占位目录；正式工具真相只来自复制后的平台包根目录 `tools/`。
+- 当前 `Tools` 的正式用户入口是 `tools/rdx.bat`；若宿主按 `MCP` 接入，应通过 `cmd /c tools/rdx.bat --non-interactive mcp` 或等价包装调用，而不是把系统 `Python` 当成正式前提。
 - `rd.vfs.*` 是只读导航层，用于 browse-only 结构探索；精确调试、导出与状态变更必须回到 canonical `rd.*`。
 - `tabular/tsv` 只是 projection/summary 格式，用于提升扫描效率，不表示语义重要度排序。
 - 当前已重新验证的闭环包括 package-local `tools/` + local-first 工具链，以及 Android remote-only 的 daemon / `MCP` 最小 bootstrap 主链：`rd.remote.connect -> rd.remote.ping -> rd.capture.open_replay`。
@@ -70,7 +71,7 @@
    - `codex_plugin`：installable plugin 包装层；真正的 plugin root 是 `platforms/codex_plugin/rdc-debugger/`，外层 `platforms/codex_plugin/` 只负责安装说明与 marketplace 示例。
 2. 将仓库根目录 `debugger/common/` 整体拷贝到该平台根的 `common/`。
 3. 将 `RDC-Agent-Tools` 根目录整包拷贝到该平台根的 `tools/`。
-4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、snapshot 与宿主入口文件都已对齐。
+4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot 与宿主入口文件都已对齐。
 5. 完成覆盖后，在对应宿主中打开该平台根目录。
 6. 正常用户请求从 `rdc-debugger` 发起；`rdc-debugger` 与其他 specialist 角色默认是 internal/debug-only。
 7. 发起 debug 任务时，用户必须先提供一份或多份 `.rdc`；可在当前对话上传，或提供宿主当前会话可访问的文件路径。

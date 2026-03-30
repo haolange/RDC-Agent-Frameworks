@@ -24,6 +24,34 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def _write_runtime_layout(tools_root: Path) -> None:
+    _write(tools_root / "rdx.bat", "@echo off\n")
+    _write(tools_root / "binaries/windows/x64/python/python.exe", "python\n")
+    _write(tools_root / "binaries/windows/x64/python/Lib/os.py", "# os\n")
+    _write(tools_root / "binaries/windows/x64/python/Lib/site-packages/runtime.txt", "runtime\n")
+    _write(tools_root / "binaries/windows/x64/python/DLLs/runtime.dll", "dll\n")
+    _write(
+        tools_root / "binaries/windows/x64/manifest.runtime.json",
+        json.dumps(
+            {
+                "file_count": 3,
+                "files": [
+                    {"path": "python/python.exe"},
+                    {"path": "python/Lib/os.py"},
+                    {"path": "pymodules/renderdoc.pyd"},
+                ],
+                "bundled_python": {
+                    "python_version": "3.14.3",
+                    "python_entry": "python/python.exe",
+                    "stdlib_layout": "python/Lib",
+                },
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+    )
+
+
 def _adapter_payload(*, tools_source_root: str = "tools", runtime_mode: str = "worker_staged", required_paths: list[str] | None = None) -> dict:
     return {
         "paths": {"tools_source_root": tools_source_root},
@@ -36,6 +64,9 @@ def _adapter_payload(*, tools_source_root: str = "tools", runtime_mode: str = "w
                 "docs/session-model.md",
                 "docs/agent-model.md",
                 "spec/tool_catalog.json",
+                "rdx.bat",
+                "binaries/windows/x64/manifest.runtime.json",
+                "binaries/windows/x64/python/python.exe",
             ]
         },
     }
@@ -105,6 +136,7 @@ class BindingValidationTests(unittest.TestCase):
 
             for rel in ("README.md", "docs/tools.md", "docs/session-model.md", "docs/agent-model.md"):
                 _write(tools_root / rel, "ok\n")
+            _write_runtime_layout(tools_root)
             _write(
                 tools_root / "spec" / "tool_catalog.json",
                 json.dumps(
@@ -209,6 +241,7 @@ class BindingValidationTests(unittest.TestCase):
             _write(tools_root / "docs/tools.md", "ok\n")
             _write(tools_root / "docs/session-model.md", "ok\n")
             _write(tools_root / "docs/agent-model.md", "ok\n")
+            _write_runtime_layout(tools_root)
             _write(
                 tools_root / "spec/tool_catalog.json",
                 json.dumps(
@@ -246,6 +279,42 @@ class BindingValidationTests(unittest.TestCase):
                 "common/README.md is still a platform placeholder - copy debugger/common/ into the platform root common/ again",
                 findings,
             )
+
+    def test_validate_binding_reports_missing_zero_install_runtime(self) -> None:
+        validator = _load_validator_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "debugger"
+            tools_root = root / "tools"
+            tool_names = sorted(validator.REQUIRED_FRAMEWORK_TOOLS)
+
+            for rel in (
+                "README.md",
+                "common/README.md",
+                "common/AGENT_CORE.md",
+                "common/docs/cli-mode-reference.md",
+                "common/docs/model-routing.md",
+                "common/docs/platform-capability-matrix.md",
+                "common/docs/platform-capability-model.md",
+                "common/docs/runtime-coordination-model.md",
+                "common/docs/workspace-layout.md",
+                "platforms/codex/README.md",
+                "platforms/codex/AGENTS.md",
+                "platforms/codex/.codex/config.toml",
+                "platforms/codex/.codex/agents/triage_agent.toml",
+                "platforms/codex/.agents/skills/rdc-debugger/SKILL.md",
+            ):
+                _write(root / rel, "ok\n")
+
+            _write(root / "common" / "config" / "platform_adapter.json", json.dumps(_adapter_payload(required_paths=["README.md", "docs/tools.md", "docs/session-model.md", "docs/agent-model.md", "spec/tool_catalog.json"]), ensure_ascii=False, indent=2))
+            _write(root / "common" / "config" / "platform_capabilities.json", json.dumps({"platforms": {"codex": {"required_paths": ["platforms/codex/README.md", "platforms/codex/AGENTS.md", "platforms/codex/.codex/config.toml", "platforms/codex/.codex/agents/triage_agent.toml", "platforms/codex/.agents/skills/rdc-debugger/SKILL.md"]}}}, ensure_ascii=False, indent=2))
+            _write(root / "common" / "config" / "tool_catalog.snapshot.json", json.dumps({"tool_count": len(tool_names), "tools": [{"name": name} for name in tool_names]}, ensure_ascii=False, indent=2))
+            for rel in ("README.md", "docs/tools.md", "docs/session-model.md", "docs/agent-model.md"):
+                _write(tools_root / rel, "ok\n")
+            _write(tools_root / "spec" / "tool_catalog.json", json.dumps({"tool_count": len(tool_names), "tools": [{"name": name} for name in tool_names]}, ensure_ascii=False, indent=2))
+
+            findings = validator.validate_binding(root, platform="codex")
+
+            self.assertTrue(any("missing package-local zero-install runtime file" in item for item in findings))
 
     def test_validate_binding_reports_invalid_adapter_json(self) -> None:
         validator = _load_validator_module()

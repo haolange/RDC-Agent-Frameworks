@@ -7,7 +7,7 @@
 在执行任何工作前，必须验证以下两项均已就绪：
 
 1. `common/` 已正确覆盖：检查 `common/AGENT_CORE.md` 是否存在。
-2. `tools/` 已正确覆盖：检查 `tools/spec/tool_catalog.json` 是否存在。
+2. `tools/` 已正确覆盖：检查 `tools/spec/tool_catalog.json` 与 `tools/rdx.bat` 是否存在。
 
 任一文件不存在时：
 
@@ -39,11 +39,10 @@
 
 运行时工作区固定为平台根目录下的 `workspace/`
 
-- 当前插件路径属于 `no-hooks` tier；执行门禁固定为：
+- 当前插件路径按 `no-hooks` 处理；Codex 的执行门禁固定为：
   1. `intent_gate`
-  2. `preflight`
-  3. `accept-intake`（内部顺序执行 `entry-gate -> capture import + case/run bootstrap -> intake-gate -> runtime-topology`）
-  4. `dispatch-readiness` / `dispatch-specialist` / `specialist-feedback`
-  5. `staged_handoff`
-  6. `artifacts/run_compliance.yaml` pass
+  2. `accept-intake`（内部顺序执行 `entry_gate -> capture import -> case/run bootstrap -> intake_gate -> runtime_topology`）
+  3. `dispatch_readiness` / `dispatch_specialist` / `specialist_feedback`
+  4. `staged_handoff`
+  5. `artifacts/run_compliance.yaml` pass
 - 在 `artifacts/intake_gate.yaml` 通过前，不得执行 specialist dispatch 或 live `rd.*` 调试。

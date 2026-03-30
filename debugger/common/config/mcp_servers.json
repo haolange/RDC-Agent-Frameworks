@@ -4,13 +4,18 @@
     "renderdoc-platform-mcp": {
       "activation": "explicit_opt_in_only",
       "transport": "stdio",
-      "command": "python",
+      "command": "cmd",
       "args": [
-        "${DEBUGGER_PLATFORM_TOOLS_ROOT}/mcp/run_mcp.py"
+        "/c",
+        "${DEBUGGER_PLATFORM_TOOLS_ROOT}/rdx.bat",
+        "--non-interactive",
+        "mcp"
       ],
       "cwd": "${DEBUGGER_PLATFORM_TOOLS_ROOT}",
       "required": true,
-      "enabled_tools": ["rd.*"]
+      "enabled_tools": [
+        "rd.*"
+      ]
     }
   }
 }

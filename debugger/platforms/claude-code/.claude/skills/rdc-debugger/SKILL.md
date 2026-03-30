@@ -11,31 +11,27 @@ metadata:
 
 平台启动后默认保持普通对话态。只有用户手动召唤 `rdc-debugger`，才进入 RenderDoc/RDC GPU Debug 调试框架。
 
-当前平台属于 `native-hooks` tier；hooks 只负责触发 shared harness，不在平台侧复制业务规则。
-
 进入 `rdc-debugger` 后，本 skill 负责：
 
 - `intent_gate`
+- `entry_gate`
 - preflight
 - 缺失输入补料
-- `accept-intake`
-- `dispatch-readiness`
-- `dispatch-specialist`
-- `specialist-feedback`
-- `final-audit`
-- `render-user-verdict`
+- intake 规范化
+- capture 导入 + case/run 初始化
+- `artifacts/intake_gate.yaml`
+- `artifacts/runtime_topology.yaml`
 - specialist 分派、阶段推进与质量门裁决
 
 固定顺序：
 
 1. `intent_gate`
-2. `preflight`
-3. `accept-intake`（内部顺序执行 `entry-gate -> capture import + case/run bootstrap -> intake-gate -> runtime-topology`）
-4. `dispatch-readiness` / `dispatch-specialist` / `specialist-feedback`
-5. `artifacts/intake_gate.yaml` pass
-6. `artifacts/runtime_topology.yaml`
-7. `concurrent_team`
-8. `artifacts/run_compliance.yaml` pass
+2. `entry_gate`
+3. binding/preflight + capture import + case/run bootstrap
+4. `artifacts/intake_gate.yaml` pass
+5. `artifacts/runtime_topology.yaml`
+6. `concurrent_team`
+7. `artifacts/run_compliance.yaml` pass
 
 在 `artifacts/intake_gate.yaml` 通过前，不得进入 specialist dispatch 或 live `rd.*` 分析。
 

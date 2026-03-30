@@ -3,5 +3,5 @@
 # or replace the variable with the literal absolute path of that directory.
 
 [mcp_servers.renderdoc-platform-mcp]
-command = "python"
-args = ["${RDC_DEBUGGER_PLUGIN_ROOT}/tools/mcp/run_mcp.py"]
+command = "cmd"
+args = ["/c", "${RDC_DEBUGGER_PLUGIN_ROOT}/tools/rdx.bat", "--non-interactive", "mcp"]

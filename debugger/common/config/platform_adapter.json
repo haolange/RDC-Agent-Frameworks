@@ -14,7 +14,10 @@
       "docs/tools.md",
       "docs/session-model.md",
       "docs/agent-model.md",
-      "spec/tool_catalog.json"
+      "spec/tool_catalog.json",
+      "rdx.bat",
+      "binaries/windows/x64/manifest.runtime.json",
+      "binaries/windows/x64/python/python.exe"
     ]
   },
   "cli": {

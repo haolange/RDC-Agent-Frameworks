@@ -18,7 +18,7 @@
 
 运行时约束：
 
-- 单独执行 `python ...run_cli.py` 或 `rdx capture open` 只会建立 tools-layer session state
+- 单独执行 `tools/rdx.bat --non-interactive cli ...`，或维护态 `python ...run_cli.py ...`，都只会建立 tools-layer session state
 - 独立的 tools-layer session bootstrap 不会创建 framework `workspace/case/run`
 - 只有手动触发且被 `rdc-debugger` 接受的 intake，才允许初始化 framework workspace state
 - 运行时 workspace 固定在 platform-root `workspace/`

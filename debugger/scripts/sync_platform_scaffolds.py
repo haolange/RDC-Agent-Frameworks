@@ -85,7 +85,7 @@ def tools_placeholder_text() -> str:
 
 1. 选择一个 `debugger/platforms/<platform>/` 模板。
 2. 将 RDC-Agent-Tools 根目录整包拷贝到该平台根目录的 `tools/`，覆盖当前目录。
-3. 完成覆盖后，运行 `python common/config/validate_binding.py --strict` 确认绑定有效。
+3. 完成覆盖后，运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime 与共享绑定均有效。
 4. 确认通过后，再在对应宿主中打开该平台根目录使用。
 
 约束：
@@ -536,7 +536,7 @@ def codex_plugin_outer_readme_text() -> str:
 
 1. 将仓库根目录 `debugger/common/` 整体拷贝到 `rdc-debugger/common/`。
 2. 将 `RDC-Agent-Tools` 根目录整包拷贝到 `rdc-debugger/tools/`。
-3. 在 `rdc-debugger/` 根目录运行 `python common/config/validate_binding.py --strict`。
+3. 在 `rdc-debugger/` 根目录运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime 与共享绑定全部通过。
 4. 将 `rdc-debugger/` 同步到 `~/.agents/plugins/rdc-debugger/`。
 5. 将 `references/personal-marketplace.sample.json` 合并到 `~/.agents/plugins/marketplace.json`。
 6. 在 Codex 中打开 `/plugins`，安装或刷新 `rdc-debugger`。
@@ -583,7 +583,7 @@ def codex_plugin_inner_readme_text() -> str:
 1. 将仓库根目录 `debugger/common/` 整体拷贝到当前插件根目录的 `common/`，覆盖占位内容。
 2. 将 `RDC-Agent-Tools` 根目录整包拷贝到当前插件根目录的 `tools/`，覆盖占位内容。
 3. 确认 `tools/` 下存在 `validation.required_paths` 列出的必需文件。
-4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、snapshot、共享文档与插件包根目录全部对齐。
+4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot、共享文档与插件包根目录全部对齐。
 5. 使用当前插件根目录下、与 `common/` 和 `tools/` 并列的 `workspace/` 作为运行区。
 6. 将当前目录同步到 `~/.agents/plugins/rdc-debugger/`。
 7. 将 `../references/personal-marketplace.sample.json` 合并到 `~/.agents/plugins/marketplace.json`。
@@ -611,7 +611,7 @@ def codex_plugin_inner_agents_text() -> str:
 在执行任何工作前，必须验证以下两项均已就绪：
 
 1. `common/` 已正确覆盖：检查 `common/AGENT_CORE.md` 是否存在。
-2. `tools/` 已正确覆盖：检查 `tools/spec/tool_catalog.json` 是否存在。
+2. `tools/` 已正确覆盖：检查 `tools/spec/tool_catalog.json` 与 `tools/rdx.bat` 是否存在。
 
 任一文件不存在时：
 
@@ -683,8 +683,8 @@ def codex_plugin_mcp_opt_in_text() -> str:
 # or replace the variable with the literal absolute path of that directory.
 
 [mcp_servers.renderdoc-platform-mcp]
-command = "python"
-args = ["${RDC_DEBUGGER_PLUGIN_ROOT}/tools/mcp/run_mcp.py"]
+command = "cmd"
+args = ["/c", "${RDC_DEBUGGER_PLUGIN_ROOT}/tools/rdx.bat", "--non-interactive", "mcp"]
 """
 
 
