@@ -181,11 +181,11 @@ def _platform_wrapper_path_findings(root: Path) -> list[str]:
                         f"{path}:{lineno}: platform wrapper relative path escapes platform root '{marker}'"
                     )
 
-    cursor_rules = (platform_root / "cursor" / ".cursorrules").read_text(encoding="utf-8-sig")
+    cursor_rules = (platform_root / "cursor" / ".cursor" / "rules" / "rdc-debugger.mdc").read_text(encoding="utf-8-sig")
     if "正常用户请求只能从 `rdc-debugger` 进入" in cursor_rules:
-        findings.append("cursor/.cursorrules must not declare rdc-debugger as the normal user entry")
+        findings.append("cursor/.cursor/rules/rdc-debugger.mdc must not declare rdc-debugger as the normal user entry")
     if "rdc-debugger" not in cursor_rules:
-        findings.append("cursor/.cursorrules must declare rdc-debugger as the normal user entry")
+        findings.append("cursor/.cursor/rules/rdc-debugger.mdc must declare rdc-debugger as the normal user entry")
 
     return findings
 
@@ -199,6 +199,10 @@ def _doc_contract_findings(root: Path) -> list[str]:
     core_doc = (root / "common" / "AGENT_CORE.md").read_text(encoding="utf-8-sig")
     intake_doc = (root / "common" / "docs" / "intake" / "README.md").read_text(encoding="utf-8-sig")
     main_skill = (root / "common" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
+    triage_agent_doc = (root / "common" / "agents" / "02_triage_taxonomy.md").read_text(encoding="utf-8-sig")
+    triage_skill = (root / "common" / "skills" / "triage-taxonomy" / "SKILL.md").read_text(encoding="utf-8-sig")
+    curator_agent_doc = (root / "common" / "agents" / "09_report_knowledge_curator.md").read_text(encoding="utf-8-sig")
+    curator_skill = (root / "common" / "skills" / "report-knowledge-curator" / "SKILL.md").read_text(encoding="utf-8-sig")
     claude_code_readme = (root / "platforms" / "claude-code" / "README.md").read_text(encoding="utf-8-sig")
     codex_readme = (root / "platforms" / "codex" / "README.md").read_text(encoding="utf-8-sig")
     codex_agents = (root / "platforms" / "codex" / "AGENTS.md").read_text(encoding="utf-8-sig")
@@ -276,6 +280,22 @@ def _doc_contract_findings(root: Path) -> list[str]:
         findings.append("AGENT_CORE.md must allow uploaded captures and accessible file paths")
     if "single_agent_by_user" not in core_doc or "BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT" not in core_doc:
         findings.append("AGENT_CORE.md must define explicit single-agent mode and specialist feedback timeout handling")
+    if "历史 BugCard / BugFull" not in core_doc or "探索方向建议" not in core_doc:
+        findings.append("AGENT_CORE.md must define triage historical-case matching as routing hints for the main agent")
+    if "knowledge/library/bugcards/" not in triage_agent_doc or "knowledge/library/bugfull/" not in triage_agent_doc:
+        findings.append("triage agent doc must load BugCard/BugFull history as triage inputs")
+    if "candidate_bug_refs" not in triage_agent_doc or "recommended_investigation_paths" not in triage_agent_doc:
+        findings.append("triage agent doc must define candidate_bug_refs and recommended_investigation_paths outputs")
+    if "candidate_bug_refs" not in triage_skill or "recommended_investigation_paths" not in triage_skill:
+        findings.append("triage skill must expose candidate_bug_refs and recommended_investigation_paths")
+    if "BugCard/BugFull" not in triage_skill:
+        findings.append("triage skill must mention BugCard/BugFull history matching")
+    if "candidate_bug_refs" not in main_skill or "recommended_investigation_paths" not in main_skill:
+        findings.append("rdc-debugger skill must define consumption of triage routing hints")
+    if "不参与当前 run 的前置方向建议" not in curator_agent_doc or "反向做 dispatch" not in curator_agent_doc:
+        findings.append("curator agent doc must forbid front-loaded routing and dispatch feedback loops")
+    if "不参与当前 run 的前置方向建议" not in curator_skill:
+        findings.append("curator skill must keep curator in post-run knowledge curation only")
     if "统一走已配置的 MCP server" in claude_code_readme:
         findings.append("claude-code README must not declare MCP as the only default path")
     for text in (codex_readme, codex_agents):
@@ -283,8 +303,8 @@ def _doc_contract_findings(root: Path) -> list[str]:
             findings.append("codex docs must declare platform-managed native specialist dispatch semantics")
         if "single_agent_by_user" not in text or "BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT" not in text:
             findings.append("codex docs must explain explicit single-agent mode and specialist feedback timeout semantics")
-        if "runtime_owner + validator-driven gate loop + audit artifacts" not in text:
-            findings.append("codex docs must describe runtime_owner + validator-driven gate loop + audit artifacts enforcement")
+        if "runtime_owner + shared harness guard + audit artifacts" not in text:
+            findings.append("codex docs must describe runtime_owner + shared harness guard + audit artifacts enforcement")
         if ".codex/runtime_guard.py" not in text:
             findings.append("codex docs must reference the runtime_guard.py enforcement entrypoint")
 
@@ -499,14 +519,14 @@ def _compliance_findings(root: Path) -> list[str]:
 
         enforcement_mode = str(rules.get("enforcement_mode", "")).strip()
         hooks_supported = _surface_supported(platform_caps, "hooks")
-        if enforcement_mode not in {"native_hook_gate", "audit_only_gate", "workflow_audit_gate", "runtime_owner_gate_loop"}:
+        if enforcement_mode not in {"native_hook_harness", "pseudo_hook_harness", "no_hook_audit", "runtime_owner_gate_loop"}:
             findings.append(f"{key}: invalid enforcement_mode")
-        if enforcement_mode == "native_hook_gate" and not hooks_supported:
-            findings.append(f"{key}: native_hook_gate requires hooks support")
-        if enforcement_mode == "audit_only_gate" and hooks_supported:
-            findings.append(f"{key}: audit_only_gate should not claim native hooks support")
-        if enforcement_mode == "workflow_audit_gate" and actual_mode != "workflow_stage":
-            findings.append(f"{key}: workflow_audit_gate requires workflow_stage coordination_mode")
+        if enforcement_mode == "native_hook_harness" and not hooks_supported:
+            findings.append(f"{key}: native_hook_harness requires hooks support")
+        if enforcement_mode == "pseudo_hook_harness" and hooks_supported:
+            findings.append(f"{key}: pseudo_hook_harness should not claim native hooks support")
+        if enforcement_mode == "no_hook_audit" and actual_mode != "workflow_stage" and key not in {"codex_plugin"}:
+            findings.append(f"{key}: no_hook_audit requires workflow_stage or explicit plugin wrapper handling")
         if enforcement_mode == "runtime_owner_gate_loop" and str(platform_caps.get("enforcement_layer", "")).strip() != "runtime_owner":
             findings.append(f"{key}: runtime_owner_gate_loop requires enforcement_layer=runtime_owner")
 

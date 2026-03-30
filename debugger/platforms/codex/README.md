@@ -41,18 +41,16 @@
 - 如果维护者复核 Android remote-only 路径，当前平台应优先走 daemon-backed `CLI`，并使用 `tools/scripts/tool_contract_remote_smoke.py --rdc "<sample.rdc>" --transport daemon|mcp`。
 - 对 Codex 平台，remote 是否 `verified` 以最新 smoke 报告与 `platform_capabilities.json` 当前行共同裁决，不再使用 “experimental remote” 口径。
 - OpenAI Codex 当前原生支持 `AGENTS.md` 分层与 `.codex/agents/*.toml` custom agents；当前模板继续使用这两类 native surface。
-- OpenAI Codex Hooks 当前只对 Bash 提供 guardrail，不足以为本框架的 native `rd.*` / specialist dispatch 提供可靠 host-side enforcement；因此当前 workspace-native 路径不引入 `.codex/hooks.json`，也不把 Codex 记成 hooks-based 平台。
-- 当前平台的 enforcement 机制固定为 `runtime_owner + validator-driven gate loop + audit artifacts`，唯一主入口是 `.codex/runtime_guard.py`。
+- OpenAI Codex Hooks 当前只提供有限 guardrail，不足以为本框架的 native `rd.*` / specialist dispatch 提供可靠 host-side enforcement；因此当前 workspace-native 路径不引入 `.codex/hooks.json`，并按 `pseudo-hooks` 平台处理，而不是 hooks-based 平台。
+- 当前平台的 enforcement 机制固定为 `runtime_owner + shared harness guard + audit artifacts`；`.codex/runtime_guard.py` 只是薄包装，唯一权威实现位于 `common/hooks/utils/harness_guard.py`。
 - Codex 的执行门禁固定为：
   1. `.codex/runtime_guard.py preflight`
   2. `intent_gate`
-  3. `.codex/runtime_guard.py entry-gate` → `artifacts/entry_gate.yaml` pass
-  4. binding/preflight + capture import + case/run bootstrap
-  5. `.codex/runtime_guard.py intake-gate`
-  6. `.codex/runtime_guard.py runtime-topology` → `artifacts/runtime_topology.yaml` pass
-  7. `.codex/runtime_guard.py dispatch-readiness` / `.codex/runtime_guard.py specialist-feedback`
-  8. `staged_handoff`
-  9. `.codex/runtime_guard.py final-audit` → `artifacts/run_compliance.yaml` pass
+  3. `.codex/runtime_guard.py accept-intake`：内部顺序执行 `entry-gate -> capture import -> case/run bootstrap -> intake-gate -> runtime-topology`
+  4. `.codex/runtime_guard.py dispatch-readiness` / `.codex/runtime_guard.py dispatch-specialist` / `.codex/runtime_guard.py specialist-feedback`
+  5. `staged_handoff`
+  6. `.codex/runtime_guard.py final-audit` → `artifacts/run_compliance.yaml` pass
+  7. `.codex/runtime_guard.py render-user-verdict`
 - 在 `artifacts/intake_gate.yaml` 通过前，不得进入 specialist dispatch 或 live `rd.*` 分析。
 
 Sub-Agent 工作模型：

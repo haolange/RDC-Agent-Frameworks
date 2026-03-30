@@ -13,5 +13,9 @@
 当前平台的 `coordination_mode = workflow_stage`，`sub_agent_mode = instruction_only_sub_agents`，`peer_communication = none`。
 
 
+当前 role 负责读取用户 bug 描述、历史 BugCard/BugFull 与 active taxonomy / invariant / SOP，
+输出 `candidate_bug_refs`、`recommended_sop` 与 `recommended_investigation_paths` 这类方向建议给 `rdc-debugger`。
+当前 role 只提供 routing hints，不做根因裁决，不得直接继续 specialist orchestration。
+
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
 运行时 case/run 现场与第二层报告统一写入平台根目录下的 `workspace/`

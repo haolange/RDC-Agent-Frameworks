@@ -60,6 +60,28 @@ class HookDispatchTests(unittest.TestCase):
                 "common/knowledge/library/sessions/session-001/skeptic_signoff.yaml",
             )
 
+    def test_extract_tool_output_file_from_copilot_cli_payload(self) -> None:
+        module = _load_module()
+        payload = json.dumps(
+            {
+                "toolName": "edit",
+                "toolArgs": json.dumps(
+                    {
+                        "file_path": "workspace/cases/case-001/runs/run-001/notes/pixel_forensics.md",
+                    },
+                    ensure_ascii=False,
+                ),
+            },
+            ensure_ascii=False,
+        )
+
+        with mock.patch.dict(module.os.environ, {}, clear=True):
+            self.assertEqual(
+                module._extract_tool_output_file(payload),
+                "workspace/cases/case-001/runs/run-001/notes/pixel_forensics.md",
+            )
+            self.assertEqual(module._extract_tool_name(payload), "edit")
+
     def test_write_bugcard_skips_non_target_path(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:

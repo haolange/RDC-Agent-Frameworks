@@ -85,6 +85,9 @@ class ConfigConsistencyTests(unittest.TestCase):
 
         for role in (manifest.get("roles") or []):
             self.assertEqual(set((role.get("platform_files") or {}).keys()), expected_role_platforms)
+        triage_role = next(role for role in (manifest.get("roles") or []) if role.get("agent_id") == "triage_agent")
+        self.assertIn("BugCard/BugFull", triage_role.get("description") or "")
+        self.assertIn("exploration direction", triage_role.get("description") or "")
 
         compliance_entry = (compliance.get("entry_model") or {})
         self.assertEqual(compliance_entry.get("public_entry_skill"), "rdc-debugger")
@@ -102,6 +105,23 @@ class ConfigConsistencyTests(unittest.TestCase):
         self.assertEqual(capabilities["platforms"]["codex"]["host_delegation_policy"], "platform_managed")
         self.assertEqual(capabilities["platforms"]["codex"]["host_delegation_fallback"], "none")
         self.assertEqual(capabilities["platforms"]["manus"]["agent_description_mode"], "spawn_instruction_only")
+        self.assertEqual(capabilities["platforms"]["claude-code"]["enforcement_tier"], "native-hooks")
+        self.assertEqual(capabilities["platforms"]["copilot-cli"]["enforcement_tier"], "native-hooks")
+        self.assertEqual(capabilities["platforms"]["cursor"]["enforcement_tier"], "pseudo-hooks")
+        self.assertEqual(capabilities["platforms"]["code-buddy"]["enforcement_tier"], "pseudo-hooks")
+        self.assertEqual(capabilities["platforms"]["codex"]["enforcement_tier"], "pseudo-hooks")
+        self.assertEqual(capabilities["platforms"]["claude-desktop"]["enforcement_tier"], "no-hooks")
+        self.assertEqual(capabilities["platforms"]["manus"]["enforcement_tier"], "no-hooks")
+        self.assertFalse(capabilities["platforms"]["cursor"]["capabilities"]["hooks"]["supported"])
+        self.assertFalse(capabilities["platforms"]["code-buddy"]["capabilities"]["hooks"]["supported"])
+        self.assertTrue(capabilities["platforms"]["claude-code"]["capabilities"]["hooks"]["supported"])
+        self.assertTrue(capabilities["platforms"]["copilot-cli"]["capabilities"]["hooks"]["supported"])
+        self.assertEqual(compliance["platforms"]["cursor"]["enforcement_mode"], "pseudo_hook_harness")
+        self.assertEqual(compliance["platforms"]["code-buddy"]["enforcement_mode"], "pseudo_hook_harness")
+        self.assertEqual(compliance["platforms"]["claude-code"]["enforcement_mode"], "native_hook_harness")
+        self.assertEqual(compliance["platforms"]["copilot-cli"]["enforcement_mode"], "native_hook_harness")
+        self.assertEqual(compliance["platforms"]["claude-desktop"]["enforcement_mode"], "no_hook_audit")
+        self.assertEqual(compliance["platforms"]["manus"]["enforcement_mode"], "no_hook_audit")
 
     def test_validate_tool_contract_reader_reports_invalid_adapter_json(self) -> None:
         module = _load_module(DEBUGGER_ROOT / "scripts" / "validate_tool_contract.py", "validate_tool_contract_module")
@@ -173,7 +193,7 @@ class ConfigConsistencyTests(unittest.TestCase):
 
         self.assertEqual(
             cli_first,
-            {"code-buddy", "claude-code", "copilot-cli", "copilot-ide", "codex", "cursor"},
+            {"code-buddy", "claude-code", "copilot-cli", "copilot-ide", "codex", "codex_plugin", "cursor"},
         )
         self.assertEqual(mcp_only, {"claude-desktop", "manus"})
 

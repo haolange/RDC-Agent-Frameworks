@@ -32,7 +32,7 @@
 - 未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断，不得初始化 case/run 或继续 triage、investigation、planning。
 - `workspace/` 预生成空骨架；真实运行产物在平台使用阶段按 case/run 写入。
 - 维护者若重跑 scaffold，必须继续产出 platform-local `common/` 最小占位目录，不得回退到跨级引用。
-- 当前宿主按 `workflow_stage` 串行运行；最终仍必须生成 `artifacts/run_compliance.yaml` 才算合规结案。
+- 当前平台属于 `no-hooks` tier；宿主按 `workflow_stage` 串行运行，不能伪造 host-side strict hooks。最终仍必须生成 `artifacts/run_compliance.yaml` 才算合规结案。
 - 可进行串行 specialist dispatch，但不得在该宿主上模拟实时 multi-agent handoff。
 - 不得把独立 specialist 描述文件误写成 Claude Desktop 宿主能力；该宿主只支持 spawn-time instruction。
 - 用户侧 capture intake 支持当前对话上传 `.rdc` 或提供宿主当前会话可访问的文件路径；平台模板只负责把导入后的 case/run 现场写入 `workspace/`。

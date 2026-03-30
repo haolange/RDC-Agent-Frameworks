@@ -56,6 +56,37 @@ class RepoBaselineValidationTests(unittest.TestCase):
         ):
             self.assertIn(marker, text)
 
+    def test_triage_knowledge_contract_is_documented(self) -> None:
+        agent_text = (DEBUGGER_ROOT / "common" / "agents" / "02_triage_taxonomy.md").read_text(encoding="utf-8-sig")
+        skill_text = (DEBUGGER_ROOT / "common" / "skills" / "triage-taxonomy" / "SKILL.md").read_text(encoding="utf-8-sig")
+        for text in (agent_text, skill_text):
+            self.assertIn("knowledge/library/bugcards/", text)
+            self.assertIn("knowledge/library/bugfull/", text)
+            self.assertIn("candidate_bug_refs", text)
+            self.assertIn("recommended_investigation_paths", text)
+        self.assertIn("不得直接当作当前 run 的根因结论", agent_text)
+
+    def test_curator_is_documented_as_post_run_knowledge_curation(self) -> None:
+        agent_text = (DEBUGGER_ROOT / "common" / "agents" / "09_report_knowledge_curator.md").read_text(encoding="utf-8-sig")
+        skill_text = (DEBUGGER_ROOT / "common" / "skills" / "report-knowledge-curator" / "SKILL.md").read_text(encoding="utf-8-sig")
+        self.assertIn("不参与当前 run 的前置方向建议", agent_text)
+        self.assertIn("不读取 triage 的知识匹配结果来反向做 dispatch", agent_text)
+        self.assertIn("不参与当前 run 的前置方向建议", skill_text)
+
+    def test_platform_wrappers_mirror_triage_and_curator_knowledge_boundaries(self) -> None:
+        codex_triage = (DEBUGGER_ROOT / "platforms" / "codex" / ".agents" / "skills" / "triage-taxonomy" / "SKILL.md").read_text(encoding="utf-8-sig")
+        codex_curator = (DEBUGGER_ROOT / "platforms" / "codex" / ".agents" / "skills" / "report-knowledge-curator" / "SKILL.md").read_text(encoding="utf-8-sig")
+        claude_triage = (DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "agents" / "02_triage_taxonomy.md").read_text(encoding="utf-8")
+        claude_curator = (DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "agents" / "09_report_knowledge_curator.md").read_text(encoding="utf-8")
+
+        for text in (codex_triage, claude_triage):
+            self.assertIn("BugCard/BugFull", text)
+            self.assertIn("candidate_bug_refs", text)
+            self.assertIn("recommended_investigation_paths", text)
+        for text in (codex_curator, claude_curator):
+            self.assertIn("proposal", text)
+            self.assertIn("不参与当前 run 的前置方向建议", text)
+
     def test_capture_intake_docs_allow_upload_or_accessible_path(self) -> None:
         core_text = (DEBUGGER_ROOT / "common" / "AGENT_CORE.md").read_text(encoding="utf-8-sig")
         skill_text = (DEBUGGER_ROOT / "common" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
@@ -109,7 +140,7 @@ class RepoBaselineValidationTests(unittest.TestCase):
         scaffold = _load_module(DEBUGGER_ROOT / "scripts" / "sync_platform_scaffolds.py", "sync_platform_scaffolds_module")
         ctx = scaffold.load_context(DEBUGGER_ROOT)
         expected = scaffold.expected_files(ctx, "cursor")
-        self.assertIn(DEBUGGER_ROOT / "platforms" / "cursor" / ".cursorrules", expected)
+        self.assertIn(DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "rules" / "rdc-debugger.mdc", expected)
         self.assertIn(DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "mcp.json", expected)
         self.assertIn(DEBUGGER_ROOT / "platforms" / "cursor" / "agents" / "02_triage_taxonomy.md", expected)
         self.assertIn(DEBUGGER_ROOT / "platforms" / "cursor" / "skills" / "rdc-debugger" / "SKILL.md", expected)
@@ -149,7 +180,7 @@ class RepoBaselineValidationTests(unittest.TestCase):
         self.assertTrue((DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "mcp.opt-in.json").is_file())
 
     def test_cursor_rules_use_rdc_debugger_as_normal_user_entry(self) -> None:
-        text = (DEBUGGER_ROOT / "platforms" / "cursor" / ".cursorrules").read_text(encoding="utf-8-sig")
+        text = (DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "rules" / "rdc-debugger.mdc").read_text(encoding="utf-8-sig")
         self.assertNotIn("正常用户请求只能从 `rdc-debugger` 进入", text)
         self.assertIn("`rdc-debugger`", text)
 
@@ -173,12 +204,13 @@ class RepoBaselineValidationTests(unittest.TestCase):
 
         for text in (readme, agents):
             self.assertIn(".codex/runtime_guard.py", text)
-            self.assertIn("runtime_owner + validator-driven gate loop + audit artifacts", text)
+            self.assertIn("runtime_owner + shared harness guard + audit artifacts", text)
             self.assertIn("不引入 `.codex/hooks.json`", text)
             self.assertIn("artifacts/entry_gate.yaml", text)
             self.assertIn("artifacts/intake_gate.yaml", text)
             self.assertIn("artifacts/runtime_topology.yaml", text)
-            self.assertIn("capture import + case/run bootstrap", text)
+            self.assertIn("capture import", text)
+            self.assertIn("case/run bootstrap", text)
             self.assertIn("artifacts/run_compliance.yaml", text)
             self.assertIn("multi_context_orchestrated", text)
             self.assertIn("host_delegation_policy = platform_managed", text)
@@ -198,11 +230,11 @@ class RepoBaselineValidationTests(unittest.TestCase):
         for row in (capabilities.get("platforms") or {}).values():
             self.assertIn(row.get("local_support"), {"verified", "degraded", "unsupported"})
             self.assertIn(row.get("remote_support"), {"verified", "serial_only", "unsupported"})
-            self.assertIn(row.get("enforcement_layer"), {"hooks", "runtime_owner", "audit_only"})
+            self.assertIn(row.get("enforcement_layer"), {"native_hooks", "pseudo_hooks", "runtime_owner", "no_hooks"})
             self.assertEqual(row.get("remote_coordination_mode"), "single_runtime_owner")
             self.assertIn(row.get("sub_agent_mode"), {"team_agents", "puppet_sub_agents", "instruction_only_sub_agents"})
             self.assertIn(row.get("peer_communication"), {"direct", "via_main_agent", "none"})
-            self.assertIn(row.get("agent_description_mode"), {"independent_files", "spawn_instruction_only"})
+            self.assertIn(row.get("agent_description_mode"), {"independent_files", "spawn_instruction_only", "skill_files"})
             self.assertIn(row.get("dispatch_topology"), {"mesh", "hub_and_spoke", "workflow_serial"})
             self.assertEqual(row.get("specialist_dispatch_requirement"), "required")
             self.assertEqual(row.get("host_delegation_policy"), "platform_managed")

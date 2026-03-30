@@ -417,6 +417,19 @@ def role_skill_wrapper_text(ctx: dict[str, Any], platform_key: str, role: dict[s
     role_intro = "该角色默认是 internal/debug-only specialist。平台启动后不会自动进入该角色；只有用户手动召唤 `rdc-debugger` 并由它分派时，才进入当前 role。"
     title = "角色技能包装说明"
     dispatch_note = ""
+    role_name = Path(role["role_skill_path"]).parent.name
+    role_guidance = ""
+    if role_name == "triage-taxonomy":
+        role_guidance = (
+            "\n\n当前 role 负责读取用户 bug 描述、历史 BugCard/BugFull 与 active taxonomy / invariant / SOP，"
+            "\n输出 `candidate_bug_refs`、`recommended_sop` 与 `recommended_investigation_paths` 这类方向建议给 `rdc-debugger`。"
+            "\n当前 role 只提供 routing hints，不做根因裁决，不得直接继续 specialist orchestration。"
+        )
+    elif role_name == "report-knowledge-curator":
+        role_guidance = (
+            "\n\n当前 role 只在 run 收尾后回看整场调试，判断是否值得新增、更新或 proposal 化 BugCard / BugFull / SOP 等知识对象。"
+            "\n当前 role 不参与当前 run 的前置方向建议，也不读取 triage 的知识匹配结果来反向做 specialist dispatch。"
+        )
     if platform_key == "codex":
         dispatch_note = (
             "\n\n当前平台的 role gate 由 `rdc-debugger` 通过 `.codex/runtime_guard.py` 统一执行。"
@@ -442,7 +455,7 @@ def role_skill_wrapper_text(ctx: dict[str, Any], platform_key: str, role: dict[s
 3. common/config/platform_capabilities.json
 
 当前平台的 `coordination_mode = {str(platform_row.get("coordination_mode") or "").strip()}`，`sub_agent_mode = {str(platform_row.get("sub_agent_mode") or "").strip()}`，`peer_communication = {str(platform_row.get("peer_communication") or "").strip()}`。
-{dispatch_note}
+{role_guidance}{dispatch_note}
 
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
 运行时 case/run 现场与第二层报告统一写入平台根目录下的 `workspace/`
@@ -630,14 +643,12 @@ def codex_plugin_inner_agents_text() -> str:
 
 运行时工作区固定为平台根目录下的 `workspace/`
 
-- 当前宿主没有 native hooks；Codex 的执行门禁固定为：
+- 当前插件路径按 `no-hooks` 处理；Codex 的执行门禁固定为：
   1. `intent_gate`
-  2. `artifacts/entry_gate.yaml`
-  3. binding/preflight + capture import + case/run bootstrap
-  4. `artifacts/intake_gate.yaml` pass
-  5. `artifacts/runtime_topology.yaml`
-  6. `staged_handoff`
-  7. `artifacts/run_compliance.yaml` pass
+  2. `accept-intake`（内部顺序执行 `entry_gate -> capture import -> case/run bootstrap -> intake_gate -> runtime_topology`）
+  3. `dispatch_readiness` / `dispatch_specialist` / `specialist_feedback`
+  4. `staged_handoff`
+  5. `artifacts/run_compliance.yaml` pass
 - 在 `artifacts/intake_gate.yaml` 通过前，不得执行 specialist dispatch 或 live `rd.*` 调试。
 """
 
@@ -710,6 +721,18 @@ def agent_wrapper_body_text(ctx: dict[str, Any], platform_key: str, role: dict[s
 
     role_intro = "该角色默认是 internal/debug-only specialist。平台启动后不会自动进入该角色；只有用户手动召唤 `rdc-debugger` 并由它完成分派时，才进入当前 role。"
     extra = ""
+    role_name = Path(role["role_skill_path"]).parent.name
+    if role_name == "triage-taxonomy":
+        extra = (
+            "当前 role 负责读取用户 bug 描述、BugCard/BugFull 历史案例与 active taxonomy / invariant / SOP，"
+            "输出 `candidate_bug_refs`、`recommended_sop` 与 `recommended_investigation_paths` 给主 agent；"
+            "它只提供 routing hints，不做根因裁决，也不继续 orchestration。"
+        )
+    elif role_name == "report-knowledge-curator":
+        extra = (
+            "当前 role 只在 run 收尾后回看整场调试，判断是否值得新增、更新或 proposal 化知识对象；"
+            "它不参与当前 run 的前置方向建议，也不反向做 specialist dispatch。"
+        )
 
     tail = ("\n\n" + extra) if extra else ""
     return f"""# RenderDoc/RDC Agent 宿主入口

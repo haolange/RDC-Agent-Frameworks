@@ -11,27 +11,31 @@ metadata:
 
 平台启动后默认保持普通对话态。只有用户手动召唤 `rdc-debugger`，才进入 RenderDoc/RDC GPU Debug 调试框架。
 
+当前平台属于 `no-hooks` tier；插件只提供入口与安装面，关键跃迁必须经 shared harness。
+
 进入 `rdc-debugger` 后，本 skill 负责：
 
 - `intent_gate`
-- `entry_gate`
 - preflight
 - 缺失输入补料
-- intake 规范化
-- capture 导入 + case/run 初始化
-- `artifacts/intake_gate.yaml`
-- `artifacts/runtime_topology.yaml`
+- `accept-intake`
+- `dispatch-readiness`
+- `dispatch-specialist`
+- `specialist-feedback`
+- `final-audit`
+- `render-user-verdict`
 - specialist 分派、阶段推进与质量门裁决
 
 固定顺序：
 
 1. `intent_gate`
-2. `entry_gate`
-3. binding/preflight + capture import + case/run bootstrap
-4. `artifacts/intake_gate.yaml` pass
-5. `artifacts/runtime_topology.yaml`
-6. `staged_handoff`
-7. `artifacts/run_compliance.yaml` pass
+2. `preflight`
+3. `accept-intake`（内部顺序执行 `entry-gate -> capture import + case/run bootstrap -> intake-gate -> runtime-topology`）
+4. `dispatch-readiness` / `dispatch-specialist` / `specialist-feedback`
+5. `artifacts/intake_gate.yaml` pass
+6. `artifacts/runtime_topology.yaml`
+7. `staged_handoff`
+8. `artifacts/run_compliance.yaml` pass
 
 在 `artifacts/intake_gate.yaml` 通过前，不得进入 specialist dispatch 或 live `rd.*` 分析。
 
@@ -41,7 +45,7 @@ metadata:
 - 进入任何平台真相相关工作前，必须先校验 common/config/platform_adapter.json
 - local_support / remote_support / enforcement_layer / coordination_mode 统一以 common/config/platform_capabilities.json 的当前平台定义为准。
 - 当前平台的 `sub_agent_mode = puppet_sub_agents`，`peer_communication = via_main_agent`，`agent_description_mode = skill_files`。
-- 当前平台的 `specialist_dispatch_requirement = required`，`host_delegation_policy = skill_managed`，`host_delegation_fallback = generic_subagents`。
+- 当前平台的 `specialist_dispatch_requirement = required`，`host_delegation_policy = platform_managed`，`host_delegation_fallback = none`。
 - local live policy = `multi_context_orchestrated`；remote live policy = `single_runtime_owner`。
 - 当前平台的执行约束补充：
 - 当前平台的 local `staged_handoff` 允许 specialist 各持独立 context，但所有协调、brief 重组与裁决都必须经 `rdc-debugger`。

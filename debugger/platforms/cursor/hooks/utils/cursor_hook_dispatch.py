@@ -12,7 +12,7 @@ Modes:
   - stop-gate-force  : Force finalization gate check
 
 Usage in Cursor:
-  - Configure in .cursorrules or as pre-commit hooks
+  - Configure in .cursor/rules/rdc-debugger.mdc or as pre-commit hooks
   - Or run manually: python cursor_hook_dispatch.py <mode>
 """
 

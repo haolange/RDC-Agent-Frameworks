@@ -30,4 +30,4 @@
 - 未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断，不得初始化 case/run 或继续 triage、investigation、planning。
 - `workspace/` 预生成空骨架；真实运行产物在平台使用阶段按 case/run 写入。
 - 维护者若重跑 scaffold，必须继续产出 platform-local `common/` 最小占位目录，不得回退到跨级引用。
-- 当前宿主没有 native hooks；只有生成 `artifacts/run_compliance.yaml` 且 `status=passed` 后，结案才算合规。
+- 当前平台按 `pseudo-hooks` 处理：instructions / skills / MCP 只负责把操作收口到共享 harness；只有生成 `artifacts/run_compliance.yaml` 且 `status=passed` 后，结案才算合规。

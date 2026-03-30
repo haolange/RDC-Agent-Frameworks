@@ -13,6 +13,10 @@
 当前平台的 `coordination_mode = staged_handoff`，`sub_agent_mode = puppet_sub_agents`，`peer_communication = via_main_agent`。
 
 
+当前 role 负责读取用户 bug 描述、历史 BugCard/BugFull 与 active taxonomy / invariant / SOP，
+输出 `candidate_bug_refs`、`recommended_sop` 与 `recommended_investigation_paths` 这类方向建议给 `rdc-debugger`。
+当前 role 只提供 routing hints，不做根因裁决，不得直接继续 specialist orchestration。
+
 当前平台不预注册 `.codex/agents` 自定义 agent；如需进入当前 role，`rdc-debugger` 必须显式要求 Codex 创建通用 sub-agent，并让它先加载当前插件内的 `skills/triage-taxonomy/SKILL.md`。
 
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。

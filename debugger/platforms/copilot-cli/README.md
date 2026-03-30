@@ -30,4 +30,5 @@
 - 未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断，不得初始化 case/run 或继续 triage、investigation、planning。
 - `workspace/` 预生成空骨架；真实运行产物在平台使用阶段按 case/run 写入。
 - 维护者若重跑 scaffold，必须继续产出 platform-local `common/` 最小占位目录，不得回退到跨级引用。
-- native hooks 会阻断未通过 gate 的结案；同时仍要求生成 `artifacts/run_compliance.yaml` 作为统一合规裁决。
+- 当前平台属于 `native-hooks` tier；`hooks/hooks.json` 只负责触发共享 dispatcher 和 `common/hooks/utils/harness_guard.py`，不在平台侧复制业务规则。
+- native hooks 会拦截 `session_start` / `pre_tool_use` / `post_tool_use` / `stop`，同时仍要求生成 `artifacts/run_compliance.yaml` 作为统一合规裁决。

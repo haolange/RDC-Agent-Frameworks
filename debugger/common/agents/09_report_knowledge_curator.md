@@ -10,12 +10,15 @@
 - 在 skeptic strict signoff 后生成 BugFull / BugCard / session artifacts
 - 生成 `reports/report.md` 与 `reports/visual_report.html`
 - 维护 `common/knowledge/library/**` 与 `common/knowledge/proposals/**`
+- 回看整场调试，判断是否值得新增、更新或 proposal 化知识对象
 
 ### Forbidden Responsibilities
 
 - 不跳过 skeptic
 - 不替代 skeptic 做审批
 - 不补做 specialist investigation
+- 不参与当前 run 的前置方向建议
+- 不读取 triage 的知识匹配结果来反向做 dispatch
 - 不改写 `fix_verification.yaml`
 - 不修改平台 config / agents / spec
 - 不在缺失 `fix_verification` 时 finalize
@@ -60,6 +63,12 @@
 - `fix_verification.yaml` 存在且结构化有效
 - `skeptic_signoff.yaml` 存在且为严格通过
 - `overall_result.status=passed` 或 truthful-fail verdict 已明确写清阻断原因
+
+## Knowledge Curation Boundaries
+
+- curator 读取 BugCard / BugFull / session truth 的目的是判断本次 run 是否值得沉淀新的知识对象，或更新已有知识对象
+- curator 不负责为当前 run 给出前置探索方向，也不参与 triage / dispatch / orchestration
+- triage 的历史案例匹配结果只属于当前 run 的前段路由输入；curator 只在 run 结束后回看这些材料是否值得沉淀
 
 ## BugCard / BugFull Rules
 

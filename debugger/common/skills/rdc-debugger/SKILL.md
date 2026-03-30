@@ -345,6 +345,9 @@ Hard rules:
 - default `orchestration_mode` is `multi_agent`
 - only explicit user intent may switch the run to `single_agent_by_user`
 - `single_agent_by_user` must also write `single_agent_reason = user_requested` into `entry_gate` / `runtime_topology`
+- before specialist dispatch, `rdc-debugger` must read triage output中的 `candidate_bug_refs`、`recommended_sop` 与 `recommended_investigation_paths`
+- triage 的历史案例匹配与方向建议只提供 routing hints；是否采纳、派哪些 specialist、按什么顺序推进，仍由 `rdc-debugger` 决定
+- triage 提供的 BugCard / BugFull 相似案例不得替代当前 run 的 `causal_anchor`、live evidence 或 `fix_verification`
 
 ### 4.2 Intake Gate Output
 

@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""Safe hook dispatcher for Code Buddy and Claude-style hooks.
+"""Shared hook dispatcher for native-hook and pseudo-hook platforms.
 
 Modes:
+  - session-start
+  - pretool-live
+  - posttool-artifact
   - write-bugcard
   - write-skeptic
   - stop-gate
@@ -34,6 +37,12 @@ KEYWORDS = (
 _SAFE_SESSION_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 _PATH_KEYS = ("file_path", "path", "output_file", "output_path", "file")
 _NESTED_PATH_KEYS = ("tool_input", "tool_result", "result", "output", "payload")
+
+UTILS_ROOT = Path(__file__).resolve().parent
+if str(UTILS_ROOT) not in sys.path:
+    sys.path.insert(0, str(UTILS_ROOT))
+
+from harness_guard import run_dispatch_readiness, run_preflight, validate_capability_token  # noqa: E402
 
 
 def _normalize_path_text(value: str) -> str:
@@ -107,6 +116,10 @@ def _parse_json_payload(text: str) -> dict[str, Any]:
 def _find_path_in_payload(payload: Any, *, depth: int = 0) -> str:
     if depth > 4:
         return ""
+    if isinstance(payload, str):
+        nested = _parse_json_payload(payload)
+        if nested:
+            return _find_path_in_payload(nested, depth=depth + 1)
     if isinstance(payload, dict):
         for key in _PATH_KEYS:
             candidate = str(payload.get(key, "")).strip()
@@ -160,6 +173,16 @@ def _relay(proc: subprocess.CompletedProcess[str]) -> None:
         print(proc.stdout, end="")
     if proc.stderr:
         print(proc.stderr, end="", file=sys.stderr)
+
+
+def _run_root_from_env() -> Path | None:
+    value = str(os.environ.get("DEBUGGER_RUN_ROOT", "")).strip()
+    return Path(value).resolve() if value else None
+
+
+def _case_root_from_env() -> Path | None:
+    value = str(os.environ.get("DEBUGGER_CASE_ROOT", "")).strip()
+    return Path(value).resolve() if value else None
 
 
 def _validate_session_id(session_id: str) -> str:
@@ -293,7 +316,107 @@ def _should_gate_stop(stdin_text: str) -> bool:
 
 
 def _emit_block(reason: str) -> None:
-    print(json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "decision": "block",
+                "reason": reason,
+                "permissionDecision": "deny",
+                "permissionDecisionReason": reason,
+            },
+            ensure_ascii=False,
+        )
+    )
+
+
+def _emit_pretool_deny(reason: str) -> None:
+    print(
+        json.dumps(
+            {
+                "permissionDecision": "deny",
+                "permissionDecisionReason": reason,
+            },
+            ensure_ascii=False,
+        )
+    )
+
+
+def _cmd_session_start(root: Path) -> int:
+    _, validate_contract = _script_paths(root)
+    strict = _run(_py_cmd(str(validate_contract), "--strict"))
+    if strict.returncode != 0:
+        _relay(strict)
+        _emit_block("Session start blocked: tool contract validation failed.")
+        return 0
+    payload = run_preflight(root, case_root=_case_root_from_env())
+    if payload["status"] != "passed":
+        blockers = ", ".join(payload.get("blocking_codes") or ["unknown"])
+        _emit_block(f"Session start blocked: {blockers}")
+        return 0
+    return 0
+
+
+def _cmd_pretool_live(root: Path) -> int:
+    _, validate_contract = _script_paths(root)
+    strict = _run(_py_cmd(str(validate_contract), "--strict"))
+    if strict.returncode != 0:
+        _relay(strict)
+        _emit_pretool_deny("Live tool blocked: tool contract validation failed.")
+        return 0
+    stdin_text = sys.stdin.read()
+    tool_name = _extract_tool_name(stdin_text).strip().lower()
+    if tool_name in {"view", "read", "glob", "grep", "show_file", "fetch_copilot_cli_documentation"}:
+        return 0
+    run_root = _run_root_from_env()
+    if run_root is None:
+        return 0
+    payload = run_dispatch_readiness(root, run_root, platform=root.name)
+    if payload["status"] != "passed":
+        blockers = ", ".join(payload.get("blocking_codes") or ["unknown"])
+        _emit_pretool_deny(f"Live tool blocked: {blockers}")
+        return 0
+    token_ref = str(os.environ.get("DEBUGGER_CAPABILITY_TOKEN", "")).strip()
+    agent_id = str(os.environ.get("DEBUGGER_AGENT_ID", "")).strip()
+    runtime_owner = str(os.environ.get("DEBUGGER_RUNTIME_OWNER", "")).strip()
+    target_action = str(os.environ.get("DEBUGGER_TARGET_ACTION", "")).strip() or "live_investigation"
+    target_path = _extract_tool_output_file(stdin_text)
+    if token_ref and agent_id and runtime_owner:
+        token = validate_capability_token(
+            run_root,
+            token_ref=token_ref,
+            agent_id=agent_id,
+            runtime_owner=runtime_owner,
+            action=target_action,
+            target_path=target_path,
+        )
+        if token["status"] != "passed":
+            _emit_pretool_deny(f"Live tool blocked: {token['blocking_code']}")
+            return 0
+    return 0
+
+
+def _cmd_posttool_artifact(root: Path) -> int:
+    run_root = _run_root_from_env()
+    if run_root is None:
+        return 0
+    file_path = _extract_tool_output_file(sys.stdin.read())
+    token_ref = str(os.environ.get("DEBUGGER_CAPABILITY_TOKEN", "")).strip()
+    agent_id = str(os.environ.get("DEBUGGER_AGENT_ID", "")).strip()
+    runtime_owner = str(os.environ.get("DEBUGGER_RUNTIME_OWNER", "")).strip()
+    target_action = str(os.environ.get("DEBUGGER_TARGET_ACTION", "")).strip() or "write_note"
+    if token_ref and agent_id and runtime_owner and file_path:
+        token = validate_capability_token(
+            run_root,
+            token_ref=token_ref,
+            agent_id=agent_id,
+            runtime_owner=runtime_owner,
+            action=target_action,
+            target_path=file_path,
+        )
+        if token["status"] != "passed":
+            _emit_block(f"Artifact write blocked: {token['blocking_code']}")
+            return 0
+    return 0
 
 
 def _cmd_stop_gate(root: Path, force: bool = False) -> int:
@@ -359,7 +482,7 @@ def _cmd_stop_gate(root: Path, force: bool = False) -> int:
 def main() -> int:
     if len(sys.argv) != 2:
         print(
-            "usage: codebuddy_hook_dispatch.py <write-bugcard|write-skeptic|stop-gate|stop-gate-force>",
+            "usage: codebuddy_hook_dispatch.py <session-start|pretool-live|posttool-artifact|write-bugcard|write-skeptic|stop-gate|stop-gate-force>",
             file=sys.stderr,
         )
         return 2
@@ -367,6 +490,12 @@ def main() -> int:
     mode = sys.argv[1].strip().lower()
     root = _debug_agent_root()
 
+    if mode == "session-start":
+        return _cmd_session_start(root)
+    if mode == "pretool-live":
+        return _cmd_pretool_live(root)
+    if mode == "posttool-artifact":
+        return _cmd_posttool_artifact(root)
     if mode == "write-bugcard":
         return _cmd_write_bugcard(root)
     if mode == "write-skeptic":

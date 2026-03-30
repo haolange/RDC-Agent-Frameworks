@@ -36,4 +36,5 @@
 未先将 `debugger/common/` 整包覆盖到平台根 `common/`、且将 RDC-Agent-Tools 整包覆盖到平台根 `tools/` 之前，不允许在宿主中使用当前平台模板。
 
 运行时工作区固定为平台根目录下的 `workspace/`
-- 当前宿主没有 native hooks；只有生成 `artifacts/run_compliance.yaml` 且 `status=passed` 后，结案才算合规。
+- 当前平台按 `pseudo-hooks` 处理；instructions / skills / MCP 只负责把操作收口到共享 harness。
+- 只有生成 `artifacts/run_compliance.yaml` 且 `status=passed` 后，结案才算合规。

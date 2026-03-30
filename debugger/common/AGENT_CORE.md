@@ -58,6 +58,7 @@
 
 - `rdc-debugger` 是唯一 framework classifier。
 - `triage_agent`、`capture_repro_agent` 与其他 specialist 不得重做 framework 判定。
+- `triage_agent` 可以读取历史 BugCard / BugFull 与 active taxonomy / invariant / SOP，给主 agent 提供探索方向建议，但不得重判 intent gate、不得替代主 agent 做 orchestration。
 - `intent_gate` 只能由主入口 LLM 按显式 rubric 执行；不得引入 Python classifier、hook classifier 或 specialist 二次改判。
 - A/B 可能只是 debugger 的证据方法，不自动等于 analyst。
 - 若任务主要在问“哪里不同”，且没有 root-cause / fix-verification 目标，则必须 reject + redirect 到 `rdc-analyst`。

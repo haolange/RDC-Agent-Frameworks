@@ -39,12 +39,11 @@
 
 运行时工作区固定为平台根目录下的 `workspace/`
 
-- 当前宿主没有 native hooks；Codex 的执行门禁固定为：
+- 当前插件路径属于 `no-hooks` tier；执行门禁固定为：
   1. `intent_gate`
-  2. `artifacts/entry_gate.yaml`
-  3. binding/preflight + capture import + case/run bootstrap
-  4. `artifacts/intake_gate.yaml` pass
-  5. `artifacts/runtime_topology.yaml`
-  6. `staged_handoff`
-  7. `artifacts/run_compliance.yaml` pass
+  2. `preflight`
+  3. `accept-intake`（内部顺序执行 `entry-gate -> capture import + case/run bootstrap -> intake-gate -> runtime-topology`）
+  4. `dispatch-readiness` / `dispatch-specialist` / `specialist-feedback`
+  5. `staged_handoff`
+  6. `artifacts/run_compliance.yaml` pass
 - 在 `artifacts/intake_gate.yaml` 通过前，不得执行 specialist dispatch 或 live `rd.*` 调试。

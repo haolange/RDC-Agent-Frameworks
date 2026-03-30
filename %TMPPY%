@@ -1,0 +1,4 @@
+from pathlib import Path 
+p=Path(r'D:\Projects\Native\RDX\RDC-Agent-Frameworks\debugger\common\config\platform_capabilities.json') 
+print(p.read_text(encoding='utf-8-sig')) 
+pass

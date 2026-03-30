@@ -36,4 +36,5 @@
 未先将 `debugger/common/` 整包覆盖到平台根 `common/`、且将 RDC-Agent-Tools 整包覆盖到平台根 `tools/` 之前，不允许在宿主中使用当前平台模板。
 
 运行时工作区固定为平台根目录下的 `workspace/`
-- native hooks 会阻断未通过 gate 的结案；同时仍要求生成 `artifacts/run_compliance.yaml` 作为统一合规裁决。
+- 当前平台属于 `native-hooks` tier；hooks 只触发 shared harness，不在平台侧复制业务规则。
+- native hooks 会拦截 `session_start` / `pre_tool_use` / `post_tool_use` / `stop`，同时仍要求生成 `artifacts/run_compliance.yaml` 作为统一合规裁决。

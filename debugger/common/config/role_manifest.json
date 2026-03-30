@@ -5,7 +5,7 @@
       "agent_id": "triage_agent",
       "category": "investigator",
       "display_name": "Triage & Taxonomy",
-      "description": "Map symptoms and triggers to normalized tags and SOP candidates.",
+      "description": "Match the bug description against BugCard/BugFull history, map symptoms and triggers to normalized tags, recommend SOP candidates, and propose exploration direction suggestions for the main agent.",
       "source_prompt": "agents/02_triage_taxonomy.md",
       "role_skill_path": "skills/triage-taxonomy/SKILL.md",
       "platform_files": {

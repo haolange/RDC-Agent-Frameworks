@@ -34,9 +34,10 @@
 - remote 现在属于正式平台能力面；Claude Code 在 local 下可 `concurrent_team`，进入 remote 后统一降级为 `single_runtime_owner`。
 - local 下只有 team-agent live investigators 才能把 Tools 的 multi-context ceiling 用成 `multi_context_multi_owner`。
 - Claude hooks 使用 string `matcher`；文件路径过滤由共享 hook dispatcher 读取 hook payload 后自行判断，不在 settings.json 里写 object matcher。
+- 当前平台属于 `native-hooks` tier；`.claude/settings.json` 里的 hooks 只负责触发 `common/hooks/utils/harness_guard.py` 与共享 dispatcher，不在平台侧复制业务规则。
 - 未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断，不得初始化 case/run 或继续 triage、investigation、planning。
 - `workspace/` 预生成空骨架；真实运行产物只在被接受的手动 `rdc-debugger` intake 流程中按 case/run 写入。
 - standalone `capture open` 只建立 tools-layer session state，不会创建 framework `workspace/case/run`。
 - accepted intake 前必须先通过 `artifacts/entry_gate.yaml`；调查开始前必须写出 `artifacts/runtime_topology.yaml`。
 - 维护者若重跑 scaffold，必须继续产出 platform-local `common/` 最小占位目录，不得回退到跨级引用。
-- native hooks 会阻断未通过 gate 的结案；同时仍要求生成 `artifacts/run_compliance.yaml` 作为统一合规裁决。
+- native hooks 会拦截 `session_start` / `pre_tool_use` / `post_tool_use` / `stop`，但真正的流程裁决仍以 `artifacts/run_compliance.yaml` 为准。

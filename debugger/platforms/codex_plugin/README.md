@@ -25,3 +25,4 @@
 - 不要把当前外层目录当作 plugin root。
 - `common/` 与 `tools/` 仍然是用户手动覆盖的 package-local payload，不会随插件自动内置。
 - Codex 本地插件安装后实际加载的是 cache 副本；每次重新覆盖 `common/` 或 `tools/` 后，都必须重新同步 `~/.agents/plugins/rdc-debugger/`，然后在 `/plugins` 中刷新或重装。
+- 当前插件路径按 `no-hooks` 处理：插件只提供入口与安装面，不把宿主插件接口误写成严格 lifecycle hooks enforcement。

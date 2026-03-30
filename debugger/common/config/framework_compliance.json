@@ -79,7 +79,11 @@
         "mcp"
       ],
       "workflow_required": false,
-      "enforcement_mode": "native_hook_gate",
+      "enforcement_mode": "pseudo_hook_harness",
+      "enforcement_tier": "pseudo-hooks",
+      "public_entrypoints": [
+        "rdc-debugger"
+      ],
       "requires_run_compliance_artifact": true
     },
     "claude-code": {
@@ -91,7 +95,11 @@
         "mcp"
       ],
       "workflow_required": false,
-      "enforcement_mode": "native_hook_gate",
+      "enforcement_mode": "native_hook_harness",
+      "enforcement_tier": "native-hooks",
+      "public_entrypoints": [
+        "rdc-debugger"
+      ],
       "requires_run_compliance_artifact": true
     },
     "copilot-cli": {
@@ -103,7 +111,11 @@
         "mcp"
       ],
       "workflow_required": false,
-      "enforcement_mode": "native_hook_gate",
+      "enforcement_mode": "native_hook_harness",
+      "enforcement_tier": "native-hooks",
+      "public_entrypoints": [
+        "rdc-debugger"
+      ],
       "requires_run_compliance_artifact": true
     },
     "copilot-ide": {
@@ -114,7 +126,11 @@
         "mcp"
       ],
       "workflow_required": false,
-      "enforcement_mode": "audit_only_gate",
+      "enforcement_mode": "pseudo_hook_harness",
+      "enforcement_tier": "pseudo-hooks",
+      "public_entrypoints": [
+        "rdc-debugger"
+      ],
       "requires_run_compliance_artifact": true
     },
     "claude-desktop": {
@@ -124,7 +140,11 @@
         "workflow"
       ],
       "workflow_required": true,
-      "enforcement_mode": "workflow_audit_gate",
+      "enforcement_mode": "no_hook_audit",
+      "enforcement_tier": "no-hooks",
+      "public_entrypoints": [
+        "rdc-debugger"
+      ],
       "requires_run_compliance_artifact": true
     },
     "manus": {
@@ -134,7 +154,11 @@
         "workflow"
       ],
       "workflow_required": true,
-      "enforcement_mode": "workflow_audit_gate",
+      "enforcement_mode": "no_hook_audit",
+      "enforcement_tier": "no-hooks",
+      "public_entrypoints": [
+        "rdc-debugger"
+      ],
       "requires_run_compliance_artifact": true
     },
     "codex": {
@@ -146,6 +170,24 @@
       ],
       "workflow_required": false,
       "enforcement_mode": "runtime_owner_gate_loop",
+      "enforcement_tier": "pseudo-hooks",
+      "public_entrypoints": [
+        "rdc-debugger"
+      ],
+      "requires_run_compliance_artifact": true
+    },
+    "codex_plugin": {
+      "coordination_mode": "staged_handoff",
+      "required_surfaces": [
+        "skills",
+        "mcp"
+      ],
+      "workflow_required": false,
+      "enforcement_mode": "no_hook_audit",
+      "enforcement_tier": "no-hooks",
+      "public_entrypoints": [
+        "rdc-debugger"
+      ],
       "requires_run_compliance_artifact": true
     },
     "cursor": {
@@ -157,7 +199,11 @@
         "mcp"
       ],
       "workflow_required": false,
-      "enforcement_mode": "native_hook_gate",
+      "enforcement_mode": "pseudo_hook_harness",
+      "enforcement_tier": "pseudo-hooks",
+      "public_entrypoints": [
+        "rdc-debugger"
+      ],
       "requires_run_compliance_artifact": true
     }
   }

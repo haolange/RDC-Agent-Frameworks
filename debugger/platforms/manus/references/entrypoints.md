@@ -9,7 +9,7 @@
 
 未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
 
-- 当前宿主不支持 custom agents、native hooks 与 per-agent model control，但当前模板提供 wrapper skills 来统一入口语义。
+- 当前平台属于 `no-hooks` tier；宿主不支持 custom agents、native lifecycle hooks 与 per-agent model control，但当前模板提供 wrapper skills 来统一入口语义。
 - 当前宿主按 `workflow_stage` 降级运行；最终仍必须生成 `artifacts/run_compliance.yaml` 才算合规结案。
 - 不得在该宿主上模拟实时 multi-agent handoff。
 - 当前平台只允许 `MCP` 作为工具入口，不允许尝试 `CLI`。

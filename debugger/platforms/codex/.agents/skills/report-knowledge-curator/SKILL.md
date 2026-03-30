@@ -13,6 +13,9 @@
 当前平台的 `coordination_mode = staged_handoff`，`sub_agent_mode = puppet_sub_agents`，`peer_communication = via_main_agent`。
 
 
+当前 role 只在 run 收尾后回看整场调试，判断是否值得新增、更新或 proposal 化 BugCard / BugFull / SOP 等知识对象。
+当前 role 不参与当前 run 的前置方向建议，也不读取 triage 的知识匹配结果来反向做 specialist dispatch。
+
 当前平台的 role gate 由 `rdc-debugger` 通过 `.codex/runtime_guard.py` 统一执行。
 没有 passed `artifacts/intake_gate.yaml`、passed `artifacts/runtime_topology.yaml` 与主 agent handoff 前，不得进入 live 调查。
 当前 role 只读消费 gate 结果，不得重判 intent gate，不得直接分派其他 specialist。

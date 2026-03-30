@@ -27,8 +27,8 @@
                                                                              "rendered":  "native"
                                                                          },
                                                               "hooks":  {
-                                                                            "supported":  true,
-                                                                            "rendered":  "native"
+                                                                            "supported":  false,
+                                                                            "rendered":  "pseudo-hooks"
                                                                         },
                                                               "mcp":  {
                                                                           "supported":  true,
@@ -50,8 +50,8 @@
                                          "dispatch_topology":  "mesh",
                                          "specialist_dispatch_requirement":  "required",
                                          "host_delegation_policy":  "platform_managed",
-                                         "host_delegation_fallback":  "native",
-                                         "degradation_mode":  "none",
+                                         "host_delegation_fallback":  "none",
+                                         "degradation_mode":  "wrapper-pseudo-hooks",
                                          "cli_discovery_policy":  "mcp-discovery-ok,cli-reference-required",
                                          "required_paths":  [
                                                                 "platforms/code-buddy/README.md",
@@ -74,7 +74,18 @@
                                          "remote_live_runtime_policy":  "single_runtime_owner",
                                          "local_support":  "verified",
                                          "remote_support":  "verified",
-                                         "enforcement_layer":  "hooks"
+                                         "enforcement_layer":  "pseudo_hooks",
+                                         "enforcement_tier":  "pseudo-hooks",
+                                         "guard_injection_points":  [
+                                                                          "session_start",
+                                                                          "pre_tool_use",
+                                                                          "post_tool_use",
+                                                                          "stop"
+                                                                      ],
+                                         "public_entrypoints":  [
+                                                                     "rdc-debugger"
+                                                                 ],
+                                         "strict_hook_surface":  "wrapper-dispatched"
                                      },
                       "claude-code":  {
                                           "display_name":  "Claude Code",
@@ -141,7 +152,18 @@
                                           "remote_live_runtime_policy":  "single_runtime_owner",
                                           "local_support":  "verified",
                                           "remote_support":  "verified",
-                                          "enforcement_layer":  "hooks"
+                                          "enforcement_layer":  "native_hooks",
+                                          "enforcement_tier":  "native-hooks",
+                                          "guard_injection_points":  [
+                                                                           "session_start",
+                                                                           "pre_tool_use",
+                                                                           "post_tool_use",
+                                                                           "stop"
+                                                                       ],
+                                          "public_entrypoints":  [
+                                                                      "rdc-debugger"
+                                                                  ],
+                                          "strict_hook_surface":  "host-native"
                                       },
                       "copilot-cli":  {
                                           "display_name":  "Copilot CLI",
@@ -209,7 +231,18 @@
                                           "remote_live_runtime_policy":  "single_runtime_owner",
                                           "local_support":  "verified",
                                           "remote_support":  "verified",
-                                          "enforcement_layer":  "hooks"
+                                          "enforcement_layer":  "native_hooks",
+                                          "enforcement_tier":  "native-hooks",
+                                          "guard_injection_points":  [
+                                                                           "session_start",
+                                                                           "pre_tool_use",
+                                                                           "post_tool_use",
+                                                                           "stop"
+                                                                       ],
+                                          "public_entrypoints":  [
+                                                                      "rdc-debugger"
+                                                                  ],
+                                          "strict_hook_surface":  "host-native"
                                       },
                       "copilot-ide":  {
                                           "display_name":  "Copilot IDE",
@@ -231,7 +264,7 @@
                                                                           },
                                                                "hooks":  {
                                                                              "supported":  false,
-                                                                             "rendered":  "documented-boundary"
+                                                                             "rendered":  "pseudo-hooks"
                                                                          },
                                                                "mcp":  {
                                                                            "supported":  true,
@@ -254,7 +287,7 @@
                                           "specialist_dispatch_requirement":  "required",
                                           "host_delegation_policy":  "platform_managed",
                                           "host_delegation_fallback":  "none",
-                                          "degradation_mode":  "no-native-hooks",
+                                          "degradation_mode":  "pseudo-hooks-wrapper",
                                           "cli_discovery_policy":  "n/a",
                                           "required_paths":  [
                                                                  "platforms/copilot-ide/README.md",
@@ -276,7 +309,16 @@
                                           "remote_live_runtime_policy":  "single_runtime_owner",
                                           "local_support":  "verified",
                                           "remote_support":  "verified",
-                                          "enforcement_layer":  "runtime_owner"
+                                          "enforcement_layer":  "pseudo_hooks",
+                                          "enforcement_tier":  "pseudo-hooks",
+                                          "guard_injection_points":  [
+                                                                           "post_tool_use",
+                                                                           "stop"
+                                                                       ],
+                                          "public_entrypoints":  [
+                                                                      "rdc-debugger"
+                                                                  ],
+                                          "strict_hook_surface":  "wrapper-dispatched"
                                       },
                       "claude-desktop":  {
                                              "display_name":  "Claude Desktop",
@@ -341,7 +383,15 @@
                                              "remote_live_runtime_policy":  "single_runtime_owner",
                                              "local_support":  "degraded",
                                              "remote_support":  "serial_only",
-                                             "enforcement_layer":  "runtime_owner"
+                                             "enforcement_layer":  "no_hooks",
+                                             "enforcement_tier":  "no-hooks",
+                                             "guard_injection_points":  [
+                                                                              "stop"
+                                                                          ],
+                                             "public_entrypoints":  [
+                                                                         "rdc-debugger"
+                                                                     ],
+                                             "strict_hook_surface":  "audit-only"
                                          },
                       "manus":  {
                                     "display_name":  "Manus",
@@ -406,8 +456,16 @@
                                     "remote_live_runtime_policy":  "single_runtime_owner",
                                     "local_support":  "degraded",
                                     "remote_support":  "serial_only",
-                                    "enforcement_layer":  "runtime_owner"
-                                },
+                                           "enforcement_layer":  "no_hooks",
+                                           "enforcement_tier":  "no-hooks",
+                                           "guard_injection_points":  [
+                                                                            "stop"
+                                                                        ],
+                                           "public_entrypoints":  [
+                                                                       "rdc-debugger"
+                                                                   ],
+                                           "strict_hook_surface":  "audit-only"
+                                       },
                       "codex":  {
                                     "display_name":  "Codex",
                                     "status_label":  "workspace-native",
@@ -428,7 +486,7 @@
                                                                     },
                                                          "hooks":  {
                                                                        "supported":  false,
-                                                                       "rendered":  "documented-boundary"
+                                                                       "rendered":  "bash-guardrail-only"
                                                                    },
                                                          "mcp":  {
                                                                      "supported":  true,
@@ -474,7 +532,17 @@
                                     "remote_live_runtime_policy":  "single_runtime_owner",
                                     "local_support":  "verified",
                                     "remote_support":  "verified",
-                                    "enforcement_layer":  "runtime_owner"
+                                    "enforcement_layer":  "runtime_owner",
+                                    "enforcement_tier":  "pseudo-hooks",
+                                    "guard_injection_points":  [
+                                                                     "pre_tool_use",
+                                                                     "post_tool_use",
+                                                                     "stop"
+                                                                 ],
+                                    "public_entrypoints":  [
+                                                                "rdc-debugger"
+                                                            ],
+                                    "strict_hook_surface":  "runtime-guard-wrapper"
                                 },
                       "codex_plugin":  {
                                            "display_name":  "Codex Plugin",
@@ -517,8 +585,8 @@
                                            "agent_description_mode":  "skill_files",
                                            "dispatch_topology":  "hub_and_spoke",
                                            "specialist_dispatch_requirement":  "required",
-                                           "host_delegation_policy":  "skill_managed",
-                                           "host_delegation_fallback":  "generic_subagents",
+                                           "host_delegation_policy":  "platform_managed",
+                                           "host_delegation_fallback":  "none",
                                            "degradation_mode":  "plugin-cache-install",
                                            "cli_discovery_policy":  "mcp-discovery-ok,cli-reference-required",
                                            "required_paths":  [
@@ -545,8 +613,16 @@
                                            "remote_live_runtime_policy":  "single_runtime_owner",
                                            "local_support":  "verified",
                                            "remote_support":  "verified",
-                                           "enforcement_layer":  "runtime_owner"
-                                       },
+                                           "enforcement_layer":  "no_hooks",
+                                           "enforcement_tier":  "no-hooks",
+                                           "guard_injection_points":  [
+                                                                            "stop"
+                                                                        ],
+                                           "public_entrypoints":  [
+                                                                       "rdc-debugger"
+                                                                   ],
+                                           "strict_hook_surface":  "audit-only"
+                                        },
                       "cursor":  {
                                      "display_name":  "Cursor",
                                      "status_label":  "full",
@@ -566,8 +642,8 @@
                                                                          "rendered":  "native"
                                                                      },
                                                           "hooks":  {
-                                                                        "supported":  true,
-                                                                        "rendered":  "rules-config"
+                                                                        "supported":  false,
+                                                                        "rendered":  "pseudo-hooks"
                                                                     },
                                                           "mcp":  {
                                                                       "supported":  true,
@@ -590,12 +666,12 @@
                                      "specialist_dispatch_requirement":  "required",
                                      "host_delegation_policy":  "platform_managed",
                                      "host_delegation_fallback":  "none",
-                                     "degradation_mode":  "limited-hooks",
+                                     "degradation_mode":  "wrapper-pseudo-hooks",
                                      "cli_discovery_policy":  "mcp-discovery-ok,cli-reference-required",
-                                     "required_paths":  [
+                                                             "required_paths":  [
                                                             "platforms/cursor/README.md",
                                                             "platforms/cursor/AGENTS.md",
-                                                            "platforms/cursor/.cursorrules",
+                                                            "platforms/cursor/.cursor/rules/rdc-debugger.mdc",
                                                             "platforms/cursor/.cursor/mcp.json",
                                                             "platforms/cursor/skills/rdc-debugger/SKILL.md",
                                                             "platforms/cursor/hooks/hooks.json"
@@ -613,7 +689,16 @@
                                      "remote_live_runtime_policy":  "single_runtime_owner",
                                      "local_support":  "verified",
                                      "remote_support":  "verified",
-                                     "enforcement_layer":  "hooks"
+                                     "enforcement_layer":  "pseudo_hooks",
+                                     "enforcement_tier":  "pseudo-hooks",
+                                     "guard_injection_points":  [
+                                                                      "post_tool_use",
+                                                                      "stop"
+                                                                  ],
+                                     "public_entrypoints":  [
+                                                                 "rdc-debugger"
+                                                             ],
+                                     "strict_hook_surface":  "wrapper-dispatched"
                                  }
                   }
 }

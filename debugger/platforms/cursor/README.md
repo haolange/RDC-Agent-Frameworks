@@ -4,7 +4,7 @@
 
 入口规则：
 
-- 当前宿主支持 native agents、skills、rules-config hooks 与 `MCP`，但平台启动后默认保持普通对话态；只有用户手动召唤 `rdc-debugger`，才进入调试框架。
+- 当前宿主支持 agents、skills 与 `MCP`，但本模板对 Cursor 按 `pseudo-hooks` 平台处理：`.cursor/rules/rdc-debugger.mdc` 与 `hooks/hooks.json` 只负责 wrapper 触发，不被记成 native lifecycle hooks。
 - 当前宿主可直接访问本地进程、文件系统与 workspace，默认采用 local-first。
 - 默认入口是 daemon-backed `CLI`；只有用户明确要求按 `MCP` 接入时，才切换到 `MCP`。
 - 任务开始时，Agent 必须向用户说明当前采用的是 `CLI` 还是 `MCP`。
@@ -32,10 +32,9 @@
 - 未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断，不得初始化 case/run 或继续 triage、investigation、planning。
 - `workspace/` 预生成空骨架；真实运行产物在平台使用阶段按 case/run 写入。
 - 维护者若重跑 scaffold，必须继续产出 platform-local `common/` 最小占位目录，不得回退到跨级引用。
-- native hooks 会阻断未通过 gate 的结案；同时仍要求生成 `artifacts/run_compliance.yaml` 作为统一合规裁决。
-- `.cursorrules` 与 `hooks/hooks.json` 只负责宿主级行为提示；最终合规仍以 `artifacts/run_compliance.yaml` 为准。
+- `.cursor/rules/rdc-debugger.mdc` 与 `hooks/hooks.json` 只负责 wrapper-dispatched pseudo-hooks；最终合规仍以 `artifacts/run_compliance.yaml` 为准。
 - 当前平台的 `coordination_mode = staged_handoff`，`sub_agent_mode = puppet_sub_agents`。
 - Cursor 有多个 sub agent，但它们不是 `team_agents`；所有依赖、冲突与下一轮 brief 都经主 agent 中转。
 - `staged_handoff` 在当前平台上是 hub-and-spoke 多轮接力，不是单 agent 串行切换。
-- local ?? `multi_context_orchestrated`?Cursor ???? specialist ?????? context??????????????? brief ????? agent ???
-- local 与 remote 都统一采用 `single_runtime_owner`；Cursor 不把 Tools 的 local multi-context ceiling 直接提升成 platform-level concurrent team。
+- local 保持 `multi_context_orchestrated`，但这只表示 shared harness 可以协调多个 specialist context；不表示 Cursor 宿主原生具备 concurrent team hooks enforcement。
+- remote 统一采用 `single_runtime_owner`；Cursor 不把 Tools 的 local multi-context ceiling 直接提升成 platform-level concurrent team。

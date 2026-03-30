@@ -1,35 +1,37 @@
-﻿{
-    "PostToolUse":  [
-                        {
-                            "hooks":  [
-                                          {
-                                              "command":  "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py write-bugcard",
-                                              "description":  "Validate BugCard before write",
-                                              "type":  "command"
-                                          }
-                                      ],
-                            "matcher":  "Write"
-                        },
-                        {
-                            "hooks":  [
-                                          {
-                                              "command":  "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py write-skeptic",
-                                              "description":  "Validate skeptic signoff artifact",
-                                              "type":  "command"
-                                          }
-                                      ],
-                            "matcher":  "Write"
-                        }
-                    ],
-    "Stop":  [
-                 {
-                     "hooks":  [
-                                   {
-                                       "command":  "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
-                                       "description":  "Finalization gate",
-                                       "type":  "command"
-                                   }
-                               ]
-                 }
-             ]
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py session-start",
+        "description": "Run shared harness preflight before debugger work starts"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py pretool-live",
+        "description": "Validate dispatch readiness and capability token before live investigation"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py posttool-artifact",
+        "description": "Validate artifact writes against the shared harness capability token"
+      },
+      {
+        "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py write-bugcard",
+        "description": "Validate BugCard contract and schema before library write"
+      },
+      {
+        "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py write-skeptic",
+        "description": "Validate skeptic signoff artifact format"
+      }
+    ],
+    "agentStop": [
+      {
+        "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py stop-gate",
+        "description": "Finalization gate for RenderDoc/RDC GPU Debug"
+      }
+    ]
+  }
 }

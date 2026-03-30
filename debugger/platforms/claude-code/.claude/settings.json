@@ -2,7 +2,47 @@
   "mcpServers": {},
   "description": "RenderDoc/RDC GPU Debug - Claude Code platform-local common adaptation with manual rdc-debugger skill entry",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "failure_message": "Session start blocked by shared harness preflight.",
+            "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py session-start",
+            "description": "Run shared harness preflight before debugger work starts",
+            "type": "command",
+            "on_failure": "block"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "failure_message": "Live investigation blocked by shared harness dispatch readiness.",
+            "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py pretool-live",
+            "description": "Validate dispatch readiness and capability token before live investigation",
+            "type": "command",
+            "on_failure": "block"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
     "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "failure_message": "Artifact write blocked by capability token contract.",
+            "command": "uv run --with pyyaml python common/hooks/utils/codebuddy_hook_dispatch.py posttool-artifact",
+            "description": "Validate artifact write against the shared harness capability token",
+            "type": "command",
+            "on_failure": "block"
+          }
+        ],
+        "matcher": "Write"
+      },
       {
         "hooks": [
           {

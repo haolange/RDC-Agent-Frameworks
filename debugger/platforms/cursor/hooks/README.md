@@ -1,12 +1,12 @@
-# Cursor Platform Quality Hooks
+# Cursor Platform Pseudo-Hooks
 
-Cursor平台的RenderDoc/RDC GPU Debug框架质量门槛Hooks系统。
+Cursor 平台的 RenderDoc/RDC GPU Debug 质量门槛 pseudo-hooks 适配层。
 
 ## 概述
 
-由于Cursor IDE没有像Claude Code那样的原生hooks系统，本实现提供了一套适配层，通过以下方式实现质量门槛检查：
+由于 Cursor IDE 没有像 Claude Code 那样的原生 lifecycle hooks，本实现只提供 wrapper-dispatched pseudo-hooks 适配层，通过以下方式实现质量门槛检查：
 
-1. **hooks.json** - 定义了PostToolUse和Stop事件的hooks配置
+1. **hooks.json** - 定义 pseudo-hook 触发入口
 2. **验证脚本** - 包装了common/hooks中的验证器
 3. **工具脚本** - 提供Cursor特定的hook分发和审计功能
 4. **Schema定义** - Cursor平台特定的验证schema
@@ -45,9 +45,9 @@ export CURSOR_WRITE_PATH=""               # 当前写入的文件路径（由IDE
 export CURSOR_SESSION_ID=""               # 当前会话ID（可选）
 ```
 
-### 2. 在.cursorrules中配置
+### 2. 在 `.cursor/rules/rdc-debugger.mdc` 中配置
 
-在项目的`.cursorrules`文件中添加规则：
+在项目的 `.cursor/rules/rdc-debugger.mdc` 中添加规则或引用对应命令：
 
 ```markdown
 ## Quality Gates
@@ -95,7 +95,7 @@ python utils/run_compliance_audit.py [--strict]
 
 ## Hooks配置详解
 
-### PostToolUse事件
+### PostToolUse 伪触发
 
 1. **BugCard写入验证**
    - 触发条件：写入 `**/knowledge/library/**/*bugcard*.yaml`
@@ -107,7 +107,7 @@ python utils/run_compliance_audit.py [--strict]
    - 验证内容：五把刀覆盖、签署状态
    - 失败行为：警告（不阻止）
 
-### Stop事件
+### Stop 伪触发
 
 **最终结案Gate检查**
 - 触发条件：输出包含 `DEBUGGER_FINAL_VERDICT|最终裁决|根因确认|结案|final verdict|case closed`
@@ -202,7 +202,7 @@ python utils/run_compliance_audit.py [--strict]
 
 ## 注意事项
 
-1. **Cursor限制** - Cursor没有像Claude Code那样的原生hook系统，需要通过`.cursorrules`或手动运行
+1. **Cursor限制** - Cursor 没有原生 lifecycle hooks；`.cursor/rules/rdc-debugger.mdc` 与本目录脚本只是 wrapper 触发面，不是宿主真相
 2. **环境变量** - 确保`DEBUGGER_ROOT`环境变量正确设置
 3. **Session标记** - 某些验证需要`common/knowledge/library/sessions/.current_session`文件
 4. **审计产物** - 最终合规性以`workspace/cases/<case_id>/runs/<run_id>/artifacts/run_compliance.yaml`为准
