@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import importlib.util
 import json
@@ -33,6 +33,18 @@ class RepoBaselineValidationTests(unittest.TestCase):
         )
         findings = validator._platform_wrapper_path_findings(DEBUGGER_ROOT)
         self.assertEqual(findings, [])
+
+    def test_machine_consumed_common_and_platform_files_are_utf8_without_bom(self) -> None:
+        exts = {".md", ".mdc", ".json", ".toml", ".yaml", ".yml"}
+        offenders: list[str] = []
+        for root in (DEBUGGER_ROOT / "common", DEBUGGER_ROOT / "platforms"):
+            for path in sorted(root.rglob("*")):
+                if not path.is_file() or path.suffix.lower() not in exts:
+                    continue
+                if path.read_bytes().startswith(b"\xef\xbb\xbf"):
+                    offenders.append(str(path.relative_to(DEBUGGER_ROOT)).replace("\\", "/"))
+        self.assertEqual(offenders, [])
+
 
     def test_entry_mode_contract_is_documented_in_matrix(self) -> None:
         text = (DEBUGGER_ROOT / "common" / "docs" / "platform-capability-matrix.md").read_text(encoding="utf-8-sig")
@@ -74,8 +86,8 @@ class RepoBaselineValidationTests(unittest.TestCase):
         self.assertIn("不参与当前 run 的前置方向建议", skill_text)
 
     def test_platform_wrappers_mirror_triage_and_curator_knowledge_boundaries(self) -> None:
-        codex_triage = (DEBUGGER_ROOT / "platforms" / "codex" / ".agents" / "skills" / "triage-taxonomy" / "SKILL.md").read_text(encoding="utf-8-sig")
-        codex_curator = (DEBUGGER_ROOT / "platforms" / "codex" / ".agents" / "skills" / "report-knowledge-curator" / "SKILL.md").read_text(encoding="utf-8-sig")
+        codex_triage = (DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "skills" / "triage-taxonomy" / "SKILL.md").read_text(encoding="utf-8-sig")
+        codex_curator = (DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "skills" / "report-knowledge-curator" / "SKILL.md").read_text(encoding="utf-8-sig")
         claude_triage = (DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "agents" / "02_triage_taxonomy.md").read_text(encoding="utf-8")
         claude_curator = (DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "agents" / "09_report_knowledge_curator.md").read_text(encoding="utf-8")
 
@@ -243,7 +255,7 @@ class RepoBaselineValidationTests(unittest.TestCase):
             self.assertEqual(row.get("remote_live_runtime_policy"), "single_runtime_owner")
 
     def test_codex_skill_wrapper_declares_single_agent_mode_and_feedback_contract(self) -> None:
-        text = (DEBUGGER_ROOT / "platforms" / "codex" / ".agents" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
+        text = (DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
         for marker in (
             ".codex/runtime_guard.py",
             "host_delegation_policy = platform_managed",
@@ -306,6 +318,35 @@ class RepoBaselineValidationTests(unittest.TestCase):
         )
         self.assertEqual(compliance.get("entry_model", {}).get("public_entry_skill"), "rdc-debugger")
         self.assertNotIn("orchestration_role", compliance.get("entry_model", {}))
+
+    def test_platform_role_skill_wrappers_keep_frontmatter_descriptors(self) -> None:
+        for rel, skill_name in (
+            ("platforms/codex/.codex/skills/capture-repro/SKILL.md", "capture-repro"),
+            ("platforms/claude-code/.claude/skills/capture-repro/SKILL.md", "capture-repro"),
+            ("platforms/code-buddy/skills/capture-repro/SKILL.md", "capture-repro"),
+            ("platforms/copilot-ide/.github/skills/capture-repro/SKILL.md", "capture-repro"),
+        ):
+            text = (DEBUGGER_ROOT / rel).read_text(encoding="utf-8-sig")
+            self.assertTrue(text.startswith("---\n"), rel)
+            self.assertIn(f"name: {skill_name}", text, rel)
+            self.assertIn("description:", text, rel)
+            self.assertIn("short-description:", text, rel)
+
+    def test_wave1_platform_docs_include_generated_common_first_block(self) -> None:
+        for rel in (
+            "platforms/codex/README.md",
+            "platforms/codex/AGENTS.md",
+            "platforms/claude-code/README.md",
+            "platforms/claude-code/AGENTS.md",
+            "platforms/code-buddy/README.md",
+            "platforms/code-buddy/AGENTS.md",
+            "platforms/copilot-ide/README.md",
+            "platforms/copilot-ide/AGENTS.md",
+        ):
+            text = (DEBUGGER_ROOT / rel).read_text(encoding="utf-8-sig")
+            self.assertIn("BEGIN GENERATED COMMON-FIRST ADAPTER BLOCK", text)
+            self.assertIn("adapter_readiness.json", text)
+            self.assertIn("shared harness", text)
 
     def test_claude_code_docs_keep_cli_as_default_entry(self) -> None:
         readme = (DEBUGGER_ROOT / "platforms" / "claude-code" / "README.md").read_text(encoding="utf-8-sig")

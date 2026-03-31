@@ -1,4 +1,4 @@
-﻿# Claude Desktop Template（平台模板）
+# Claude Desktop Template（平台模板）
 
 当前目录是 Claude Desktop 的 platform-local 模板。Agent 的目标是使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题。
 

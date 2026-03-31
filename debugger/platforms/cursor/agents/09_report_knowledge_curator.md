@@ -1,4 +1,4 @@
-﻿---
+---
 agent_id: "curator_agent"
 category: "reporter"
 model: "gemini-3.1-pro"

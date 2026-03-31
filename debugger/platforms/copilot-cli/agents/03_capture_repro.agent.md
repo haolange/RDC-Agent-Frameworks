@@ -1,4 +1,4 @@
-﻿---
+---
 description: "Establish reproducible capture baselines and anchors."
 model: "sonnet-4.6"
 ---

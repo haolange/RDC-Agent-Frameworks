@@ -1,4 +1,4 @@
-﻿# Session Artifacts（会话产物）
+# Session Artifacts（会话产物）
 
 当前目录用于存放 live per-session 的必需 artifacts。
 

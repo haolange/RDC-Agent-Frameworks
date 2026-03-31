@@ -1,4 +1,4 @@
-﻿# Agent: Capture & Repro（捕获与复现专家）
+# Agent: Capture & Repro（捕获与复现专家）
 
 **角色**：捕获与复现专家
 

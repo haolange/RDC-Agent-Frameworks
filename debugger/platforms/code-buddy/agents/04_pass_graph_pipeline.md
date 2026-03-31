@@ -1,4 +1,4 @@
-﻿---
+---
 agent_id: "pass_graph_pipeline_agent"
 category: "investigator"
 model: "sonnet-4.6"

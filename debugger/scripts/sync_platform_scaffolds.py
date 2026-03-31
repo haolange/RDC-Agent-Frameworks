@@ -27,7 +27,7 @@ def read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
-def write_text(path: Path, text: str, *, encoding: str = "utf-8-sig") -> None:
+def write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(normalize(text), encoding=encoding)
 
@@ -38,6 +38,7 @@ def load_context(root: Path = ROOT) -> dict[str, Any]:
         "platform_targets": read_json(root / "common" / "config" / "platform_targets.json"),
         "platform_capabilities": read_json(root / "common" / "config" / "platform_capabilities.json"),
         "framework_compliance": read_json(root / "common" / "config" / "framework_compliance.json"),
+        "adapter_readiness": read_json(root / "common" / "config" / "adapter_readiness.json"),
     }
 
 
@@ -156,6 +157,82 @@ cases/
 - standalone `capture open` 不会创建这里的 case/run；这里只承载通过 `rdc-debugger` intake 之后的 workspace state。
 - 第一层 session artifacts 仍写入同级 `common/knowledge/library/sessions/`；`workspace/` 不复制 gate 真相。
 """
+
+
+def _join_code(items: list[str] | tuple[str, ...] | set[str]) -> str:
+    values = [str(item).strip() for item in items if str(item).strip()]
+    if not values:
+        return "`(none)`"
+    return ", ".join(f"`{value}`" for value in values)
+
+
+def _platform_row(ctx: dict[str, Any], platform_key: str) -> dict[str, Any]:
+    return ctx["platform_capabilities"]["platforms"][platform_key] or {}
+
+
+def _target_row(ctx: dict[str, Any], platform_key: str) -> dict[str, Any]:
+    return platform_target(ctx, platform_key)
+
+
+def _readiness_row(ctx: dict[str, Any], platform_key: str) -> dict[str, Any]:
+    return ((ctx.get("adapter_readiness") or {}).get("platforms") or {}).get(platform_key, {}) or {}
+
+
+def generated_common_first_block(ctx: dict[str, Any], platform_key: str) -> str:
+    platform_row = _platform_row(ctx, platform_key)
+    target = _target_row(ctx, platform_key)
+    readiness = _readiness_row(ctx, platform_key)
+    framework_platform = ((ctx.get("framework_compliance") or {}).get("platforms") or {}).get(platform_key, {}) or {}
+    required_surfaces = _join_code(framework_platform.get("required_surfaces") or [])
+    native_surfaces = _join_code(target.get("native_surfaces") or [])
+    ready_state = str(readiness.get("current_adapter_readiness") or "unknown").strip()
+    ready_notes = str(readiness.get("notes") or "").strip()
+    return f"""<!-- BEGIN GENERATED COMMON-FIRST ADAPTER BLOCK -->
+## Common-First Adapter Contract
+
+- `common/` + package-local `tools/` are the shared execution kernel; platform folders are adapter shells.
+- Host-visible native surfaces: {native_surfaces}
+- Target contract comes from `common/config/platform_capabilities.json` and `common/config/framework_compliance.json`; it is not the same as current readiness.
+- Current adapter must satisfy required surfaces: {required_surfaces}
+- Target contract: `coordination_mode = {platform_row.get('coordination_mode')}`, `sub_agent_mode = {platform_row.get('sub_agent_mode')}`, `peer_communication = {platform_row.get('peer_communication')}`
+- Current adapter readiness is tracked separately in `common/config/adapter_readiness.json`: `{ready_state}`
+- `status_label` / `local_support` / `remote_support` / `enforcement_layer` describe repo posture only; they do not imply strict readiness.
+- Strict execution must be enforced by shared harness, runtime lock, freeze state, artifact gate, and finalization receipt; not by prompt wording or host marketing text.
+- Notes: {ready_notes or 'No adapter-readiness notes recorded.'}
+<!-- END GENERATED COMMON-FIRST ADAPTER BLOCK -->
+"""
+
+
+def _upsert_generated_block(path: Path, block: str) -> None:
+    if not path.is_file():
+        return
+    text = path.read_text(encoding="utf-8-sig")
+    begin = '<!-- BEGIN GENERATED COMMON-FIRST ADAPTER BLOCK -->'
+    end = '<!-- END GENERATED COMMON-FIRST ADAPTER BLOCK -->'
+    if begin in text and end in text:
+        start = text.index(begin)
+        stop = text.index(end, start) + len(end)
+        updated = text[:start].rstrip() + "\n\n" + block.rstrip() + "\n" + text[stop:]
+    else:
+        parts = text.splitlines()
+        if parts and parts[0].startswith('# '):
+            head = parts[0]
+            tail = "\n".join(parts[1:]).lstrip("\n")
+            updated = head + "\n\n" + block.rstrip() + ("\n\n" + tail if tail else "\n")
+        else:
+            updated = block.rstrip() + "\n\n" + text.lstrip("\n")
+    write_text(path, updated, encoding="utf-8")
+
+
+def sync_wave1_generated_sections(ctx: dict[str, Any], platform_key: str) -> None:
+    if platform_key not in {"codex", "claude-code", "code-buddy", "copilot-ide"}:
+        return
+    package = platform_package_root(ctx, platform_key)
+    block = generated_common_first_block(ctx, platform_key)
+    _upsert_generated_block(package / "README.md", block)
+    _upsert_generated_block(package / "AGENTS.md", block)
+    if platform_key == "claude-code":
+        _upsert_generated_block(package / ".claude" / "CLAUDE.md", block)
 
 
 def validate_source_tree(ctx: dict[str, Any]) -> list[str]:
@@ -418,6 +495,8 @@ def role_skill_wrapper_text(ctx: dict[str, Any], platform_key: str, role: dict[s
     title = "角色技能包装说明"
     dispatch_note = ""
     role_name = Path(role["role_skill_path"]).parent.name
+    role_display_name = str(role.get("display_name") or role_name).strip()
+    role_description = str(role.get("description") or role_display_name).strip()
     role_guidance = ""
     if role_name == "triage-taxonomy":
         role_guidance = (
@@ -442,23 +521,30 @@ def role_skill_wrapper_text(ctx: dict[str, Any], platform_key: str, role: dict[s
             f"\n\n当前平台不预注册 `.codex/agents` 自定义 agent；如需进入当前 role，`rdc-debugger` "
             f"必须显式要求 Codex 创建通用 sub-agent，并让它先加载当前插件内的 `skills/{role_name}/SKILL.md`。"
         )
-    return f"""# {title}
+    return f"""---
+name: {role_name}
+description: Internal specialist skill for {role_description}. Use when `rdc-debugger` dispatches {role_name} work.
+metadata:
+  short-description: {role_display_name}
+---
 
-当前文件是 {display_name} 的 role skill 入口。
+# {title}
+
+Current file is the role skill entry for {display_name}.
 
 {role_intro}
 
-先阅读：
+Read first:
 
 1. common/skills/{public_entry_skill}/SKILL.md
 2. common/{role_skill}
 3. common/config/platform_capabilities.json
 
-当前平台的 `coordination_mode = {str(platform_row.get("coordination_mode") or "").strip()}`，`sub_agent_mode = {str(platform_row.get("sub_agent_mode") or "").strip()}`，`peer_communication = {str(platform_row.get("peer_communication") or "").strip()}`。
+Platform contract: `coordination_mode = {str(platform_row.get("coordination_mode") or "").strip()}`, `sub_agent_mode = {str(platform_row.get("sub_agent_mode") or "").strip()}`, `peer_communication = {str(platform_row.get("peer_communication") or "").strip()}`.
 {role_guidance}{dispatch_note}
 
-未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
-运行时 case/run 现场与第二层报告统一写入平台根目录下的 `workspace/`
+Do not use this platform template before copying top-level `debugger/common/` into the platform-local `common/`.
+Runtime case/run artifacts and reports are written under the platform-local `workspace/`.
 """
 
 
@@ -703,7 +789,7 @@ def _path_prefix_to_package_root(relative_dir: str) -> str:
 
 
 def _agent_wrapper_encoding(platform_key: str) -> str:
-    return "utf-8" if platform_key == "claude-code" else "utf-8-sig"
+    return "utf-8"
 
 
 def agent_wrapper_body_text(ctx: dict[str, Any], platform_key: str, role: dict[str, Any]) -> str:
@@ -857,6 +943,7 @@ def sync_agent_wrappers(ctx: dict[str, Any], platform_key: str) -> None:
 
 
 def sync_platform_specific_files(ctx: dict[str, Any], platform_key: str) -> None:
+    sync_wave1_generated_sections(ctx, platform_key)
     if platform_key != "codex_plugin":
         return
 
@@ -893,13 +980,15 @@ def sync_platform_specific_files(ctx: dict[str, Any], platform_key: str) -> None
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate or refresh minimal debugger platform scaffolds")
     parser.add_argument("--check", action="store_true", help="Validate scaffold topology without rewriting placeholders")
+    parser.add_argument("--platform", action="append", dest="platforms", choices=sorted(load_context(ROOT)["platform_capabilities"]["platforms"].keys()), help="Limit sync/check to selected platform keys")
     args = parser.parse_args(argv)
 
     ctx = load_context(ROOT)
+    platform_keys = args.platforms or list(ctx["platform_capabilities"]["platforms"].keys())
 
     if args.check:
         findings = validate_source_tree(ctx)
-        for platform_key in ctx["platform_capabilities"]["platforms"]:
+        for platform_key in platform_keys:
             findings.extend(collect_findings(ctx, platform_key))
         if findings:
             print("[platform scaffold findings]")
@@ -909,14 +998,14 @@ def main(argv: list[str] | None = None) -> int:
         print("platform scaffold check passed")
         return 0
 
-    for platform_key in ctx["platform_capabilities"]["platforms"]:
+    for platform_key in platform_keys:
         sync_placeholders(ctx, platform_key)
         sync_skill_wrappers(ctx, platform_key)
         sync_platform_specific_files(ctx, platform_key)
         sync_agent_and_role_configs(ctx, platform_key)
         sync_agent_wrappers(ctx, platform_key)
     findings = validate_source_tree(ctx)
-    for platform_key in ctx["platform_capabilities"]["platforms"]:
+    for platform_key in platform_keys:
         findings.extend(collect_findings(ctx, platform_key))
     if findings:
         print("[platform scaffold findings]")

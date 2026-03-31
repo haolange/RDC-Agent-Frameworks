@@ -1,4 +1,4 @@
-﻿interface:
+interface:
   display_name: "RDC Debugger"
   short_description: "RenderDoc/RDC 调试主入口"
   default_prompt: "Use $rdc-debugger to intake an RDC GPU debug request, complete preflight, and hand the normalized task to rdc-debugger."

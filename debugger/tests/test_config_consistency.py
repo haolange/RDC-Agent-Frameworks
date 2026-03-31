@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import importlib.util
 import json
@@ -283,6 +283,19 @@ class ConfigConsistencyTests(unittest.TestCase):
         self.assertEqual(modes["remote_daemon"]["runtime_parallelism_ceiling"], "single_runtime_owner")
         self.assertEqual(modes["remote_mcp"]["runtime_parallelism_ceiling"], "single_runtime_owner")
         self.assertEqual(modes["remote_mcp"]["host_coordination_gate"], "frameworks_platform_matrix_applies")
+
+
+    def test_adapter_readiness_contract_is_separate_from_target_contract(self) -> None:
+        compliance = _read_json(DEBUGGER_ROOT / "common" / "config" / "framework_compliance.json")
+        readiness = _read_json(DEBUGGER_ROOT / "common" / "config" / "adapter_readiness.json")
+        artifact_contract = compliance.get("runtime_artifact_contract") or {}
+        self.assertEqual(artifact_contract.get("adapter_readiness_contract"), "common/config/adapter_readiness.json")
+        self.assertEqual(artifact_contract.get("freeze_state_artifact"), "artifacts/freeze_state.yaml")
+        self.assertEqual(artifact_contract.get("finalization_receipt_artifact"), "artifacts/finalization_receipt.yaml")
+        self.assertTrue((readiness.get("semantics") or {}).get("current_readiness_is_separate"))
+        self.assertEqual((readiness.get("waves") or {}).get("wave1_strict"), ["codex", "claude-code", "code-buddy", "copilot-ide"])
+        self.assertTrue(((readiness.get("platforms") or {}).get("claude-code") or {}).get("strict_runtime_target"))
+        self.assertTrue(((readiness.get("platforms") or {}).get("code-buddy") or {}).get("strict_runtime_target"))
 
 
 if __name__ == "__main__":

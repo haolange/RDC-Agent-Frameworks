@@ -1,4 +1,4 @@
-﻿# Debugger 用户输入模板
+# Debugger 用户输入模板
 
 将下面七段填写后提交给 `rdc-debugger`。  
 Agent 会把它规范化为 `case_input.yaml`，并据此初始化 case/run。

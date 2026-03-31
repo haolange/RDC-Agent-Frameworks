@@ -15,19 +15,19 @@ metadata:
 
 - `intent_gate`
 - `entry_gate`
-- `preflight`
-- `缺失输入补料`
-- `intake 规范化`
-- `capture 导入 + case/run 初始化`
+- preflight
+- 缺失输入补料
+- intake 规范化
+- capture 导入 + case/run 初始化
 - `artifacts/intake_gate.yaml`
 - `artifacts/runtime_topology.yaml`
-- `specialist 分派、阶段推进与质量门裁决`
+- specialist 分派、阶段推进与质量门裁决
 
 固定顺序：
 
 1. `intent_gate`
 2. `entry_gate`
-3. `binding/preflight + capture import + case/run bootstrap`
+3. binding/preflight + capture import + case/run bootstrap
 4. `artifacts/intake_gate.yaml` pass
 5. `artifacts/runtime_topology.yaml`
 6. `staged_handoff`

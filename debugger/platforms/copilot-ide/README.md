@@ -1,4 +1,21 @@
-﻿# Copilot IDE Template（平台模板）
+# Copilot IDE Template（平台模板）
+
+<!-- BEGIN GENERATED COMMON-FIRST ADAPTER BLOCK -->
+## Common-First Adapter Contract
+
+- `common/` + package-local `tools/` are the shared execution kernel; platform folders are adapter shells.
+- Host-visible native surfaces: `agents`, `skills`, `mcp`, `preferred_model`, `handoffs`
+- Target contract comes from `common/config/platform_capabilities.json` and `common/config/framework_compliance.json`; it is not the same as current readiness.
+- Current adapter must satisfy required surfaces: `agents`, `skills`, `mcp`
+- Target contract: `coordination_mode = staged_handoff`, `sub_agent_mode = puppet_sub_agents`, `peer_communication = via_main_agent`
+- Current adapter readiness is tracked separately in `common/config/adapter_readiness.json`: `adapter_in_progress`
+- `status_label` / `local_support` / `remote_support` / `enforcement_layer` describe repo posture only; they do not imply strict readiness.
+- Strict execution must be enforced by shared harness, runtime lock, freeze state, artifact gate, and finalization receipt; not by prompt wording or host marketing text.
+- Notes: Wave 1 strict target via external common-first enforcement, not assumed IDE-native hard hooks.
+<!-- END GENERATED COMMON-FIRST ADAPTER BLOCK -->
+
+
+
 
 当前目录是 Copilot IDE 的 platform-local 模板。Agent 的目标是使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题。
 

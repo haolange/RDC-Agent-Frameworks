@@ -1,4 +1,4 @@
-﻿# Codex Plugin Bundle（插件包）
+# Codex Plugin Bundle（插件包）
 
 当前目录是 Codex 的 installable plugin bundle。Agent 的目标是使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题。
 

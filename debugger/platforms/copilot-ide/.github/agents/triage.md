@@ -1,4 +1,4 @@
-﻿---
+---
 description: "Map symptoms and triggers to normalized tags and SOP candidates."
 model: "sonnet-4.6"
 handoffs:

@@ -1,4 +1,4 @@
-﻿# Copilot IDE Entrypoints（宿主入口说明）
+# Copilot IDE Entrypoints（宿主入口说明）
 
 当前目录只提供宿主入口提示；运行时共享文档统一从当前平台根目录的 `common/` 读取。
 

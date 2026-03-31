@@ -1,4 +1,4 @@
-﻿---
+---
 description: "Produce BugFull and BugCard outputs and maintain reusable knowledge."
 model: "gemini-3.1-pro"
 ---

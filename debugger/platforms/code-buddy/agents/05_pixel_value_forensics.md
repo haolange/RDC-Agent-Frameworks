@@ -1,4 +1,4 @@
-﻿---
+---
 agent_id: "pixel_forensics_agent"
 category: "investigator"
 model: "sonnet-4.6"

@@ -1,4 +1,4 @@
-﻿---
+---
 agent_id: "skeptic_agent"
 category: "verifier"
 model: "gpt-5.4"

@@ -1,4 +1,4 @@
-﻿---
+---
 description: "Trace pass divergence and resource dependency chains."
 model: "sonnet-4.6"
 ---

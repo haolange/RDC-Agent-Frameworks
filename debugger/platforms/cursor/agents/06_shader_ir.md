@@ -1,4 +1,4 @@
-﻿---
+---
 agent_id: "shader_ir"
 category: "code_analyzer"
 model: "sonnet-4.6"

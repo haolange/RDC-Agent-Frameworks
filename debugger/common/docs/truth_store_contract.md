@@ -1,4 +1,4 @@
-﻿# Truth Store Contract
+# Truth Store Contract
 
 本文定义 debugger framework 在文件系统上的真相存储合同。
 

@@ -1,4 +1,4 @@
-﻿# Session 示例产物
+# Session 示例产物
 
 本目录保存示例 session artifacts，用于：
 

@@ -1,4 +1,4 @@
-﻿# BugCard 必填字段清单
+# BugCard 必填字段清单
 # 任何 BugCard 入库前必须通过此 schema 验证
 
 description: "BugCard 必填字段清单，由 bugcard_validator.py 使用"

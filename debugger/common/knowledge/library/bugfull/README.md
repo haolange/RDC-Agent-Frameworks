@@ -1,4 +1,4 @@
-﻿# `knowledge/library/bugfull`
+# `knowledge/library/bugfull`
 
 当前目录用于存放 BugFull（Markdown）。
 

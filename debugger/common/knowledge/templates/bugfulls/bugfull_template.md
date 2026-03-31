@@ -1,4 +1,4 @@
-﻿# BugFull 模板（Markdown）
+# BugFull 模板（Markdown）
 
 > 建议输出路径：`common/knowledge/library/bugfull/BUG-XXX-001_full.md`
 

@@ -1,4 +1,4 @@
-﻿# BugCard：BUG-PREC-002
+# BugCard：BUG-PREC-002
 
 ```yaml
 bugcard_id: BUG-PREC-002

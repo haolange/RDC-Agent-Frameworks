@@ -1,4 +1,4 @@
-﻿---
+---
 description: "Perform cross-device attribution and platform-specific checks."
 model: "sonnet-4.6"
 ---

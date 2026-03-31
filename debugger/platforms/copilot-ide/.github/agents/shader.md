@@ -1,4 +1,4 @@
-﻿---
+---
 description: "Analyze shader source, IR evidence, and suspicious fingerprints."
 model: "sonnet-4.6"
 handoffs:

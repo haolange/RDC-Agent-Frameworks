@@ -1,4 +1,4 @@
-﻿# RenderDoc/RDC Debugger Runtime Coordination Model
+# RenderDoc/RDC Debugger Runtime Coordination Model
 
 本文定义 framework 如何消费 Tools 的 runtime truth，并把它落成可执行、可审计、可终局检查的协作协议。
 

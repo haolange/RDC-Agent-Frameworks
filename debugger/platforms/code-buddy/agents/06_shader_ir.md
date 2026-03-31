@@ -1,4 +1,4 @@
-﻿---
+---
 agent_id: "shader_ir_agent"
 category: "investigator"
 model: "sonnet-4.6"

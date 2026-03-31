@@ -91,7 +91,7 @@
       "workspace_root": "platforms/codex",
       "status_label": "workspace-native",
       "agent_dir": null,
-      "skill_dir": ".agents/skills/rdc-debugger",
+      "skill_dir": ".codex/skills/rdc-debugger",
       "role_config_dir": ".codex/agents",
       "entrypoint_file": "AGENTS.md",
       "native_surfaces": [

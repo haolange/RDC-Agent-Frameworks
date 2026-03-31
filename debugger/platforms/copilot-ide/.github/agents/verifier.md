@@ -1,4 +1,4 @@
-﻿---
+---
 description: "Challenge weak claims and sign off only when proven."
 model: "gpt-5.4"
 handoffs:

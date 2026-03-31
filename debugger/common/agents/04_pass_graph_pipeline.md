@@ -1,4 +1,4 @@
-﻿# Agent: Pass Graph / Pipeline（命令列表与管线状态分析专家）
+# Agent: Pass Graph / Pipeline（命令列表与管线状态分析专家）
 
 **角色**：命令列表与管线状态分析专家
 

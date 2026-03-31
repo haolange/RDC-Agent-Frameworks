@@ -1,4 +1,4 @@
-﻿{
+{
     "description":  "RenderDoc/RDC GPU Debug 的 Copilot IDE platform-local common 适配包。",
     "name":  "rdc-debugger-ide",
     "agentsRoot":  ".github/agents",

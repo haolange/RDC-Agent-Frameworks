@@ -1,4 +1,4 @@
-﻿---
+---
 agent_id: "driver_device"
 category: "platform_analyst"
 model: "sonnet-4.6"

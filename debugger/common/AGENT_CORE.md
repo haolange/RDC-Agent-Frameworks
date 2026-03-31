@@ -1,4 +1,4 @@
-﻿# RenderDoc/RDC GPU Debug Agent Core（框架核心约束）
+# RenderDoc/RDC GPU Debug Agent Core（框架核心约束）
 
 本文件是 `RenderDoc/RDC GPU Debug` framework 的全局约束入口。
 

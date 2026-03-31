@@ -1,4 +1,4 @@
-﻿{
+{
     "schema_version":  4,
     "runtime_contract":  {
                              "context_state_model":  "single_current_runtime_per_context",
@@ -517,7 +517,7 @@
                                                            "platforms/codex/.codex/config.toml",
                                                            "platforms/codex/.codex/runtime_guard.py",
                                                            "platforms/codex/.codex/agents/rdc-debugger.toml",
-                                                           "platforms/codex/.agents/skills/rdc-debugger/SKILL.md"
+                                                           "platforms/codex/.codex/skills/rdc-debugger/SKILL.md"
                                                        ],
                                     "supported_entry_modes":  [
                                                                   "cli",

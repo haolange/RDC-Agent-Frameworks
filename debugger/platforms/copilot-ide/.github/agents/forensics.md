@@ -1,4 +1,4 @@
-﻿---
+---
 description: "Locate first bad event and pixel-level evidence."
 model: "sonnet-4.6"
 handoffs:

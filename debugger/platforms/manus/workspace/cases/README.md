@@ -1,4 +1,4 @@
-﻿# `workspace/cases/` 占位说明
+# `workspace/cases/` 占位说明
 
 当前目录用于承载运行时 case。
 

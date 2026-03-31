@@ -1,4 +1,4 @@
-﻿---
+---
 agent_id: "driver_device_agent"
 category: "investigator"
 model: "sonnet-4.6"

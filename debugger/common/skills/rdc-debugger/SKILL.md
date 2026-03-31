@@ -1,4 +1,4 @@
-﻿---
+---
 name: rdc-debugger
 description: Public main skill for the RenderDoc/RDC GPU debugger framework. Use when the user wants defect diagnosis, root-cause analysis, regression explanation, or fix verification for a GPU rendering issue from one or more `.rdc` captures. This skill owns intent gate classification, preflight, missing-input collection, intake normalization, case/run initialization, specialist dispatch, and verdict gating; it is the only framework classifier and the only normal user-facing entry.
 ---

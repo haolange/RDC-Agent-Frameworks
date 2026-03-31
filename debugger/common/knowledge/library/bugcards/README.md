@@ -1,4 +1,4 @@
-﻿# `knowledge/library/bugcards`
+# `knowledge/library/bugcards`
 
 当前目录用于存放 BugCard（YAML）。
 

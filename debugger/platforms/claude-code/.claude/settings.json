@@ -1,4 +1,4 @@
-﻿{
+{
   "mcpServers": {},
   "description": "RenderDoc/RDC GPU Debug - Claude Code platform-local common adaptation with manual rdc-debugger skill entry",
   "hooks": {

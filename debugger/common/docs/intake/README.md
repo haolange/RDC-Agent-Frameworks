@@ -1,4 +1,4 @@
-﻿# Intake Contract（输入合同）
+# Intake Contract（输入合同）
 
 本文定义 Debugger framework 唯一的用户输入合同。
 

@@ -1,17 +1,24 @@
-﻿# 角色技能包装说明
+---
+name: capture-repro
+description: Internal specialist skill for Establish reproducible capture baselines and anchors.. Use when `rdc-debugger` dispatches capture-repro work.
+metadata:
+  short-description: Capture & Repro
+---
 
-当前文件是 Claude Code 的 role skill 入口。
+# 角色技能包装说明
+
+Current file is the role skill entry for Claude Code.
 
 该角色默认是 internal/debug-only specialist。平台启动后不会自动进入该角色；只有用户手动召唤 `rdc-debugger` 并由它分派时，才进入当前 role。
 
-先阅读：
+Read first:
 
 1. common/skills/rdc-debugger/SKILL.md
 2. common/skills/capture-repro/SKILL.md
 3. common/config/platform_capabilities.json
 
-当前平台的 `coordination_mode = concurrent_team`，`sub_agent_mode = team_agents`，`peer_communication = direct`。
+Platform contract: `coordination_mode = concurrent_team`, `sub_agent_mode = team_agents`, `peer_communication = direct`.
 
 
-未先将顶层 `debugger/common/` 拷入当前平台根目录的 `common/` 之前，不允许在宿主中使用当前平台模板。
-运行时 case/run 现场与第二层报告统一写入平台根目录下的 `workspace/`
+Do not use this platform template before copying top-level `debugger/common/` into the platform-local `common/`.
+Runtime case/run artifacts and reports are written under the platform-local `workspace/`.

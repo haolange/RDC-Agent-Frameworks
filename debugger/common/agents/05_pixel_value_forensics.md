@@ -1,4 +1,4 @@
-﻿# Agent: Pixel / Value Forensics（像素取证专家）
+# Agent: Pixel / Value Forensics（像素取证专家）
 
 **角色**：像素取证专家
 

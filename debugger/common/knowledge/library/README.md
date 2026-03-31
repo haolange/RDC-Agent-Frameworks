@@ -1,4 +1,4 @@
-﻿# RenderDoc/RDC GPU Debug · Knowledge Library（共享知识库）
+# RenderDoc/RDC GPU Debug · Knowledge Library（共享知识库）
 
 本目录存放共享知识沉淀与 live session 真相。
 

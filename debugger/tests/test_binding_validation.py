@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import importlib.util
 import json
@@ -94,7 +94,7 @@ class BindingValidationTests(unittest.TestCase):
                 "platforms/codex/AGENTS.md",
                 "platforms/codex/.codex/config.toml",
                 "platforms/codex/.codex/agents/triage_agent.toml",
-                "platforms/codex/.agents/skills/rdc-debugger/SKILL.md",
+                "platforms/codex/.codex/skills/rdc-debugger/SKILL.md",
             ):
                 _write(root / rel, "ok\n")
 
@@ -113,7 +113,7 @@ class BindingValidationTests(unittest.TestCase):
                                     "platforms/codex/AGENTS.md",
                                     "platforms/codex/.codex/config.toml",
                                     "platforms/codex/.codex/agents/triage_agent.toml",
-                                    "platforms/codex/.agents/skills/rdc-debugger/SKILL.md",
+                                    "platforms/codex/.codex/skills/rdc-debugger/SKILL.md",
                                 ]
                             }
                         }
@@ -301,12 +301,12 @@ class BindingValidationTests(unittest.TestCase):
                 "platforms/codex/AGENTS.md",
                 "platforms/codex/.codex/config.toml",
                 "platforms/codex/.codex/agents/triage_agent.toml",
-                "platforms/codex/.agents/skills/rdc-debugger/SKILL.md",
+                "platforms/codex/.codex/skills/rdc-debugger/SKILL.md",
             ):
                 _write(root / rel, "ok\n")
 
             _write(root / "common" / "config" / "platform_adapter.json", json.dumps(_adapter_payload(required_paths=["README.md", "docs/tools.md", "docs/session-model.md", "docs/agent-model.md", "spec/tool_catalog.json"]), ensure_ascii=False, indent=2))
-            _write(root / "common" / "config" / "platform_capabilities.json", json.dumps({"platforms": {"codex": {"required_paths": ["platforms/codex/README.md", "platforms/codex/AGENTS.md", "platforms/codex/.codex/config.toml", "platforms/codex/.codex/agents/triage_agent.toml", "platforms/codex/.agents/skills/rdc-debugger/SKILL.md"]}}}, ensure_ascii=False, indent=2))
+            _write(root / "common" / "config" / "platform_capabilities.json", json.dumps({"platforms": {"codex": {"required_paths": ["platforms/codex/README.md", "platforms/codex/AGENTS.md", "platforms/codex/.codex/config.toml", "platforms/codex/.codex/agents/triage_agent.toml", "platforms/codex/.codex/skills/rdc-debugger/SKILL.md"]}}}, ensure_ascii=False, indent=2))
             _write(root / "common" / "config" / "tool_catalog.snapshot.json", json.dumps({"tool_count": len(tool_names), "tools": [{"name": name} for name in tool_names]}, ensure_ascii=False, indent=2))
             for rel in ("README.md", "docs/tools.md", "docs/session-model.md", "docs/agent-model.md"):
                 _write(tools_root / rel, "ok\n")

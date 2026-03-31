@@ -1,4 +1,4 @@
-﻿# Codex Plugin Wrapper（外层包装目录）
+# Codex Plugin Wrapper（外层包装目录）
 
 当前目录是 Codex plugin 的外层包装目录，不是可直接安装或运行的 plugin root。
 

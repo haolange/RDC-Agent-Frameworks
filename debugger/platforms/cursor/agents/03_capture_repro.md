@@ -1,4 +1,4 @@
-﻿---
+---
 agent_id: "capture_repro"
 category: "executor"
 model: "sonnet-4.6"

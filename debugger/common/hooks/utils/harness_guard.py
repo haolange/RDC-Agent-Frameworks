@@ -58,6 +58,9 @@ from validate_tool_contract_runtime import validate_runtime_tool_contract  # noq
 
 GUARD_SCHEMA = "2"
 CAPABILITY_TOKEN_SCHEMA = "1"
+RUNTIME_LOCK_SCHEMA = "1"
+FREEZE_STATE_SCHEMA = "1"
+FINALIZATION_RECEIPT_SCHEMA = "1"
 QUALITY_CHECK_EVENT_TYPE = "quality_check"
 PROCESS_DEVIATION_EVENT_TYPE = "process_deviation"
 DISPATCH_FEEDBACK_EVENT_TYPES = {
@@ -286,6 +289,12 @@ def _emit_process_deviation(
             },
         },
     )
+    freeze_run(
+        run_root,
+        blocking_codes=[deviation_code],
+        reason=summary,
+        refs=refs or [_norm(artifact_path)],
+    )
 
 
 def _flatten_tool_contract_findings(root: Path) -> list[str]:
@@ -473,6 +482,151 @@ def _allowed_path_match(target_path: str, allowed_paths: list[str]) -> bool:
         if normalized_target == normalized_allowed or normalized_target.startswith(normalized_allowed.rstrip("/") + "/"):
             return True
     return False
+
+
+def _runtime_lock_store(run_root: Path) -> Path:
+    return run_root / "artifacts" / "runtime_locks"
+
+
+def _runtime_lock_path(run_root: Path, lock_id: str) -> Path:
+    return _runtime_lock_store(run_root) / f"{lock_id}.yaml"
+
+
+def _freeze_state_path(run_root: Path) -> Path:
+    return run_root / "artifacts" / "freeze_state.yaml"
+
+
+def _finalization_receipt_path(run_root: Path) -> Path:
+    return run_root / "artifacts" / "finalization_receipt.yaml"
+
+
+def _freeze_blockers(run_root: Path) -> list[dict[str, Any]]:
+    freeze_state_path = _freeze_state_path(run_root)
+    if not freeze_state_path.is_file():
+        return []
+    data = _read_yaml(freeze_state_path)
+    if not isinstance(data, dict):
+        return [{"code": "BLOCKED_FREEZE_STATE_ACTIVE", "reason": "run is frozen until deviation is resolved", "refs": [_norm(freeze_state_path)]}]
+    if str(data.get("status") or "").strip() != "frozen":
+        return []
+    refs = [str(item).strip() for item in (data.get("blocking_codes") or []) if str(item).strip()]
+    return [{"code": "BLOCKED_FREEZE_STATE_ACTIVE", "reason": "run is frozen until deviation is resolved", "refs": refs[:8] or [_norm(freeze_state_path)]}]
+
+
+def issue_runtime_lock(
+    run_root: Path,
+    *,
+    agent_id: str,
+    workflow_stage: str,
+    context_binding_id: str,
+    context_id: str,
+    runtime_owner: str,
+    capture_ref: str = "",
+    canonical_anchor_ref: str = "",
+    baton_ref: str = "",
+    allowed_tool_classes: list[str] | None = None,
+    allowed_output_paths: list[str] | None = None,
+    ttl_seconds: int = DEFAULT_TOKEN_TTL_SECONDS,
+) -> dict[str, Any]:
+    lock_id = f"lock-{_sanitize_token(agent_id)}-{secrets.token_hex(6)}"
+    payload = {
+        "schema_version": RUNTIME_LOCK_SCHEMA,
+        "lock_id": lock_id,
+        "run_id": _run_id(run_root),
+        "agent_id": agent_id,
+        "workflow_stage": workflow_stage,
+        "context_binding_id": context_binding_id,
+        "context_id": context_id,
+        "runtime_owner": runtime_owner,
+        "capture_ref": capture_ref,
+        "canonical_anchor_ref": canonical_anchor_ref,
+        "baton_ref": baton_ref,
+        "lease_seq": _now_ms(),
+        "allowed_tool_classes": list(allowed_tool_classes or ["live_investigation", "artifact_write"]),
+        "allowed_output_paths": list(allowed_output_paths or []),
+        "issued_at": _now_iso(),
+        "expires_at": (_now() + timedelta(seconds=int(ttl_seconds))).isoformat(),
+        "status": "active",
+        "path": _norm(_runtime_lock_path(run_root, lock_id)),
+    }
+    _dump_yaml(_runtime_lock_path(run_root, lock_id), payload)
+    return payload
+
+
+def validate_runtime_lock(
+    run_root: Path,
+    *,
+    lock_ref: str,
+    agent_id: str,
+    workflow_stage: str,
+    context_binding_id: str,
+    context_id: str,
+    runtime_owner: str,
+    tool_class: str,
+    output_path: str = "",
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    lock_path = Path(lock_ref)
+    if not lock_path.is_absolute():
+        lock_path = (run_root / lock_ref).resolve()
+    if not lock_path.is_file():
+        return {"status": "blocked", "blocking_code": "BLOCKED_RUNTIME_LOCK_REQUIRED", "reason": "runtime lock file is missing", "path": _norm(lock_path)}
+    lock = _read_yaml(lock_path)
+    if not isinstance(lock, dict):
+        return {"status": "blocked", "blocking_code": "BLOCKED_RUNTIME_LOCK_INVALID", "reason": "runtime lock payload must be a YAML object", "path": _norm(lock_path)}
+    if str(lock.get("status") or "").strip() != "active":
+        return {"status": "blocked", "blocking_code": "BLOCKED_RUNTIME_LOCK_INACTIVE", "reason": "runtime lock is not active", "path": _norm(lock_path)}
+    expires_at = str(lock.get("expires_at") or "").strip()
+    current = now or _now()
+    if not expires_at or current > datetime.fromisoformat(expires_at):
+        return {"status": "blocked", "blocking_code": "BLOCKED_RUNTIME_LOCK_EXPIRED", "reason": "runtime lock has expired", "path": _norm(lock_path)}
+    checks = {"agent_id": agent_id, "workflow_stage": workflow_stage, "context_binding_id": context_binding_id, "context_id": context_id, "runtime_owner": runtime_owner}
+    for key, expected in checks.items():
+        if str(lock.get(key) or "").strip() != str(expected or "").strip():
+            return {"status": "blocked", "blocking_code": "BLOCKED_RUNTIME_LOCK_MISMATCH", "reason": f"runtime lock {key} does not match execution payload", "path": _norm(lock_path)}
+    allowed_tool_classes = [str(item).strip() for item in (lock.get("allowed_tool_classes") or []) if str(item).strip()]
+    if tool_class not in allowed_tool_classes:
+        return {"status": "blocked", "blocking_code": "BLOCKED_RUNTIME_LOCK_TOOL_CLASS_MISMATCH", "reason": "runtime lock does not allow the requested tool class", "path": _norm(lock_path)}
+    allowed_output_paths = [str(item).strip() for item in (lock.get("allowed_output_paths") or []) if str(item).strip()]
+    if output_path and allowed_output_paths and not _allowed_path_match(output_path, allowed_output_paths):
+        return {"status": "blocked", "blocking_code": "BLOCKED_RUNTIME_LOCK_PATH_MISMATCH", "reason": "runtime lock does not allow the requested output path", "path": _norm(lock_path)}
+    return {"status": "passed", "lock_id": str(lock.get("lock_id") or "").strip(), "path": _norm(lock_path), "allowed_tool_classes": allowed_tool_classes, "allowed_output_paths": allowed_output_paths}
+
+
+def release_runtime_lock(run_root: Path, *, lock_ref: str, reason: str = "feedback_recorded") -> dict[str, Any] | None:
+    lock_path = Path(lock_ref)
+    if not lock_path.is_absolute():
+        lock_path = (run_root / lock_ref).resolve()
+    if not lock_path.is_file():
+        return None
+    payload = _read_yaml(lock_path)
+    if not isinstance(payload, dict):
+        return None
+    payload["status"] = "released"
+    payload["released_at"] = _now_iso()
+    payload["release_reason"] = reason
+    _dump_yaml(lock_path, payload)
+    return payload
+
+
+def freeze_run(
+    run_root: Path,
+    *,
+    blocking_codes: list[str],
+    reason: str,
+    refs: list[str] | None = None,
+) -> dict[str, Any]:
+    payload = {
+        "schema_version": FREEZE_STATE_SCHEMA,
+        "generated_by": "harness_guard",
+        "generated_at": _now_iso(),
+        "status": "frozen",
+        "blocking_codes": list(blocking_codes),
+        "reason": reason,
+        "refs": list(refs or []),
+    }
+    _dump_yaml(_freeze_state_path(run_root), payload)
+    return payload
 
 
 def issue_capability_token(
@@ -837,6 +991,14 @@ def run_runtime_topology(root: Path, run_root: Path, *, platform: str) -> dict[s
 
 def run_dispatch_readiness(root: Path, run_root: Path, *, platform: str) -> dict[str, Any]:
     run_root = run_root.resolve()
+    freeze_blockers = _freeze_blockers(run_root)
+    if freeze_blockers:
+        return _guard_payload(
+            stage="dispatch_readiness",
+            status="blocked",
+            blockers=freeze_blockers,
+            paths={"run_root": _norm(run_root), "freeze_state": _norm(_freeze_state_path(run_root))},
+        )
     case_root = run_root.parent.parent
     entry_gate_path = case_root / "artifacts" / "entry_gate.yaml"
     intake_gate_path = run_root / "artifacts" / "intake_gate.yaml"
@@ -1005,6 +1167,20 @@ def run_dispatch_specialist(
     )
     action_chain = _action_chain_path(root, run_root)
     runtime = _runtime_fields(run_root)
+    runtime_lock = issue_runtime_lock(
+        run_root,
+        agent_id=target_agent,
+        workflow_stage="waiting_for_specialist_brief",
+        context_binding_id=str(runtime.get("context_binding_id") or "ctxbind-default"),
+        context_id=str(runtime.get("context_id") or "default"),
+        runtime_owner=target_agent,
+        capture_ref=str(runtime.get("capture_ref") or ""),
+        canonical_anchor_ref=str(runtime.get("canonical_anchor_ref") or ""),
+        baton_ref=str(runtime.get("baton_ref") or ""),
+        allowed_tool_classes=["live_investigation", "artifact_write"],
+        allowed_output_paths=[allowed_note_path],
+        ttl_seconds=ttl_seconds,
+    )
     dispatch_event_id = f"evt-dispatch-{_sanitize_token(target_agent)}-{_now_ms()}"
     _append_event(
         action_chain,
@@ -1024,6 +1200,7 @@ def run_dispatch_specialist(
                 "target_agent": target_agent,
                 "objective": objective,
                 "capability_token_ref": token["path"],
+                "runtime_lock_ref": runtime_lock["path"],
                 "delegation_status": "native_dispatch",
                 "fallback_execution_mode": "wrapper",
                 "degraded_reasons": [],
@@ -1059,11 +1236,13 @@ def run_dispatch_specialist(
             "run_root": _norm(run_root),
             "action_chain": _norm(action_chain),
             "capability_token": token["path"],
+            "runtime_lock": runtime_lock["path"],
         },
         extra={
             "target_agent": target_agent,
             "objective": objective,
             "capability_token": token,
+            "runtime_lock": runtime_lock,
         },
     )
     _write_guard_artifact(run_root, "dispatch_specialist.yaml", payload)
@@ -1078,6 +1257,15 @@ def run_specialist_feedback(
     now_ms: int | None = None,
 ) -> dict[str, Any]:
     run_root = run_root.resolve()
+    freeze_blockers = _freeze_blockers(run_root)
+    if freeze_blockers:
+        return _guard_payload(
+            stage="specialist_feedback",
+            status="blocked",
+            blockers=freeze_blockers,
+            paths={"run_root": _norm(run_root), "freeze_state": _norm(_freeze_state_path(run_root))},
+        )
+
     topology_path = run_root / "artifacts" / "runtime_topology.yaml"
     runtime_topology = _read_yaml(topology_path) if topology_path.is_file() else {}
     runtime_topology = runtime_topology if isinstance(runtime_topology, dict) else {}
@@ -1126,6 +1314,9 @@ def run_specialist_feedback(
             None,
         )
         if feedback is not None:
+            lock_ref = str(payload.get("runtime_lock_ref") or "").strip()
+            if lock_ref:
+                release_runtime_lock(run_root, lock_ref=lock_ref)
             continue
         age_ms = now_value - dispatch_ts
         if age_ms > timeout_ms:
@@ -1168,6 +1359,14 @@ def run_specialist_feedback(
     artifact_path = _write_guard_artifact(run_root, "specialist_feedback.yaml", payload)
     if blockers:
         _emit_quality_check(root, run_root, stage="specialist-feedback", payload=payload, artifact_path=artifact_path)
+        _emit_process_deviation(
+            root,
+            run_root,
+            deviation_code="BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT",
+            summary="specialist feedback timeout froze the run",
+            refs=[f"{item['target_agent']}@{item['dispatch_event_id']}" for item in pending[:8]],
+            artifact_path=artifact_path,
+        )
     return payload
 
 
@@ -1177,10 +1376,20 @@ def run_final_audit(root: Path, run_root: Path, *, platform: str) -> dict[str, A
 
 def run_render_user_verdict(root: Path, run_root: Path) -> dict[str, Any]:
     run_root = run_root.resolve()
+    freeze_blockers = _freeze_blockers(run_root)
+    if freeze_blockers:
+        return _guard_payload(
+            stage="user_verdict",
+            status="blocked",
+            blockers=freeze_blockers,
+            paths={"run_root": _norm(run_root), "freeze_state": _norm(_freeze_state_path(run_root))},
+        )
+
     compliance_path = run_root / "artifacts" / "run_compliance.yaml"
     report_md = run_root / "reports" / "report.md"
     visual_report = run_root / "reports" / "visual_report.html"
     fix_verification = run_root / "artifacts" / "fix_verification.yaml"
+    receipt_path = _finalization_receipt_path(run_root)
 
     blockers: list[dict[str, Any]] = []
     compliance = _read_yaml(compliance_path) if compliance_path.is_file() else {}
@@ -1220,18 +1429,50 @@ def run_render_user_verdict(root: Path, run_root: Path) -> dict[str, Any]:
             paths={"run_root": _norm(run_root), "run_compliance": _norm(compliance_path)},
         )
 
+    active_locks: list[str] = []
+    lock_store = _runtime_lock_store(run_root)
+    if lock_store.is_dir():
+        for lock_path in sorted(lock_store.glob("*.yaml")):
+            data = _read_yaml(lock_path)
+            if isinstance(data, dict) and str(data.get("status") or "").strip() == "active":
+                active_locks.append(_norm(lock_path))
+    if active_locks:
+        return _guard_payload(
+            stage="user_verdict",
+            status="blocked",
+            blockers=[{
+                "code": "BLOCKED_ACTIVE_RUNTIME_LOCKS",
+                "reason": "render_user_verdict requires all runtime locks to be released",
+                "refs": active_locks[:8],
+            }],
+            paths={"run_root": _norm(run_root), "runtime_locks": _norm(lock_store)},
+        )
+
+    receipt = {
+        "schema_version": FINALIZATION_RECEIPT_SCHEMA,
+        "generated_by": "harness_guard",
+        "generated_at": _now_iso(),
+        "status": "issued",
+        "run_compliance": _norm(compliance_path),
+        "report_md": _norm(report_md),
+        "visual_report_html": _norm(visual_report),
+        "fix_verification": _norm(fix_verification),
+    }
+    _dump_yaml(receipt_path, receipt)
+
     fix_data = _read_yaml(fix_verification)
     if not isinstance(fix_data, dict):
         fix_data = {}
     verdict = str(fix_data.get("verdict") or (fix_data.get("overall_result") or {}).get("verdict") or "").strip()
     overall_status = str((fix_data.get("overall_result") or {}).get("status") or "").strip()
     response_lines = [
-        "当前 run 已完成 debugger 流程。",
+        "DEBUGGER_USER_VERDICT",
         "",
-        f"- 修复判断：{verdict or 'unknown'}",
-        f"- verification_status：{overall_status or 'unknown'}",
-        f"- 报告产物：{_norm(report_md.relative_to(run_root))}, {_norm(visual_report.relative_to(run_root))}",
-        f"- 合规审计：{_norm(compliance_path.relative_to(run_root))} = passed",
+        f"- verdict: {verdict or 'unknown'}",
+        f"- verification_status: {overall_status or 'unknown'}",
+        f"- reports: {_norm(report_md.relative_to(run_root))}, {_norm(visual_report.relative_to(run_root))}",
+        f"- run_compliance: {_norm(compliance_path.relative_to(run_root))} = passed",
+        f"- finalization_receipt: {_norm(receipt_path.relative_to(run_root))}",
     ]
     payload = {
         "schema_version": GUARD_SCHEMA,
@@ -1249,6 +1490,7 @@ def run_render_user_verdict(root: Path, run_root: Path) -> dict[str, Any]:
             "visual_report_html": _norm(visual_report),
             "run_compliance": _norm(compliance_path),
             "fix_verification": _norm(fix_verification),
+            "finalization_receipt": _norm(receipt_path),
         },
     }
     _write_guard_artifact(run_root, "user_verdict.yaml", payload)
@@ -1397,3 +1639,7 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+
+

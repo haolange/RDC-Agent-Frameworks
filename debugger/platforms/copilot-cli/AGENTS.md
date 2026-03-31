@@ -1,4 +1,4 @@
-﻿# Copilot CLI Workspace Instructions（工作区约束）
+# Copilot CLI Workspace Instructions（工作区约束）
 
 当前目录是 Copilot CLI 的 platform-local 模板。所有角色在进入 role-specific 行为前，都必须先服从本文件与共享 `common/` 约束。
 

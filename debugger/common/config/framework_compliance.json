@@ -6,6 +6,7 @@
   },
   "runtime_artifact_contract": {
     "run_root_layout": "workspace/cases/<case_id>/runs/<run_id>",
+    "adapter_readiness_contract": "common/config/adapter_readiness.json",
     "required_case_files": [
       "workspace/cases/<case_id>/case.yaml",
       "workspace/cases/<case_id>/artifacts/entry_gate.yaml"
@@ -28,6 +29,8 @@
       "BugCard/BugFull reference or DEBUGGER_FINAL_VERDICT"
     ],
     "run_compliance_artifact": "artifacts/run_compliance.yaml",
+    "freeze_state_artifact": "artifacts/freeze_state.yaml",
+    "finalization_receipt_artifact": "artifacts/finalization_receipt.yaml",
     "write_scope_paths": {
       "workspace_control": [
         "workspace/cases/<case_id>/case.yaml",
@@ -208,3 +211,4 @@
     }
   }
 }
+

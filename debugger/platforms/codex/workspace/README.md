@@ -1,4 +1,4 @@
-﻿# 平台本地 `workspace/` 占位说明
+# 平台本地 `workspace/` 占位说明
 
 当前目录是平台本地 `workspace/` 运行区骨架。
 
