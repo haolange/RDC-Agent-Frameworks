@@ -1,21 +1,17 @@
-# Code Buddy Template（平台模板）
+# Code Buddy 模板（平台模板）
 
 <!-- BEGIN GENERATED COMMON-FIRST ADAPTER BLOCK -->
 ## Common-First Adapter Contract
 
-- `common/` + package-local `tools/` are the shared execution kernel; platform folders are adapter shells.
-- Host-visible native surfaces: `plugin`, `agents`, `skills`, `hooks`, `mcp`, `per_agent_model`
-- Target contract comes from `common/config/platform_capabilities.json` and `common/config/framework_compliance.json`; it is not the same as current readiness.
-- Current adapter must satisfy required surfaces: `agents`, `skills`, `hooks`, `mcp`
-- Target contract: `coordination_mode = concurrent_team`, `sub_agent_mode = team_agents`, `peer_communication = direct`
-- Current adapter readiness is tracked separately in `common/config/adapter_readiness.json`: `adapter_in_progress`
-- `status_label` / `local_support` / `remote_support` / `enforcement_layer` describe repo posture only; they do not imply strict readiness.
-- Strict execution must be enforced by shared harness, runtime lock, freeze state, artifact gate, and finalization receipt; not by prompt wording or host marketing text.
-- Notes: Retains concurrent_team/team_agents/direct target contract; strict adapter must move beyond write-and-stop-only hooks.
+- `common/` + package-local `tools/` 是共享执行内核，platform folder 只是 adapter 壳层。
+- 宿主可见的 native surface：`plugin`、`agents`、`skills`、`hooks`、`mcp`、`per_agent_model`。
+- 目标合同来自 `common/config/platform_capabilities.json` 和 `common/config/framework_compliance.json`，不等同于当前 readiness。
+- 当前 adapter 必须满足的 surface：`agents`、`skills`、`hooks`、`mcp`。
+- 目标合同：`coordination_mode = concurrent_team`、`sub_agent_mode = team_agents`、`peer_communication = direct`。
+- 当前 adapter readiness 单独记录在 `common/config/adapter_readiness.json`：`adapter_in_progress`。
+- `status_label` / `local_support` / `remote_support` / `enforcement_layer` 只描述仓库姿态，不代表 strict readiness。
+- 严格执行必须由 shared harness、runtime lock、freeze state、artifact gate 和 finalization receipt 共同约束。
 <!-- END GENERATED COMMON-FIRST ADAPTER BLOCK -->
-
-
-
 
 当前目录是 Code Buddy 的 platform-local 模板。Agent 的目标是使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题。
 
@@ -24,28 +20,22 @@
 - 当前宿主可直接访问本地进程、文件系统与 workspace，默认采用 local-first。
 - 默认入口是 daemon-backed `CLI`；只有用户明确要求按 `MCP` 接入时，才切换到 `MCP`。
 - 任务开始时，Agent 必须向用户说明当前采用的是 `CLI` 还是 `MCP`。
-- 若用户要求 `MCP`，但宿主未配置对应 MCP server，必须直接阻断并提示配置。
 - 当前模板默认不预注册 MCP；若要启用，使用 `.mcp.opt-in.json` 的示例配置显式接入。
 
 使用方式：
 
-1. 将仓库根目录 `debugger/common/` 整体拷贝到当前平台根目录的 `common/`，覆盖占位内容。
-2. 将 `RDC-Agent-Tools` 根目录整包拷贝到当前平台根目录的 `tools/`，覆盖占位内容。
-3. 确认 `tools/` 下存在 `validation.required_paths` 列出的必需文件，并确认零安装入口 `rdx.bat` 与 bundled runtime 已随包覆盖。
-4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot、宿主入口文件与共享文档全部对齐。
-5. 正式发起 debug 前，用户必须先提供至少一份 `.rdc`；可在当前对话上传，或提供宿主当前会话可访问的文件路径。accepted intake 后由 Agent 导入 `workspace/cases/<case_id>/inputs/captures/`。
-6. 使用当前平台根目录下、与 `common/` 和 `tools/` 并列的 `workspace/` 作为运行区。
-7. 完成覆盖后，再在对应宿主中打开当前平台根目录。
-8. 平台启动后默认保持普通对话态；只有用户手动召唤 `rdc-debugger`，才进入调试框架。除 `rdc-debugger` 之外，其他 specialist 默认都是 internal/debug-only。
+1. 将 `debugger/common/` 拷贝到当前平台根目录的 `common/`。
+2. 将 `RDC-Agent-Tools` 根目录拷贝到当前平台根目录的 `tools/`。
+3. 运行 `python common/config/validate_binding.py --strict`。
+4. 使用当前平台根目录下的 `workspace/` 作为运行区。
+5. 平台启动后默认保持普通对话态；只有用户手动召唤 `rdc-debugger`，才进入调试框架。
 
 约束：
 
-- `common/` 默认只保留一个占位文件；正式共享正文仍由顶层 `debugger/common/` 提供，并由用户显式拷入。
+- `common/` 只保留一个占位文件；正式共享正文仍由顶层 `debugger/common/` 提供。
 - 未完成 `debugger/common/` 覆盖前，当前平台模板不可用。
 - 未完成 `debugger/common/` 覆盖、`tools/` 覆盖或 binding 校验前，Agent 必须拒绝执行依赖平台真相的工作。
-- 当前工具 snapshot 必须与 `RDC-Agent-Tools` 当前 catalog 完整对齐，并覆盖 `rd.vfs.*` 导航层、扩展 `rd.session.*`、`rd.core.*` discovery/observability，以及 bounded event-tree 读取语义；其中 `tabular/tsv` 仅作为 projection 支持。
-- 未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断，不得初始化 case/run 或继续 triage、investigation、planning。
-- `workspace/` 预生成空骨架；真实运行产物在平台使用阶段按 case/run 写入。
-- 维护者若重跑 scaffold，必须继续产出 platform-local `common/` 最小占位目录，不得回退到跨级引用。
-- 当前平台按 `pseudo-hooks` 处理；`hooks/hooks.json` 只作为 wrapper 触发面，不被记成 native lifecycle hooks。
-- 结案仍必须依赖共享 harness 与 `artifacts/run_compliance.yaml`，不得把平台侧 hook 配置当作最终裁决。
+- 当前工具 snapshot 必须与 `RDC-Agent-Tools` 当前 catalog 完整对齐，并覆盖 `rd.vfs.*`、`rd.session.*`、`rd.core.*`。
+- 未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断。
+- 当前平台按 `pseudo-hooks` 处理；`hooks/hooks.json` 只作为 wrapper 触发面。
+- 结案仍必须依赖共享 harness 与 `artifacts/run_compliance.yaml`。

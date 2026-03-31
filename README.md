@@ -2,7 +2,7 @@
 
 本仓库是多 framework 仓库，用来承载构建在底层平台能力之上的上层 Agent framework。
 
-它不是直接暴露 platform tools、runtime state 或 tool contract 的独立运行仓库。平台真相、tool catalog、daemon-owned session/runtime 语义由对应的底层工具仓库负责；本仓库只负责上层 framework 的任务编排、角色组织、输出契约与文档治理。
+它不是一个直接暴露 platform tools、runtime state 或 tool contract 的独立运行仓库。平台真相、tool catalog、daemon-owned session/runtime 语义由对应的底层工具仓库负责；本仓库只负责上层 framework 的任务编排、角色组织、输出契约与文档治理。
 
 ## 仓库分层
 

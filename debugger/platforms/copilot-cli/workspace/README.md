@@ -14,6 +14,6 @@
 - `workspace/` 是 Agent 运行区，不要求用户手工把 `.rdc` 预放到这里。
 - 平台包装层中涉及运行区时，应统一把它表述为当前平台根目录下的 `workspace/`。
 - 导入后的原始 `.rdc` 只允许落在 `cases/<case_id>/inputs/captures/`，不得落在 `runs/<run_id>/`
-- standalone `capture open` 只建立 tools-layer session state，不会创建这里的 `case/run`
+- `capture open` 只建立 tools-layer session state，不会创建这里的 `case/run`
 - 这里的 `case/run` 只由已通过的 `rdc-debugger` intake 流程初始化
 - 模板仓库只保留占位骨架，不提交真实运行产物。

@@ -1,4 +1,4 @@
-# Capture Repro Skill
+# 捕获与复现 Skill (Capture Repro)
 
 ## 角色定位
 

@@ -1,4 +1,4 @@
-# Pixel Value Forensics Skill
+# 像素取证 Skill (Pixel Value Forensics)
 
 ## 角色定位
 

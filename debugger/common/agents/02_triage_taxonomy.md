@@ -1,4 +1,4 @@
-# Agent: Triage & Taxonomy（症状分类专家）
+# Agent: 症状分类专家 (Triage & Taxonomy)
 
 **角色**：症状分类专家
 

@@ -1,4 +1,4 @@
-# Debugger Shared Common
+# Debugger 共享内核
 
 `debugger/common/` 是 `debugger` framework 的唯一共享执行内核与真相源。
 它不是平台占位目录，也不是平台模板说明页。用户把顶层 `debugger/common/` 覆盖到某个平台根目录的 `common/` 后，当前 README 就成为该平台运行时 `common/` 的正式入口说明。

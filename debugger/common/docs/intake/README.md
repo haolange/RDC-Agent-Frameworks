@@ -1,4 +1,4 @@
-# Intake Contract（输入合同）
+# 输入契约
 
 本文定义 Debugger framework 唯一的用户输入合同。
 
@@ -6,11 +6,11 @@
 
 平台启动后默认保持普通对话态；只有用户手动召唤 `rdc-debugger`，才进入调试框架。进入框架后，由 `rdc-debugger` 自己完成 preflight、`entry_gate`、补料、intake 规范化、case/run 初始化与 specialist orchestration。
 
-## 0A. Minimal Non-Interactive Preflight
+## 0A. 最小非交互式预检
 
-When the host is running a non-interactive prompt such as `claude -p`, or the prompt only asks for a smoke-style readiness check, `rdc-debugger` may use `preflight_mode: minimal_non_interactive`.
+当宿主运行的是类似 `claude -p` 的非交互式提示，或者提示只是在做冒烟式就绪检查时，`rdc-debugger` 可以使用 `preflight_mode: minimal_non_interactive`。
 
-`minimal_non_interactive` mode must:
+`minimal_non_interactive` 模式必须：
 
 - stop after `intent_gate`
 - stop after `entry_gate`
@@ -19,7 +19,7 @@ When the host is running a non-interactive prompt such as `claude -p`, or the pr
 - declare the chosen entry mode
 - return bounded readiness output
 
-`minimal_non_interactive` mode must not:
+`minimal_non_interactive` 模式不得：
 
 - normalize full intake
 - dispatch specialists
@@ -28,9 +28,9 @@ When the host is running a non-interactive prompt such as `claude -p`, or the pr
 - write `hypothesis_board.yaml`
 - continue inside `rdc-debugger`
 
-Full `case/run` creation remains gated on accepted `rdc-debugger` intake and a passed `entry_gate`.
+完整的 `case/run` 创建仍然要以已接受的 `rdc-debugger` intake 和已通过的 `entry_gate` 为前提。
 
-## 0. Framework Intent Gate
+## 0. 框架意图闸门
 
 所有请求在进入 debugger-specific preflight、capture intake、case/run 初始化之前，必须先由 `rdc-debugger` 做 `intent_gate`。
 

@@ -1,4 +1,4 @@
-# Codex Plugin Wrapper Instructions（外层包装约束）
+# Codex 插件外层约束（工作区约束）
 
 当前目录只负责 Codex plugin 的包装说明，不是运行时 plugin root。
 

@@ -1,4 +1,4 @@
-# Knowledge Evolution Guide（知识演化指南）
+# 知识演化指南
 
 本文档说明 Debugger framework 如何从合规 run 自动生成 candidate、完成 replay / shadow 验证，并在达标后自动切换 active spec。
 

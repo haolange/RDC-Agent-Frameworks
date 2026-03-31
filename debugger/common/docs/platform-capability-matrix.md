@@ -1,4 +1,4 @@
-# Platform Capability Matrix（平台能力矩阵）
+# 平台能力矩阵
 
 本矩阵是 `common/config/platform_capabilities.json` 的文档镜像，不是独立 SSOT。
 

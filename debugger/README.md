@@ -1,13 +1,13 @@
-﻿# RenderDoc/RDC GPU Debug（调试框架）
+# RenderDoc/RDC GPU Debug（调试框架）
 
 `debugger/` 是 `RDC-Agent-Frameworks` 中面向 RenderDoc/RDC GPU 调试场景的专属 framework 根目录。
-本 framework 依赖的 `Tools` 真相边界聚焦于“打开 `.rdc` 后做离线 replay / 调试 / 导出”，不把任意 app 控制面视为默认公开能力。
-这里定义 `debugger` 自身的运行前提、共享运行时文档入口、平台模板使用方式与维护者文档边界；仓库根 README 不承载这些规则。
+本 framework 依赖的 `Tools` 真相边界聚焦于“打开 `.rdc` 后做离线 replay、调试和导出”，不把任意 app 控制面视为默认公开能力。
+这里定义 `debugger` 自身的运行前提、共享运行时文档入口、平台模板使用方式与维护者文档边界；仓库根 `README.md` 不承载这些规则。
 
 当前 `shader` 相关能力已把 raw `SPIR-V Asm` 纳入现有 `rd.shader.*` tool 的正式扩展面：
 
 - 推荐工作流是 `rd.shader.get_disassembly(target="SPIR-V ASM") -> rd.shader.edit_and_replace(source_text|diff_text, source_target="SPIR-V ASM", source_encoding="spirvasm") -> validate -> rd.shader.revert_replacement`。
-- 这条链要配套多点验证。raw asm 精确 patch 成功，只能证明工具链具备等价编辑/应用能力，不代表当前删掉的 `RelaxedPrecision` decoration 一定就是正确修复；样本级 bisect 仍要看多个像素点与回滚后一致性。
+- 这条链需要配套多点验证。raw asm 精确 patch 成功，只能证明工具链具备等价编辑和应用能力，不代表当前删掉的 `RelaxedPrecision` decoration 一定就是正确修复；样本级 bisect 仍要看多个像素点与回滚后一致性。
 - 这条链解决的是精确 IR patch / apply / revert 语义，不等价于 `qrenderdoc` 主视窗的最终 framebuffer 观察链；若 UI 主视图与 `rd.export.screenshot` 不一致，应单独按 framebuffer 观察问题处理。
 - 当前 `Tools` 已公开 context 绑定 preview：它只给人类同步观察 `current_session_id + active_event_id`，不进入 framework 的 gate / evidence / fix verification 主真相链。
 - framework 如需向用户解释当前观察窗口，可读取 `rd.session.get_context.preview.display` 中的 `output_slot`、`framebuffer_extent`、`viewport_rect`、`scissor_rect` 与 `window_rect`；这些字段只属于 human observer surface，不提升为 structure truth。
@@ -20,13 +20,13 @@
 2. 将 `RDC-Agent-Tools` 根目录整包拷贝到目标平台根目录的 `tools/`。
 3. 确认 `tools/` 下存在 `validation.required_paths` 列出的必需文件：`README.md`、`docs/tools.md`、`docs/session-model.md`、`docs/agent-model.md`、`spec/tool_catalog.json`、`rdx.bat`、`binaries/windows/x64/manifest.runtime.json`、`binaries/windows/x64/python/python.exe`。
 4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot 与宿主入口文件全部对齐。
-5. 先提供至少一份 `.rdc`：可在当前对话上传，或提供宿主当前会话可访问的文件路径。
+5. 先提供至少一份 `.rdc`：可以在当前对话上传，也可以提供宿主当前会话可访问的文件路径。
 
 补充约束：
 
 - `platform_adapter.json` 中的 `paths.tools_source_root` 固定为 `tools`；它只表示 package-local source payload，不是 live runtime 目录或手工绑定步骤。
 - source repo 中的 `tools/` 仍是平台模板占位目录；正式工具真相只来自复制后的平台包根目录 `tools/`。
-- 当前 `Tools` 的正式用户入口是 `tools/rdx.bat`；若宿主按 `MCP` 接入，应通过 `cmd /c tools/rdx.bat --non-interactive mcp` 或等价包装调用，而不是把系统 `Python` 当成正式前提。
+- 当前 `Tools` 的正式用户入口是 `tools/rdx.bat`；若宿主按 `MCP` 接线，应通过 `cmd /c tools/rdx.bat --non-interactive mcp` 或等价包装调用，而不是把系统 `Python` 当成正式前提。
 - `rd.vfs.*` 是只读导航层，用于 browse-only 结构探索；精确调试、导出与状态变更必须回到 canonical `rd.*`。
 - `tabular/tsv` 只是 projection/summary 格式，用于提升扫描效率，不表示语义重要度排序。
 - 当前已重新验证的闭环包括 package-local `tools/` + local-first 工具链，以及 Android remote-only 的 daemon / `MCP` 最小 bootstrap 主链：`rd.remote.connect -> rd.remote.ping -> rd.capture.open_replay`。
@@ -37,7 +37,7 @@
 
 - Agent 不得进入依赖平台真相的工作。
 - 尚未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 阻断，不得初始化 case/run 或继续调查。
-- `README`、`AGENT_CORE`、skills 与平台模板都只能提供 framework 约束，不能替代 `Tools` 真相。
+- `README.md`、`AGENT_CORE.md`、skills 与平台模板都只能提供 framework 约束，不能替代 `Tools` 真相。
 
 ## 文档边界
 
@@ -74,7 +74,7 @@
 4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot 与宿主入口文件都已对齐。
 5. 完成覆盖后，在对应宿主中打开该平台根目录。
 6. 正常用户请求从 `rdc-debugger` 发起；`rdc-debugger` 与其他 specialist 角色默认是 internal/debug-only。
-7. 发起 debug 任务时，用户必须先提供一份或多份 `.rdc`；可在当前对话上传，或提供宿主当前会话可访问的文件路径。
+7. 发起 debug 任务时，用户必须先提供一份或多份 `.rdc`；可以在当前对话上传，也可以提供宿主当前会话可访问的文件路径。
 
 说明：
 

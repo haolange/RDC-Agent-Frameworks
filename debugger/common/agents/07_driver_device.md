@@ -1,4 +1,4 @@
-# Agent: Driver / Device Specialist（驱动与设备差异分析专家）
+# Agent: 驱动与设备差异分析专家 (Driver / Device Specialist)
 
 **角色**：驱动与设备差异分析专家
 

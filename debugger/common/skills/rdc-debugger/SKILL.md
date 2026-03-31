@@ -3,7 +3,7 @@ name: rdc-debugger
 description: Public main skill for the RenderDoc/RDC GPU debugger framework. Use when the user wants defect diagnosis, root-cause analysis, regression explanation, or fix verification for a GPU rendering issue from one or more `.rdc` captures. This skill owns intent gate classification, preflight, missing-input collection, intake normalization, case/run initialization, specialist dispatch, and verdict gating; it is the only framework classifier and the only normal user-facing entry.
 ---
 
-# RDC Debugger
+# RDC 调试器 (RDC Debugger)
 
 ## 目标
 
@@ -26,9 +26,9 @@ description: Public main skill for the RenderDoc/RDC GPU debugger framework. Use
 13. 直接决定 specialist 分派、阶段推进与最终质量门。
 14. 在 case/run 已创建后，从 `hypothesis_board.yaml` 读取并持续回显当前 task/progress。
 
-## Role Whitelist Protocol
+## 权限白名单协议
 
-### Allowed Responsibilities
+### 允许职责
 
 - 执行 `intent_gate`
 - 执行 preflight / entry gate / intake gate
@@ -37,32 +37,32 @@ description: Public main skill for the RenderDoc/RDC GPU debugger framework. Use
 - 决定 specialist dispatch、workflow stage transition、timeout、redispatch
 - 在所有 gate 满足后推进 skeptic / curator
 
-### Forbidden Responsibilities
+### 禁止职责
 
 - 不在 `waiting_for_specialist_brief` 期间替 specialist 做 live investigation
 - 不跳过 skeptic / curator gate
 - 不把 remote blocker 留到 patch/debug 之后再补写
 - 不把 Tools runtime truth 改写成 framework 自己猜的能力结论
 
-### Writable Scope
+### 可写范围
 
 - `workspace_control`
 
-### Live RD Permission
+### 实时 RD 权限
 
 - 仅限 orchestrator 自身被允许执行的 gate / setup / bounded inspection
 - 在 `waiting_for_specialist_brief` 期间禁止继续 specialist-style live `rd.*`
 
-### Dispatch Permission
+### 调度权限
 
 - 允许
 
-### Final Verdict / Report Permission
+### 最终 verdict / report 权限
 
 - 允许推进 final gate
 - 不直接承担 curator 报告写入，除非 `single_agent_by_user`
 
-## Formal Workflow State Machine
+## 正式工作流状态机
 
 主流程固定为：
 
@@ -93,7 +93,7 @@ remote run 额外要求先完成：
 
 如被 capability 阻断，必须进入 truthful-fail 路径，而不是继续 patch/debug。
 
-## Intent Gate 独占权
+## 意图门禁独占权
 
 `intent_gate` 只允许由 `rdc-debugger` 的主入口 LLM 执行。
 
@@ -115,9 +115,9 @@ remote run 额外要求先完成：
 
 7. `../../docs/cli-mode-reference.md`
 
-## Workflow
+## 工作流
 
-### 1. Intent Gate
+### 1. 意图门禁
 
 在任何 debugger-specific preflight、capture intake、case/run 初始化和 specialist 分派之前，先做 `intent_gate`。
 
@@ -205,7 +205,7 @@ remote run 额外要求先完成：
 - 不创建 case/run
 - 不写 `hypothesis_board.yaml`
 
-### 2. Preflight
+### 2. 预检
 
 在进入任何平台真相相关工作前，先检查：
 
@@ -221,11 +221,11 @@ remote run 额外要求先完成：
 - 只输出缺失项与补齐动作
 - 不替用户模拟已完成的 binding 结果
 
-#### 2.1 Minimal Non-Interactive Preflight
+#### 2.1 最小非交互预检
 
-When the host is running a non-interactive prompt such as `claude -p`, or the prompt explicitly asks for a smoke-style readiness check, you may use `preflight_mode: minimal_non_interactive`.
+当宿主运行的是非交互式提示，例如 `claude -p`，或者提示明确要求 smoke 风格的就绪检查时，可以使用 `preflight_mode: minimal_non_interactive`。
 
-In `minimal_non_interactive` mode, stop after:
+? `minimal_non_interactive` 模式下，只能做到以下步骤为止：
 
 - `intent_gate`
 - setup verification
@@ -233,7 +233,7 @@ In `minimal_non_interactive` mode, stop after:
 - entry mode declaration
 - bounded readiness output
 
-Do not do any of the following in `minimal_non_interactive` mode:
+? `minimal_non_interactive` 模式下，不得执行以下事项：
 
 - deep analysis
 - specialist dispatch
@@ -241,7 +241,7 @@ Do not do any of the following in `minimal_non_interactive` mode:
 - `case/run` creation
 - `workspace/` writes
 
-Recommended bounded readiness output fields:
+建议输出的就绪字段：
 
 - `preflight_mode`
 - `intent_gate.decision`
@@ -251,7 +251,7 @@ Recommended bounded readiness output fields:
 - `readiness`
 - `next_blocker`
 
-### 3. Intake Completeness
+### 3. 输入齐备性
 
 你必须显式检查以下输入是否齐备：
 
@@ -273,9 +273,9 @@ Recommended bounded readiness output fields:
 - 在补料阶段，不创建 `case_id`、`run_id`、`workspace_run_root`、`case_input.yaml` 或 `hypothesis_board.yaml`
 - 补料阶段的动态状态只存在于当前会话 / 主面板，不落盘到 `workspace/`
 
-### 4. Handoff Gate
+### 4. 交接门禁
 
-Only after this full handoff gate is satisfied may `rdc-debugger` initialize `workspace/case/run`.
+
 
 只有当以下条件同时满足时，你才可以把任务交给 `rdc-debugger`：
 
@@ -326,9 +326,9 @@ intent_gate:
   redirect_target: ""
 ```
 
-### 4.1 Immediate Case/Run Initialization
+### 4.1 立即初始化 case/run
 
-Only when all of the following are true may `rdc-debugger` initialize `case_id`, `run_id`, and `../workspace/cases/<case_id>/runs/<run_id>/notes/hypothesis_board.yaml`:
+只有满足以下条件，`rdc-debugger` 才能初始化 `case_id`、`run_id` 以及 `../workspace/cases/<case_id>/runs/<run_id>/notes/hypothesis_board.yaml`：
 
 - `intent_gate.decision = debugger`
 - preflight passed
@@ -336,7 +336,7 @@ Only when all of the following are true may `rdc-debugger` initialize `case_id`,
 - `session.goal` is normalized
 - at least one importable `.rdc` is available
 
-Hard rules:
+硬规则：
 
 - standalone tools-layer `capture open` is not sufficient
 - initialize `case_id` and `run_id` immediately after accepted intake
@@ -351,7 +351,7 @@ Hard rules:
 - triage 的历史案例匹配与方向建议只提供 routing hints；是否采纳、派哪些 specialist、按什么顺序推进，仍由 `rdc-debugger` 决定
 - triage 提供的 BugCard / BugFull 相似案例不得替代当前 run 的 `causal_anchor`、live evidence 或 `fix_verification`
 
-### 4.2 Intake Gate Output
+### 4.2 Intake Gate 输出
 
 `intake_gate` 是 Codex / staged_handoff 平台的起跑门禁。
 
@@ -379,7 +379,7 @@ Hard rules:
   - `notes/hypothesis_board.yaml`
   - `hypothesis_board.intent_gate.decision = debugger`
 
-### 4.3 Tool Contract Reminder
+### 4.3 工具契约提醒
 
 - `rd.texture.get_data`
   - 只用于数值 readback / container artifact
@@ -388,7 +388,7 @@ Hard rules:
 - `rd.export.texture`
   - 是唯一的图片导出入口
 
-## Panel / Progress 规则
+## 面板 / 进度规则
 
 在 capture intake 成功并创建 case/run 后，用户侧进度展示以：
 
@@ -410,7 +410,7 @@ Hard rules:
 - `intent_gate.confidence`
 - `intent_gate.rationale`
 
-specialist dispatch 后的最小 progress contract：
+specialist dispatch 后的最小 进度契约：
 
 - 主 agent 必须先把 run 状态表述为 `waiting_for_specialist_brief`
 - specialist 至少回填四类阶段状态：`accepted`、`current_task`、`blocking_issues`、`completed_handoff`

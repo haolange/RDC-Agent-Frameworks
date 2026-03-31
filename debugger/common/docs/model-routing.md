@@ -1,4 +1,4 @@
-# Model Routing（模型路由）
+# 模型路由
 
 本文定义 Debugger framework 中角色到模型族的唯一权威路由。
 

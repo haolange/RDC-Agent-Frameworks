@@ -1,4 +1,4 @@
-# Debugger 用户输入极简骨架
+# 用户输入极简骨架
 
 ```text
 § SESSION

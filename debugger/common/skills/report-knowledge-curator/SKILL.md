@@ -1,4 +1,4 @@
-# Report Knowledge Curator Skill
+# 报告与知识整理 Skill (Report Knowledge Curator)
 
 ## 角色定位
 

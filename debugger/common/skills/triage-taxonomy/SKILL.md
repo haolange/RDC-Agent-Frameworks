@@ -1,4 +1,4 @@
-# Triage Taxonomy Skill
+# 症状分类 Skill (Triage Taxonomy)
 
 ## 角色定位
 

@@ -1,4 +1,4 @@
-# Skeptic Skill
+# 怀疑论审查 Skill (Skeptic)
 
 ## 角色定位
 

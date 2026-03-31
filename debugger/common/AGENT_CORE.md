@@ -1,4 +1,4 @@
-# RenderDoc/RDC GPU Debug Agent Core（框架核心约束）
+# RenderDoc/RDC GPU Debug 框架核心约束
 
 本文件是 `RenderDoc/RDC GPU Debug` framework 的全局约束入口。
 
@@ -50,7 +50,7 @@
   - `progress_summary`
   - `next_actions`
 
-## 2. Mandatory Intent Gate
+## 2. 必须执行的意图闸门
 
 所有进入 `debugger` 的正式请求，在做 debugger-specific preflight、capture intake、case/run 初始化与 specialist 分派之前，必须先由 `rdc-debugger` 执行 `intent_gate`。
 
@@ -67,7 +67,7 @@
 
 只有当 `intent_gate.decision=debugger` 时，后续 debugger-specific preflight、capture、handoff 才允许继续。
 
-## 3. Mandatory Entry Gate
+## 3. 必须执行的入口闸门
 
 `intent_gate` 通过后，不是直接创建 run，而是先执行 case 级 `entry_gate`。
 
@@ -83,7 +83,7 @@
   - `BLOCKED_REMOTE_PREREQUISITE`
 - framework 关于 local/remote 的正式支持级别，只能以 `common/config/platform_capabilities.json` 与 `common/config/runtime_mode_truth.snapshot.json` 为准
 
-## 3.1 Formal Workflow State Machine
+## 3.1 正式工作流状态机
 
 主流程固定为：
 
@@ -108,7 +108,7 @@
 - 无 curator 最终写入不算 finalized
 - remote blocker 和 truthful-fail verdict 必须在 patch/debug 前落盘
 
-## 3.2 Main-Agent Overreach Is A Process Deviation
+## 3.2 主 Agent 越权属于流程偏差
 
 当 `coordination_mode=staged_handoff` 且 workflow 处于 `waiting_for_specialist_brief` 时，主 agent 只允许：
 
@@ -127,7 +127,7 @@
 - `event_type: process_deviation`
 - `blocking_code: PROCESS_DEVIATION_MAIN_AGENT_OVERREACH`
 
-## 4. Mandatory Setup Verification
+## 4. 必须执行的环境验证
 
 所有需要平台真相的工作在开始前，必须先验证以下两项均已就绪：
 
@@ -163,7 +163,7 @@
 3. 不允许把 `CLI` wrapper、skill 文本、平台模板说明或模型记忆当成 Tools 真相替代品。
 4. 不允许尝试搜索替代工具路径、降级处理或用其他方式绕过本检查。
 
-## 5. Mandatory Capture Intake
+## 5. 必须执行的 Capture Intake
 
 所有进入 `RenderDoc/RDC GPU Debug` workflow 的任务，在开始前必须先取得至少一份用户提供的、可导入的 `.rdc`。
 
@@ -185,7 +185,7 @@
 当前任务缺少必需的 capture 输入：本框架只接受基于 RenderDoc `.rdc` 的第一性调试。请先提供一份或多份 `.rdc` 文件：可以在当前对话上传，或提供宿主当前会话可访问的文件路径；收到并导入 capture 前，Agent 不会继续进行 debug、调查分派或根因判断。
 ```
 
-## 6. Mandatory Intake Normalization
+## 6. 必须执行的 Intake 规整
 
 用户可以用自由语言描述问题，但 framework 只承认七段式 intake 被规范化后的 `case_input.yaml`。
 
@@ -233,7 +233,7 @@
   - `baseline.source` 必须为 `historical_good`
   - `baseline.provenance` 必须包含 known-good build 或 revision
 
-## 6. Global Entry Contract
+## 6. 全局入口契约
 
 内部 `agent_id` SSOT：
 
@@ -254,7 +254,7 @@
 - 平台启动后默认保持普通对话态；只有用户手动召唤 `rdc-debugger`，才进入 debugger workflow。
 - specialist 不得绕过 `rdc-debugger` 重新定义任务 intake、验证等级、裁决门槛或 delegation policy。
 
-## 7. Global Workflow
+## 7. 全局工作流
 
 统一工作流：
 
@@ -305,9 +305,9 @@
 - 超过框架等待预算仍未收到阶段回报时，必须进入 `BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT` 或等价阻断状态，而不是 fallback 为 orchestrator 自执行
 - direct RenderDoc Python fallback 只允许 local backend；若发生，必须记录 `fallback_execution_mode=local_renderdoc_python` 与 `WRAPPER_DEGRADED_LOCAL_DIRECT`
 
-## 8. Hard Contracts
+## 8. 硬性契约
 
-### 8.1 Causal Anchor
+### 8.1 因果锚点
 
 在做任何根因级裁决前，必须先建立 `causal_anchor`。
 
@@ -319,7 +319,7 @@
 - 结构化 `rd.*` 证据优先级高于视觉叙事
 - 证据冲突时必须进入 `BLOCKED_REANCHOR`
 
-### 8.2 Reference Contract
+### 8.2 参考契约
 
 `reference_contract` 是语义修复验证的唯一合同。
 
@@ -338,7 +338,7 @@
 - `probe_set` 缺失时，只允许 fallback 级语义验证
 - `visual_comparison` 不得单独产生 strict semantic pass
 
-### 8.3 Session / Runtime Coordination
+### 8.3 Session / Runtime 协调
 
 - `session_id` 必须来自 replay session 打开链路
 - 进入根因分析前必须先建立 `causal_anchor`
@@ -351,7 +351,7 @@
 - 跨 agent 或跨轮次移交 live 调试上下文时，必须提供可重建的 `runtime_baton`
 - `runtime_baton` 的恢复顺序与语义以 `common/docs/runtime-coordination-model.md` 为准
 
-### 8.4 Workspace Contract
+### 8.4 Workspace 契约
 
 - `common/` 是唯一共享真相
 - `../workspace/` 是 case/run 运行区
@@ -443,7 +443,7 @@
 - `curator_agent` 负责 `workspace_reports`、`session_artifacts` 与 `knowledge_library`
 - `rdc-debugger` 只在 `single_agent_by_user` 下承担调查与最终报告写入；该模式必须显式记录为用户选择，不得伪装成 native specialist / curator dispatch
 
-### 8.5 Artifact / Gate Contract
+### 8.5 Artifact / Gate 契约
 
 结案前必须具备：
 
@@ -484,7 +484,7 @@
 - `semantic_verification.status=fallback_only` 时，严格结案无效
 - preview 不进入 `entry_gate.yaml`、`intake_gate.yaml`、`runtime_topology.yaml`、`fix_verification.yaml`、`session_evidence.yaml` 的主裁决字段；如报告里提及，只能是 narrative observation
 
-## 9. Canonical References
+## 9. 权威参考
 
 共享 framework 入口：
 
@@ -511,4 +511,3 @@
 - `common/agents/*.md`
 - `common/skills/rdc-debugger/SKILL.md`
 - `common/skills/*/SKILL.md`
-

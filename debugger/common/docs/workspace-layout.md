@@ -1,4 +1,4 @@
-# Workspace Layout
+# 工作区布局契约
 
 本文定义 debugger framework 的 `workspace/` 合同。
 

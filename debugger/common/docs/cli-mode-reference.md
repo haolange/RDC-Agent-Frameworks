@@ -1,4 +1,4 @@
-# RenderDoc/RDC GPU Debug Local-First CLI Reference（本地优先 CLI 参考）
+# RenderDoc/RDC GPU Debug 本地优先命令行参考
 
 本文用于说明 framework 在 local-first 场景下如何依赖 daemon-backed `CLI` 入口。
 

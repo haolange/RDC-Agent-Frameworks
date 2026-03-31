@@ -1,4 +1,4 @@
-# Shader IR Skill
+# 着色器与 IR Skill (Shader IR)
 
 ## 角色定位
 

@@ -1,4 +1,4 @@
-# Platform Capability Model
+# 平台能力模型
 
 本文解释 `common/config/platform_capabilities.json` 的语义模型。JSON 是唯一权威源；本文只负责把字段含义展开为维护者可读说明。
 

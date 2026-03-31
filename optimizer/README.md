@@ -8,7 +8,7 @@
 
 Optimizer 的目标不是“给建议”，而是形成可复用、可验证的**优化闭环**：
 
-- **可量化瓶颈归因**：给出 Top bottleneck，并解释其机制（不是“可能”）。
+- **可量化瓶颈归因**：给出最主要的 bottleneck，并解释其机制（不是“可能”）。
 - **实验闭环**：至少完成一个反事实验证（开关/patch/配置 A/B），并给出收益预估与验证数据。
 
 Optimization 的主驱动是“性能预算不变量”（frame time / bandwidth / overdraw / occupancy）：

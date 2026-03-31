@@ -1,4 +1,4 @@
-# Pass Graph Pipeline Skill
+# 命令列表与管线 Skill (Pass Graph Pipeline)
 
 ## 角色定位
 
