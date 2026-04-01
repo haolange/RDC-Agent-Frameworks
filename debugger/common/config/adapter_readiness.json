@@ -17,64 +17,32 @@
     "wave1_strict": [
       "codex",
       "claude-code",
-      "code-buddy",
-      "copilot-ide"
+      "code-buddy"
     ],
     "wave2_adapter": [
-      "copilot-cli",
-      "cursor",
-      "manus"
-    ],
-    "wave3_surface": [
-      "claude-desktop",
-      "codex_plugin"
+      "copilot-cli"
     ]
   },
   "platforms": {
-    "code-buddy": {
-      "current_adapter_readiness": "adapter_in_progress",
-      "strict_runtime_target": true,
-      "notes": "Retains concurrent_team/team_agents/direct target contract; strict adapter must move beyond write-and-stop-only hooks."
-    },
     "claude-code": {
       "current_adapter_readiness": "adapter_in_progress",
       "strict_runtime_target": true,
       "notes": "Retains concurrent_team/team_agents/direct target contract; strict adapter depends on shared harness and host hook wiring."
     },
-    "copilot-cli": {
-      "current_adapter_readiness": "adapter_in_progress",
-      "strict_runtime_target": false,
-      "notes": "Wave 2 adapter target focused on lifecycle hooks, MCP wiring, and truthful gating."
-    },
-    "copilot-ide": {
+    "code-buddy": {
       "current_adapter_readiness": "adapter_in_progress",
       "strict_runtime_target": true,
-      "notes": "Wave 1 strict target via external common-first enforcement, not assumed IDE-native hard hooks."
-    },
-    "claude-desktop": {
-      "current_adapter_readiness": "planned",
-      "strict_runtime_target": false,
-      "notes": "Consumer and connector surface target; truthful blocking only."
-    },
-    "manus": {
-      "current_adapter_readiness": "adapter_in_progress",
-      "strict_runtime_target": false,
-      "notes": "Research and workflow adapter target; do not promote to strict runtime without separate validation."
+      "notes": "Retains concurrent_team/team_agents/direct target contract; strict adapter must move beyond write-and-stop-only hooks."
     },
     "codex": {
       "current_adapter_readiness": "adapter_in_progress",
       "strict_runtime_target": true,
       "notes": "Wave 1 strict target using runtime_guard plus common-first control interfaces."
     },
-    "codex_plugin": {
-      "current_adapter_readiness": "planned",
-      "strict_runtime_target": false,
-      "notes": "Installable packaging surface; strict runtime not targeted in current wave."
-    },
-    "cursor": {
+    "copilot-cli": {
       "current_adapter_readiness": "adapter_in_progress",
       "strict_runtime_target": false,
-      "notes": "Wave 2 adapter target focused on common-first wrapper correctness before any strict promotion."
+      "notes": "Wave 2 adapter target focused on lifecycle hooks, MCP wiring, and truthful gating."
     }
   }
 }

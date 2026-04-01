@@ -6,13 +6,10 @@
 
 - `spec/`
   - 正式生效的 versioned knowledge store
-  - 由 `registry/active_manifest.yaml`、`spec_registry.yaml`、`objects/`、`policy/`、`ledger/` 组成
 - `library/`
   - run/session 沉淀的共享真相与检索资产
-  - `bugcards/`、`bugfull/`、`sessions/`、索引与图谱
 - `proposals/`
   - 正式 candidate 对象
-  - 会进入 replay、shadow、自动晋升、自动回滚
 
 运行现场仍位于 `../workspace/`，不与 `common/knowledge/` 混写。
 
@@ -21,15 +18,16 @@
 session 级真相固定拆成四层：
 
 - `library/sessions/<session_id>/action_chain.jsonl`
-  - append-only event ledger
 - `library/sessions/<session_id>/session_evidence.yaml`
-  - 当前裁决快照，必须记录 `spec_snapshot_ref`
 - `spec/registry/active_manifest.yaml`
-  - 当前生效 spec 快照指针
 - `../workspace/cases/<case_id>/runs/<run_id>/artifacts/run_compliance.yaml`
-  - 审计派生产物
 
-这四者的角色定义见 [`../docs/truth_store_contract.md`](../docs/truth_store_contract.md)。
+## 新 run 与历史召回
+
+- 每个 `run` 都是独立 session 审计单元
+- reopen / reconnect 产生新的 `session_id` 属于正常行为
+- 新 run 复用的是历史 `action_chain` / `session_evidence` / BugCard / BugFull / reports
+- 历史召回不复用 live handle，不建立第二套 session 镜像结构
 
 ## 自动演化流程
 
@@ -43,17 +41,5 @@ session 级真相固定拆成四层：
 - `session_evidence.yaml`
 - BugCard / BugFull
 - approved counterfactual reviews
-- cross-device fingerprint graph
 
 `report.md` 和 `visual_report.html` 不是知识晋升真相源。
-
-## 与 `workspace/` 的边界
-
-- `common/knowledge/**`：共享真相、候选对象、版本化 spec 和示例
-- `../workspace/cases/<case_id>/runs/<run_id>/**`：run 现场、日志、报告和审计产物
-
-硬规则：
-
-- report 只能引用已经成立的 ledger / snapshot / active spec snapshot
-- `run_compliance.yaml` 只能派生，不能反向充当 session 真相源
-- 正式知识切换只能通过 manifest/registry 指针完成，不得绕过版本库直接改写 active 内容

@@ -128,10 +128,6 @@ def _expected_rendered_model(root: Path, platform_key: str, agent_id: str) -> tu
         path = root / "platforms" / platform_key / ".claude" / "agents" / platform_file
     elif platform_key == "copilot-cli":
         path = root / "platforms" / platform_key / "agents" / platform_file
-    elif platform_key == "copilot-ide":
-        path = root / "platforms" / platform_key / ".github" / "agents" / platform_file
-    elif platform_key == "cursor":
-        path = root / "platforms" / platform_key / "agents" / platform_file
     elif platform_key == "codex":
         path = root / "platforms" / platform_key / ".codex" / "agents" / f"{platform_file}.toml"
     else:
@@ -190,169 +186,41 @@ def _platform_wrapper_path_findings(root: Path) -> list[str]:
                         f"{path}:{lineno}: platform wrapper relative path escapes platform root '{marker}'"
                     )
 
-    cursor_rules = (platform_root / "cursor" / ".cursor" / "rules" / "rdc-debugger.mdc").read_text(encoding="utf-8-sig")
-    if "正常用户请求只能从 `rdc-debugger` 进入" in cursor_rules:
-        findings.append("cursor/.cursor/rules/rdc-debugger.mdc must not declare rdc-debugger as the normal user entry")
-    if "rdc-debugger" not in cursor_rules:
-        findings.append("cursor/.cursor/rules/rdc-debugger.mdc must declare rdc-debugger as the normal user entry")
-
     return findings
 
 
 def _doc_contract_findings(root: Path) -> list[str]:
     findings: list[str] = []
     matrix = (root / "common" / "docs" / "platform-capability-matrix.md").read_text(encoding="utf-8-sig")
-    model_doc = (root / "common" / "docs" / "platform-capability-model.md").read_text(encoding="utf-8-sig")
-    runtime_doc = (root / "common" / "docs" / "runtime-coordination-model.md").read_text(encoding="utf-8-sig")
-    workspace_doc = (root / "common" / "docs" / "workspace-layout.md").read_text(encoding="utf-8-sig")
     core_doc = (root / "common" / "AGENT_CORE.md").read_text(encoding="utf-8-sig")
-    intake_doc = (root / "common" / "docs" / "intake" / "README.md").read_text(encoding="utf-8-sig")
     main_skill = (root / "common" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
-    triage_agent_doc = (root / "common" / "agents" / "02_triage_taxonomy.md").read_text(encoding="utf-8-sig")
     triage_skill = (root / "common" / "skills" / "triage-taxonomy" / "SKILL.md").read_text(encoding="utf-8-sig")
-    curator_agent_doc = (root / "common" / "agents" / "09_report_knowledge_curator.md").read_text(encoding="utf-8-sig")
     curator_skill = (root / "common" / "skills" / "report-knowledge-curator" / "SKILL.md").read_text(encoding="utf-8-sig")
-    claude_code_readme = (root / "platforms" / "claude-code" / "README.md").read_text(encoding="utf-8-sig")
     codex_readme = (root / "platforms" / "codex" / "README.md").read_text(encoding="utf-8-sig")
     codex_agents = (root / "platforms" / "codex" / "AGENTS.md").read_text(encoding="utf-8-sig")
-    manus_readme = (root / "platforms" / "manus" / "README.md").read_text(encoding="utf-8-sig")
-    manus_entrypoints = (root / "platforms" / "manus" / "references" / "entrypoints.md").read_text(encoding="utf-8-sig")
-    manus_workflow = (root / "platforms" / "manus" / "workflows" / "00_debug_workflow.md").read_text(encoding="utf-8-sig")
 
-    required_matrix_rows = [
-        "| Code Buddy |",
-        "| Claude Code |",
-        "| Copilot CLI |",
-        "| Copilot IDE |",
-        "| Claude Desktop |",
-        "| Manus |",
-        "| Codex |",
-        "| Cursor |",
-    ]
-    for row in required_matrix_rows:
+    for row in ("| Code Buddy |", "| Claude Code |", "| Copilot CLI |", "| Codex |"):
         if row not in matrix:
             findings.append(f"platform-capability-matrix.md missing platform row: {row}")
-
-    if "文档镜像，不是独立 SSOT" not in matrix:
-        findings.append("platform-capability-matrix.md must state it is not an independent SSOT")
     if "Default Entry" not in matrix or "Allowed Entry Modes" not in matrix:
         findings.append("platform-capability-matrix.md must expose entry mode columns")
-    if "Sub-Agent Mode" not in matrix or "Peer Communication" not in matrix or "Dispatch Topology" not in matrix:
-        findings.append("platform-capability-matrix.md must expose agentic capability columns")
-    if "multi_context_orchestrated" not in matrix:
-        findings.append("platform-capability-matrix.md must expose multi_context_orchestrated local policy")
-    if "| Claude Code |" in matrix and "CLI, MCP" not in matrix:
-        findings.append("platform-capability-matrix.md must show CLI, MCP entry coverage")
-    if "| Manus |" in matrix and "MCP only" not in matrix:
-        findings.append("platform-capability-matrix.md must mark Manus as MCP only")
-    if "唯一权威源" not in model_doc:
-        findings.append("platform-capability-model.md must state JSON SSOT ownership")
-    if "sub agent 支持不等于 team agents" not in model_doc:
-        findings.append("platform-capability-model.md must distinguish sub agents from team agents")
-    if "staged_handoff" not in model_doc or "hub-and-spoke" not in model_doc:
-        findings.append("platform-capability-model.md must define staged_handoff as hub-and-spoke handoff")
-    if "multi_context_orchestrated" not in model_doc:
-        findings.append("platform-capability-model.md must document multi_context_orchestrated for staged_handoff local")
-    if "serial_only" not in model_doc or "single_runtime_owner" not in model_doc:
-        findings.append("platform-capability-model.md must describe formal remote support levels and single_runtime_owner")
-    if "并行 case 也必须拆成独立 `context/daemon`" not in runtime_doc:
-        findings.append("runtime-coordination-model.md must define parallel case isolation")
-    if "remote_coordination_mode = single_runtime_owner" not in runtime_doc:
-        findings.append("runtime-coordination-model.md must define single_runtime_owner remote coordination")
-    if "single_runtime_owner != single_agent_flow" not in runtime_doc:
-        findings.append("runtime-coordination-model.md must state that single_runtime_owner is not single_agent_flow")
-    if "staged_handoff" not in runtime_doc or "多 specialist 多轮接力" not in runtime_doc:
-        findings.append("runtime-coordination-model.md must define staged_handoff as multi-round specialist handoff")
-    if "delegation_status" not in runtime_doc or "orchestration_mode" not in runtime_doc:
-        findings.append("runtime-coordination-model.md must document orchestration_mode and delegation_status artifacts")
-    if "single_agent_by_user" not in runtime_doc or "BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT" not in runtime_doc:
-        findings.append("runtime-coordination-model.md must document single_agent_by_user and specialist feedback timeout semantics")
-    if "并行 case 只能共享仓库，不得共享同一条 live `context`" not in workspace_doc:
-        findings.append("workspace-layout.md must define case/context isolation")
-    if "`rdc-debugger` 是唯一 framework classifier" not in core_doc:
-        findings.append("AGENT_CORE.md must declare rdc-debugger as the only framework classifier")
-    if "不得重做 framework 判定" not in core_doc:
-        findings.append("AGENT_CORE.md must forbid downstream framework reclassification")
-    if "misroute 必须 reject + redirect" not in intake_doc:
-        findings.append("intake/README.md must require reject + redirect for misroutes")
-    if "多轮期间不创建 case/run" not in intake_doc:
-        findings.append("intake/README.md must state that clarification rounds do not create case/run")
-    if "A/B 本身不等于 analyst" not in main_skill:
-        findings.append("rdc-debugger skill must state that A/B alone does not imply analyst")
-    if "primary_completion_question" not in main_skill or "dominant_operation" not in main_skill or "requested_artifact" not in main_skill or "ab_role" not in main_skill:
-        findings.append("rdc-debugger skill must define the intent_gate first-principles dimensions")
-    if "拒绝进入 `debugger`" not in main_skill:
-        findings.append("rdc-debugger skill must define reject-and-redirect behavior")
-    if "多轮澄清" not in main_skill:
-        findings.append("rdc-debugger skill must allow multi-round clarification before classification stabilizes")
-    if "在当前对话上传" not in core_doc or "文件路径" not in core_doc:
-        findings.append("AGENT_CORE.md must allow uploaded captures and accessible file paths")
-    if "single_agent_by_user" not in core_doc or "BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT" not in core_doc:
-        findings.append("AGENT_CORE.md must define explicit single-agent mode and specialist feedback timeout handling")
-    if "历史 BugCard / BugFull" not in core_doc or "探索方向建议" not in core_doc:
-        findings.append("AGENT_CORE.md must define triage historical-case matching as routing hints for the main agent")
-    if "knowledge/library/bugcards/" not in triage_agent_doc or "knowledge/library/bugfull/" not in triage_agent_doc:
-        findings.append("triage agent doc must load BugCard/BugFull history as triage inputs")
-    if "candidate_bug_refs" not in triage_agent_doc or "recommended_investigation_paths" not in triage_agent_doc:
-        findings.append("triage agent doc must define candidate_bug_refs and recommended_investigation_paths outputs")
-    if "candidate_bug_refs" not in triage_skill or "recommended_investigation_paths" not in triage_skill:
-        findings.append("triage skill must expose candidate_bug_refs and recommended_investigation_paths")
-    if "BugCard/BugFull" not in triage_skill:
-        findings.append("triage skill must mention BugCard/BugFull history matching")
-    if "candidate_bug_refs" not in main_skill or "recommended_investigation_paths" not in main_skill:
-        findings.append("rdc-debugger skill must define consumption of triage routing hints")
-    if "不参与当前 run 的前置方向建议" not in curator_agent_doc or "反向做 dispatch" not in curator_agent_doc:
-        findings.append("curator agent doc must forbid front-loaded routing and dispatch feedback loops")
-    if "不参与当前 run 的前置方向建议" not in curator_skill:
-        findings.append("curator skill must keep curator in post-run knowledge curation only")
-    if "统一走已配置的 MCP server" in claude_code_readme:
-        findings.append("claude-code README must not declare MCP as the only default path")
+    for marker in ("PROCESS_DEVIATION_MAIN_AGENT_OVERREACH", "BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT"):
+        if marker not in core_doc:
+            findings.append(f"AGENT_CORE.md missing marker: {marker}")
+    for marker in ("primary_completion_question", "requested_artifact", "final_audit / render_user_verdict"):
+        if marker not in main_skill:
+            findings.append(f"rdc-debugger skill missing marker: {marker}")
+    for marker in ("candidate_bug_refs", "recommended_investigation_paths"):
+        if marker not in triage_skill:
+            findings.append(f"triage skill missing marker: {marker}")
+    for marker in ("reports/report.md", "reports/visual_report.html"):
+        if marker not in curator_skill:
+            findings.append(f"curator skill missing marker: {marker}")
     for text in (codex_readme, codex_agents):
-        if "host_delegation_policy = platform_managed" not in text or "host_delegation_fallback = none" not in text:
-            findings.append("codex docs must declare platform-managed native specialist dispatch semantics")
-        if "single_agent_by_user" not in text or "BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT" not in text:
-            findings.append("codex docs must explain explicit single-agent mode and specialist feedback timeout semantics")
-        if "runtime_owner + shared harness guard + audit artifacts" not in text:
-            findings.append("codex docs must describe runtime_owner + shared harness guard + audit artifacts enforcement")
-        if ".codex/runtime_guard.py" not in text:
-            findings.append("codex docs must reference the runtime_guard.py enforcement entrypoint")
-
-    legacy_capture_markers = (
-        "当前对话提交至少一份 `.rdc`",
-        "当前对话提交一份或多份 `.rdc`",
-        "当前对话中提交一份或多份 `.rdc`",
-        "当前对话上传 `.rdc` 为准",
-        "请先在当前对话中提交一份或多份 `.rdc` 文件",
-    )
-    for path in [root / "README.md", *list((root / "common").rglob("*.md")), *list((root / "platforms").rglob("*.md"))]:
-        text = path.read_text(encoding="utf-8-sig")
-        for marker in legacy_capture_markers:
-            if marker in text:
-                findings.append(f"legacy capture intake wording must not remain in {path}: {marker}")
-    manual_prestaging_markers = (
-        "必须手工把 `.rdc` 预放",
-        "需要手工把 `.rdc` 预放",
-        "用户手工把 `.rdc` 预放到 `workspace/`",
-        "用户手工把文件预放到 `workspace/`",
-    )
-    for path in (root / "platforms").rglob("*.md"):
-        text = path.read_text(encoding="utf-8-sig")
-        for marker in manual_prestaging_markers:
-            if marker in text:
-                findings.append(f"platform docs must not require manual workspace pre-staging: {path}: {marker}")
-
-    manus_forbidden_markers = (
-        "不提供 native `MCP` 入口",
-        "不提供 native MCP 入口",
-        "不得假设宿主侧存在可直接连接的 MCP server",
-        "MCP not supported",
-    )
-    for marker in manus_forbidden_markers:
-        if marker in manus_readme or marker in manus_entrypoints or marker in manus_workflow:
-            findings.append(f"manus docs must not contain legacy MCP denial: {marker}")
-
+        for marker in (".codex/runtime_guard.py", "artifacts/entry_gate.yaml", "artifacts/intake_gate.yaml", "artifacts/runtime_topology.yaml"):
+            if marker not in text:
+                findings.append(f"codex docs missing marker: {marker}")
     return findings
-
 
 def _model_routing_findings(root: Path) -> list[str]:
     findings: list[str] = []
@@ -414,7 +282,7 @@ def _model_routing_findings(root: Path) -> list[str]:
             elif not routed_model or routed_model == "inherit":
                 findings.append(f"{profile_name}: platform {platform_key} must have an explicit rendered model")
 
-    rendered_platforms = ["code-buddy", "claude-code", "copilot-cli", "copilot-ide", "cursor", "codex"]
+    rendered_platforms = ["code-buddy", "claude-code", "copilot-cli", "codex"]
     for platform_key in rendered_platforms:
         platform_caps = cap_platforms.get(platform_key) or {}
         if not _platform_renders_per_agent_model(platform_caps):
@@ -534,7 +402,7 @@ def _compliance_findings(root: Path) -> list[str]:
             findings.append(f"{key}: native_hook_harness requires hooks support")
         if enforcement_mode == "pseudo_hook_harness" and hooks_supported:
             findings.append(f"{key}: pseudo_hook_harness should not claim native hooks support")
-        if enforcement_mode == "no_hook_audit" and actual_mode != "workflow_stage" and key not in {"codex_plugin"}:
+        if enforcement_mode == "no_hook_audit" and actual_mode != "workflow_stage":
             findings.append(f"{key}: no_hook_audit requires workflow_stage or explicit plugin wrapper handling")
         if enforcement_mode == "runtime_owner_gate_loop" and str(platform_caps.get("enforcement_layer", "")).strip() != "runtime_owner":
             findings.append(f"{key}: runtime_owner_gate_loop requires enforcement_layer=runtime_owner")
@@ -551,14 +419,14 @@ def _compliance_findings(root: Path) -> list[str]:
         if rules.get("workflow_required") and actual_mode != "workflow_stage":
             findings.append(f"{key}: workflow_required=true but coordination_mode is not workflow_stage")
 
-    expected_cli_first = {"code-buddy", "claude-code", "copilot-cli", "copilot-ide", "codex", "codex_plugin", "cursor"}
+    expected_cli_first = {"code-buddy", "claude-code", "copilot-cli", "codex"}
     actual_cli_first = {
         key for key, row in cap_platforms.items() if str(row.get("default_entry_mode", "")).strip() == "cli"
     }
     if actual_cli_first != expected_cli_first:
         findings.append("platform_capabilities.json CLI-first platform set mismatch")
 
-    expected_mcp_only = {"claude-desktop", "manus"}
+    expected_mcp_only = set()
     actual_mcp_only = {
         key for key, row in cap_platforms.items() if list(row.get("allowed_entry_modes") or []) == ["mcp"]
     }

@@ -4,6 +4,13 @@
 本 framework 依赖的 `Tools` 真相边界聚焦于“打开 `.rdc` 后做离线 replay、调试和导出”，不把任意 app 控制面视为默认公开能力。
 这里定义 `debugger` 自身的运行前提、共享运行时文档入口、平台模板使用方式与维护者文档边界；仓库根 `README.md` 不承载这些规则。
 
+当前框架已经从“严格线性 staged handoff”收敛为“强前置参照 + 受控回转 + 可审计 finalization”的闭环调试框架：
+
+- `.rdc` 与 `fix reference` 同属正式入口前置；缺任一项都不得进入 accepted intake。
+- `reference_contract` 既是修复验证合同，也是 run 初始化前必须满足的结构化参照合同。
+- specialist handoff 允许有限回转，但所有澄清、challenge、timeout、redispatch 都必须落盘并进入审计面。
+- reopen / reconnect 产生新的 `session_id` / `context_id` 属于预期行为；跨 run 复用的是历史 evidence，而不是 live handle。
+
 当前 `shader` 相关能力已把 raw `SPIR-V Asm` 纳入现有 `rd.shader.*` tool 的正式扩展面：
 
 - 推荐工作流是 `rd.shader.get_disassembly(target="SPIR-V ASM") -> rd.shader.edit_and_replace(source_text|diff_text, source_target="SPIR-V ASM", source_encoding="spirvasm") -> validate -> rd.shader.revert_replacement`。
@@ -21,6 +28,7 @@
 3. 确认 `tools/` 下存在 `validation.required_paths` 列出的必需文件：`README.md`、`docs/tools.md`、`docs/session-model.md`、`docs/agent-model.md`、`spec/tool_catalog.json`、`rdx.bat`、`binaries/windows/x64/manifest.runtime.json`、`binaries/windows/x64/python/python.exe`。
 4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot 与宿主入口文件全部对齐。
 5. 先提供至少一份 `.rdc`：可以在当前对话上传，也可以提供宿主当前会话可访问的文件路径。
+6. 同时提供结构化 `fix reference`：至少要有可解析的 `reference_contract`，并达到 `readiness_status = strict_ready`。缺失、仅自由文本描述、或只能 `fallback_only` 的参照都不得进入 accepted intake。
 
 补充约束：
 
@@ -29,14 +37,12 @@
 - 当前 `Tools` 的正式用户入口是 `tools/rdx.bat`；若宿主按 `MCP` 接线，应通过 `cmd /c tools/rdx.bat --non-interactive mcp` 或等价包装调用，而不是把系统 `Python` 当成正式前提。
 - `rd.vfs.*` 是只读导航层，用于 browse-only 结构探索；精确调试、导出与状态变更必须回到 canonical `rd.*`。
 - `tabular/tsv` 只是 projection/summary 格式，用于提升扫描效率，不表示语义重要度排序。
-- 当前已重新验证的闭环包括 package-local `tools/` + local-first 工具链，以及 Android remote-only 的 daemon / `MCP` 最小 bootstrap 主链：`rd.remote.connect -> rd.remote.ping -> rd.capture.open_replay`。
-- 若维护者需要对 package-local `tools/` 复核 Android remote-only truth，优先使用 `tools/scripts/tool_contract_remote_smoke.py --rdc "<sample.rdc>" --transport daemon|mcp`，并以最新 `tools/intermediate/logs/tool_contract_remote_smoke_*.json/.md` 为准。
-- 历史 smoke 统计值只可作为回归背景，不得继续写成当前 truth；尤其不能再把“`MCP` remote Android 必然超时”写成平台事实。
 
 未完成以上步骤前：
 
 - Agent 不得进入依赖平台真相的工作。
 - 尚未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 阻断，不得初始化 case/run 或继续调查。
+- 尚未提供通过门禁的 `fix reference` 时，Agent 必须以 `BLOCKED_MISSING_FIX_REFERENCE` 阻断，不得初始化 case/run 或继续调查。
 - `README.md`、`AGENT_CORE.md`、skills 与平台模板都只能提供 framework 约束，不能替代 `Tools` 真相。
 
 ## 文档边界
@@ -67,14 +73,16 @@
 平台模板位于 `platforms/<platform>/`。标准用户工作流：
 
 1. 选择目标平台模板目录。
-   - `codex`：workspace-native 模板，直接使用 `platforms/codex/`。
-   - `codex_plugin`：installable plugin 包装层；真正的 plugin root 是 `platforms/codex_plugin/rdc-debugger/`，外层 `platforms/codex_plugin/` 只负责安装说明与 marketplace 示例。
+   - `claude-code`
+   - `code-buddy`
+   - `codex`
+   - `copilot-cli`
 2. 将仓库根目录 `debugger/common/` 整体拷贝到该平台根的 `common/`。
 3. 将 `RDC-Agent-Tools` 根目录整包拷贝到该平台根的 `tools/`。
 4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot 与宿主入口文件都已对齐。
 5. 完成覆盖后，在对应宿主中打开该平台根目录。
 6. 正常用户请求从 `rdc-debugger` 发起；`rdc-debugger` 与其他 specialist 角色默认是 internal/debug-only。
-7. 发起 debug 任务时，用户必须先提供一份或多份 `.rdc`；可以在当前对话上传，也可以提供宿主当前会话可访问的文件路径。
+7. 发起 debug 任务时，用户必须先提供一份或多份 `.rdc`，并同时提供可执行的 `fix reference`；accepted intake 后才允许创建 case/run。
 
 说明：
 
@@ -84,7 +92,6 @@
 - 任务开始时，Agent 必须向用户说明当前采用的入口模式；若所选入口的前置条件未满足，必须先阻断。
 - `rdc-debugger` 是当前 framework 唯一 public main skill；`rdc-debugger` 只承担 orchestration + intake normalization。
 - 用户不负责手工把 `.rdc` 预放进 `workspace/`；accepted intake 后由 Agent 创建 case/run，并把 `.rdc` 导入 `workspace/cases/<case_id>/inputs/captures/`。
-- snapshot 必须与 `RDC-Agent-Tools/spec/tool_catalog.json` 当前 `tool_count` 与工具集合对齐，其中 `rd.vfs.*` 只按导航层解释，`tabular/tsv` 只按 projection 支持解释。
 
 ## 当前平台入口模式
 
@@ -92,14 +99,8 @@
 
 - 默认 `CLI`，但用户可强制切到 `MCP`
   - `codex`
-  - `codex_plugin`
   - `claude-code`
   - `code-buddy`
   - `copilot-cli`
-  - `copilot-ide`
-  - `cursor`
-- 只允许 `MCP`
-  - `claude-desktop`
-  - `manus`
 
 这里的 `CLI` / `MCP` 只表示工具入口模式，不改变各平台现有的 `concurrent_team`、`staged_handoff`、`workflow_stage` 协作上限。

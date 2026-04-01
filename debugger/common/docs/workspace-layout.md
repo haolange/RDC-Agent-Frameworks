@@ -66,9 +66,10 @@ workspace/
 ## 4. Gate Artifact Rules
 
 - `.rdc` 是创建 case 的硬前置；未拿到 `.rdc` 不创建 case/run
-- `entry_gate.yaml` 是 case 级 preflight 权威 gate
+- `fix reference` 是创建 run 的硬前置；未拿到 `strict_ready` 的 `reference_contract` 不进入 accepted intake
+- `entry_gate.yaml` 是 case 级 preflight / capture / fix-reference 权威 gate
 - `intake_gate.yaml` 是 run 级 accepted intake 权威 gate
-- `runtime_topology.yaml` 是 run 级 runtime / locality / owner / baton / remote gate 权威 artifact
+- `runtime_topology.yaml` 是 run 级 runtime / locality / owner / baton / loop round 权威 artifact
 - `fix_verification.yaml` 是 run 级修复验证唯一权威 artifact
 
 新增硬规则：
@@ -77,6 +78,7 @@ workspace/
 - 无 `fix_verification.yaml` 不得进入 skeptic
 - 无 skeptic strict signoff 不得进入 curator
 - 无 curator 最终写入不算 finalized
+- `fallback_only` / `missing` 的 reference readiness 不得通过 `entry_gate` 或 `intake_gate`
 
 ## 5. Runtime Topology Required Fields
 
@@ -97,8 +99,21 @@ workspace/
 - `remote_capability_matrix`
 - `blocked_capability_codes`
 - `recovery_policy`
+- `investigation_round`
+- `redispatch_count`
+- `last_challenge_source`
+- `last_timeout_at`
 
-## 6. Fix Verification Required Fields
+## 6. Intake Gate Required Fields
+
+`intake_gate.yaml` 至少要表达：
+
+- `reference_readiness`
+- `clarification_required`
+- `redispatch_allowed`
+- `accepted_for_live_investigation`
+
+## 7. Fix Verification Required Fields
 
 `fix_verification.yaml` 至少要表达：
 
@@ -115,16 +130,23 @@ workspace/
 - `semantic_verification`
 - `overall_result`
 
-`structural_verification` 与 `semantic_verification` 不能再被旧 `fix_verification_data` 替代。
+`fix_verification.yaml` 只承载真正进入验证阶段后的结果，不承载补料中的临时 reference 状态。
 
-## 7. Notes And Report Rules
+## 8. Notes And Report Rules
 
 - `notes/hypothesis_board.yaml` 是 orchestration 控制状态源
 - specialist brief 必须写入 `notes/**`
 - remote 规划与不一致说明必须写成结构化 notes
 - `reports/report.md` / `reports/visual_report.html` 是对外交付层，不是第一层真相
 
-## 8. Write Scope
+`hypothesis_board.yaml` 至少固定展示：
+
+- `current_loop_reason`
+- `evidence_gap_summary`
+- `last_specialist_round`
+- `remaining_retry_budget`
+
+## 9. Write Scope
 
 共享 write scope 只允许：
 

@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 COMMON = ROOT / "common"
 CONFIG_ROOT = COMMON / "config"
 FORBIDDEN_DIRS = ("docs", "scripts")
-PLATFORMS_WITH_GENERATED_HOOKS = {"code-buddy", "copilot-cli", "cursor"}
+PLATFORMS_WITH_GENERATED_HOOKS = {"code-buddy", "copilot-cli"}
 LEGACY_ENTRY_SKILL_DIRS = {"renderdoc-rdc-gpu-debug"}
 
 
@@ -51,10 +51,7 @@ def platform_package_root(ctx: dict[str, Any], platform_key: str) -> Path:
 
 
 def platform_wrapper_root(ctx: dict[str, Any], platform_key: str) -> Path:
-    package = platform_package_root(ctx, platform_key)
-    if platform_key == "codex_plugin":
-        return package.parent
-    return package
+    return platform_package_root(ctx, platform_key)
 
 
 def common_placeholder_text() -> str:
@@ -225,7 +222,7 @@ def _upsert_generated_block(path: Path, block: str) -> None:
 
 
 def sync_wave1_generated_sections(ctx: dict[str, Any], platform_key: str) -> None:
-    if platform_key not in {"codex", "claude-code", "code-buddy", "copilot-ide"}:
+    if platform_key not in {"codex", "claude-code", "code-buddy"}:
         return
     package = platform_package_root(ctx, platform_key)
     block = generated_common_first_block(ctx, platform_key)
@@ -425,7 +422,7 @@ def main_skill_wrapper_text(ctx: dict[str, Any], platform_key: str) -> str:
 - direct RenderDoc Python fallback 只允许 local backend；若走直连路径，必须记录 `fallback_execution_mode=local_renderdoc_python` 与 `WRAPPER_DEGRADED_LOCAL_DIRECT`。
 - `runtime_guard.py` 只编排 shared validator / gate / audit；平台层不复制 shared schema 或第二套规则正文。
 """
-    elif platform_key == "codex_plugin":
+    elif False:
         host_specific_notes = """
 - 当前插件不依赖 `.codex/config.toml` 或 `.codex/agents/*.toml`。
 - specialist 角色以安装型 `skills/` 提供；当需要 specialist 时，`rdc-debugger` 必须显式要求 Codex 创建通用 sub-agent，并让每个 sub-agent 先加载对应的 `skills/<role>/SKILL.md`。
@@ -515,7 +512,7 @@ def role_skill_wrapper_text(ctx: dict[str, Any], platform_key: str, role: dict[s
             "\n没有 passed `artifacts/intake_gate.yaml`、passed `artifacts/runtime_topology.yaml` 与主 agent handoff 前，不得进入 live 调查。"
             "\n当前 role 只读消费 gate 结果，不得重判 intent gate，不得直接分派其他 specialist。"
         )
-    elif platform_key == "codex_plugin":
+    elif False:
         role_name = Path(role["role_skill_path"]).parent.name
         dispatch_note = (
             f"\n\n当前平台不预注册 `.codex/agents` 自定义 agent；如需进入当前 role，`rdc-debugger` "
@@ -800,10 +797,7 @@ def agent_wrapper_body_text(ctx: dict[str, Any], platform_key: str, role: dict[s
     role_skill = str(role["role_skill_path"]).replace("\\", "/")
     package_prefix = _path_prefix_to_package_root(str(target.get("agent_dir") or ""))
 
-    if platform_key == "cursor":
-        host_name = "Cursor IDE"
-    else:
-        host_name = display_name
+    host_name = display_name
 
     role_intro = "该角色默认是 internal/debug-only specialist。平台启动后不会自动进入该角色；只有用户手动召唤 `rdc-debugger` 并由它完成分派时，才进入当前 role。"
     extra = ""
@@ -944,37 +938,7 @@ def sync_agent_wrappers(ctx: dict[str, Any], platform_key: str) -> None:
 
 def sync_platform_specific_files(ctx: dict[str, Any], platform_key: str) -> None:
     sync_wave1_generated_sections(ctx, platform_key)
-    if platform_key != "codex_plugin":
-        return
-
-    package = platform_package_root(ctx, platform_key)
-    wrapper_root = platform_wrapper_root(ctx, platform_key)
-    public_entry_skill = _public_entry_skill(ctx)
-
-    write_text(wrapper_root / "README.md", codex_plugin_outer_readme_text())
-    write_text(wrapper_root / "AGENTS.md", codex_plugin_outer_agents_text())
-    write_text(
-        wrapper_root / "references" / "personal-marketplace.sample.json",
-        codex_plugin_marketplace_sample_text(),
-        encoding="utf-8",
-    )
-    write_text(package / "README.md", codex_plugin_inner_readme_text())
-    write_text(package / "AGENTS.md", codex_plugin_inner_agents_text())
-    write_text(
-        package / ".codex-plugin" / "plugin.json",
-        codex_plugin_manifest_text(),
-        encoding="utf-8",
-    )
-    write_text(
-        package / "references" / "mcp-opt-in.sample.toml",
-        codex_plugin_mcp_opt_in_text(),
-        encoding="utf-8",
-    )
-    write_text(
-        package / "skills" / public_entry_skill / "agents" / "openai.yaml",
-        codex_plugin_skill_openai_yaml_text(),
-        encoding="utf-8",
-    )
+    return
 
 
 def main(argv: list[str] | None = None) -> int:

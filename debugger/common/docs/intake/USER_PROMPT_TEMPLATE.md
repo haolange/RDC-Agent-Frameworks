@@ -3,7 +3,10 @@
 将下面七段填写后提交给 `rdc-debugger`。  
 Agent 会把它规范化为 `case_input.yaml`，并据此初始化 case/run。
 
----
+accepted intake 前必须同时满足两件事：
+
+- 至少一份可导入的异常 `.rdc`
+- 一份结构化且 `strict_ready` 的 `fix reference`
 
 ## § SESSION
 
@@ -36,31 +39,6 @@ BASELINE_CAPTURE:
   FILE: good.rdc
   SOURCE: historical_good | user_supplied
   NOTE: 正常设备 / 历史好版本
-
-FIXED_CAPTURE:
-  FILE: fixed.rdc
-  SOURCE: generated_counterfactual
-  NOTE: 仅在已有修复后提交；初次调试可留空
-```
-
-填写规则：
-
-- 只在这里填写 `.rdc`
-- `single` 模式可不填 `BASELINE_CAPTURE`
-- `cross_device` / `regression` 模式必须填 `BASELINE_CAPTURE`
-
-## § ENVIRONMENT
-
-```text
-API: Vulkan | D3D12 | Metal | OpenGL
-DEVICES:
-  - 设备 / GPU / OS
-DRIVERS:
-  - 驱动版本
-RENDER_SETTINGS:
-  resolution: ""
-  aa: ""
-  post_process: ""
 ```
 
 ## § REFERENCE
@@ -71,10 +49,6 @@ SOURCE_REFS:
   - capture:baseline
   - reference:golden-001
 VERIFICATION_MODE: pixel_value_check | device_parity | regression_check | visual_comparison
-
-CORRECT_DESCRIPTION:
-  - 正确画面应该具备的视觉特征
-  - 正确颜色 / 高光 / 阴影的大致期望
 
 PROBE_SET:
   PIXELS:
@@ -92,15 +66,30 @@ ACCEPTANCE:
   max_channel_delta: 0.05
   max_distance_l2: 0.08
   required_symptom_clearance: 1.0
-  fallback_only: false
+
+READINESS_STATUS: strict_ready
 ```
 
 规则：
 
-- `SOURCE_KIND` 和 `SOURCE_REFS` 决定语义基准来自哪里
-- `PROBE_SET` 是 strict 验证的量化对象
-- 如果只有图片或文字，没有 probe，则必须把 `fallback_only` 设为 `true`
-- `visual_comparison` 只允许用于 fallback/report，不会支撑 `fix_verified=true`
+- `READINESS_STATUS` 只允许 `strict_ready | fallback_only | missing`
+- accepted intake 前必须是 `strict_ready`
+- 如果只有图片或文字，没有 probe / baseline / 可执行验收对象，则只能填 `fallback_only`，这会触发 `BLOCKED_MISSING_FIX_REFERENCE`
+- `visual_comparison` 不能单独支撑 strict run
+
+## § ENVIRONMENT
+
+```text
+API: Vulkan | D3D12 | Metal | OpenGL
+DEVICES:
+  - 设备 / GPU / OS
+DRIVERS:
+  - 驱动版本
+RENDER_SETTINGS:
+  resolution: ""
+  aa: ""
+  post_process: ""
+```
 
 ## § HINTS
 
@@ -125,11 +114,9 @@ EXTRA_CONTEXT:
   - 项目相关背景
 ```
 
----
-
 ## 提交前自查
 
 - 至少上传一份异常 `.rdc`
 - `CAPTURES` 里不要放图片或设计稿
-- `REFERENCE` 里不要放 `.rdc` 文件路径描述为“语义说明”
-- 想要 strict 修复验证时，必须提供量化 probe 或可对齐的 baseline capture
+- `REFERENCE` 必须结构化，且 accepted intake 前要达到 `strict_ready`
+- 只有图片/文字参考时，当前 run 会被 `BLOCKED_MISSING_FIX_REFERENCE` 阻断

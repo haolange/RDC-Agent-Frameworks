@@ -1,7 +1,0 @@
-interface:
-  display_name: "RDC Debugger"
-  short_description: "Enter the RenderDoc/RDC GPU debugging workflow for .rdc captures"
-  default_prompt: "Use $rdc-debugger to enter the RenderDoc/RDC GPU debugging workflow for this workspace."
-
-policy:
-  allow_implicit_invocation: true

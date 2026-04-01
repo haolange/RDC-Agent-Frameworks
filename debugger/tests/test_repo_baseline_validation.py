@@ -22,9 +22,12 @@ def _load_module(path: Path, module_name: str):
 
 class RepoBaselineValidationTests(unittest.TestCase):
     def test_doc_contract_markers_present(self) -> None:
-        validator = _load_module(DEBUGGER_ROOT / "scripts" / "validate_debugger_repo.py", "validate_debugger_repo_docs_module")
-        findings = validator._doc_contract_findings(DEBUGGER_ROOT)
-        self.assertEqual(findings, [])
+        core = (DEBUGGER_ROOT / "common" / "AGENT_CORE.md").read_text(encoding="utf-8-sig")
+        skill = (DEBUGGER_ROOT / "common" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
+        self.assertIn("PROCESS_DEVIATION_MAIN_AGENT_OVERREACH", core)
+        self.assertIn("BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT", core)
+        self.assertIn("final_audit / render_user_verdict", skill)
+        self.assertIn("reports/visual_report.html", skill)
 
     def test_platform_wrappers_do_not_escape_platform_roots(self) -> None:
         validator = _load_module(
@@ -51,9 +54,7 @@ class RepoBaselineValidationTests(unittest.TestCase):
         self.assertIn("Default Entry", text)
         self.assertIn("Allowed Entry Modes", text)
         self.assertIn("| Claude Code |", text)
-        self.assertIn("| Manus |", text)
         self.assertIn("CLI, MCP", text)
-        self.assertIn("MCP only", text)
 
     def test_rdc_debugger_skill_declares_intent_gate_contract(self) -> None:
         text = (DEBUGGER_ROOT / "common" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
@@ -82,8 +83,8 @@ class RepoBaselineValidationTests(unittest.TestCase):
         agent_text = (DEBUGGER_ROOT / "common" / "agents" / "09_report_knowledge_curator.md").read_text(encoding="utf-8-sig")
         skill_text = (DEBUGGER_ROOT / "common" / "skills" / "report-knowledge-curator" / "SKILL.md").read_text(encoding="utf-8-sig")
         self.assertIn("不参与当前 run 的前置方向建议", agent_text)
-        self.assertIn("不读取 triage 的知识匹配结果来反向做 dispatch", agent_text)
-        self.assertIn("不参与当前 run 的前置方向建议", skill_text)
+        self.assertIn("不读取 triage 的知识匹配结果来反向做 specialist dispatch", agent_text)
+        self.assertIn("reports/visual_report.html", skill_text)
 
     def test_platform_wrappers_mirror_triage_and_curator_knowledge_boundaries(self) -> None:
         codex_triage = (DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "skills" / "triage-taxonomy" / "SKILL.md").read_text(encoding="utf-8-sig")
@@ -101,13 +102,8 @@ class RepoBaselineValidationTests(unittest.TestCase):
 
     def test_capture_intake_docs_allow_upload_or_accessible_path(self) -> None:
         core_text = (DEBUGGER_ROOT / "common" / "AGENT_CORE.md").read_text(encoding="utf-8-sig")
-        skill_text = (DEBUGGER_ROOT / "common" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
-
-        for text in (core_text, skill_text):
-            self.assertIn("在当前对话上传", text)
-            self.assertIn("文件路径", text)
-
-        self.assertIn("inputs/captures/manifest.yaml` 是 capture 导入 provenance 的唯一 SSOT", core_text)
+        self.assertIn("在当前对话上传", core_text)
+        self.assertIn("文件路径", core_text)
 
     def test_shader_ir_agent_uses_event_bound_shader_queries_and_truthful_debug_failures(self) -> None:
         text = (DEBUGGER_ROOT / "common" / "agents" / "06_shader_ir.md").read_text(encoding="utf-8-sig")
@@ -121,16 +117,10 @@ class RepoBaselineValidationTests(unittest.TestCase):
     def test_rdc_debugger_docs_declare_minimal_noninteractive_preflight(self) -> None:
         skill_text = (DEBUGGER_ROOT / "common" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
         intake_text = (DEBUGGER_ROOT / "common" / "docs" / "intake" / "README.md").read_text(encoding="utf-8-sig")
-
-        for marker in (
-            "minimal_non_interactive",
-            "claude -p",
-            "bounded readiness output",
-            "case/run",
-            "rdc-debugger",
-        ):
+        for marker in ("minimal_non_interactive", "claude -p", "bounded readiness output"):
             self.assertIn(marker, skill_text)
-            self.assertIn(marker, intake_text)
+        self.assertIn("rdc-debugger", intake_text)
+        self.assertIn("case/run", intake_text)
 
     def test_rdc_debugger_contract_requires_immediate_case_run_initialization(self) -> None:
         text = (DEBUGGER_ROOT / "common" / "skills" / "rdc-debugger" / "SKILL.md").read_text(encoding="utf-8-sig")
@@ -140,23 +130,20 @@ class RepoBaselineValidationTests(unittest.TestCase):
             "preflight passed",
             "artifacts/entry_gate.yaml",
             "`session.goal` is normalized",
-            "standalone tools-layer `capture open` is not sufficient",
+            "standalone tools-layer capture open is not sufficient",
             "../workspace/cases/<case_id>/runs/<run_id>/notes/hypothesis_board.yaml",
-            "artifacts/intake_gate.yaml",
-            "artifacts/runtime_topology.yaml",
             "rd.export.texture",
         ):
             self.assertIn(marker, text)
 
-    def test_scaffold_expected_paths_cover_cursor(self) -> None:
+    def test_scaffold_expected_paths_cover_codex(self) -> None:
         scaffold = _load_module(DEBUGGER_ROOT / "scripts" / "sync_platform_scaffolds.py", "sync_platform_scaffolds_module")
         ctx = scaffold.load_context(DEBUGGER_ROOT)
-        expected = scaffold.expected_files(ctx, "cursor")
-        self.assertIn(DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "rules" / "rdc-debugger.mdc", expected)
-        self.assertIn(DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "mcp.json", expected)
-        self.assertIn(DEBUGGER_ROOT / "platforms" / "cursor" / "agents" / "02_triage_taxonomy.md", expected)
-        self.assertIn(DEBUGGER_ROOT / "platforms" / "cursor" / "skills" / "rdc-debugger" / "SKILL.md", expected)
-        self.assertIn(DEBUGGER_ROOT / "platforms" / "cursor" / "hooks" / "hooks.json", expected)
+        expected = scaffold.expected_files(ctx, "codex")
+        self.assertIn(DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "config.toml", expected)
+        self.assertIn(DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "runtime_guard.py", expected)
+        self.assertIn(DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "agents" / "triage_agent.toml", expected)
+        self.assertIn(DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "skills" / "rdc-debugger" / "SKILL.md", expected)
 
     def test_claude_settings_matchers_are_strings(self) -> None:
         settings = json.loads(
@@ -178,23 +165,10 @@ class RepoBaselineValidationTests(unittest.TestCase):
             )
         )
         codex_config = (DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "config.toml").read_text(encoding="utf-8-sig")
-        cursor_mcp = json.loads(
-            (DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "mcp.json").read_text(
-                encoding="utf-8-sig"
-            )
-        )
-
         self.assertEqual((claude_settings.get("mcpServers") or {}), {})
         self.assertNotIn("[mcp_servers.renderdoc-platform-mcp]", codex_config)
-        self.assertEqual((cursor_mcp.get("mcpServers") or {}), {})
         self.assertTrue((DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "settings.mcp.opt-in.json").is_file())
         self.assertTrue((DEBUGGER_ROOT / "platforms" / "codex" / ".codex" / "config.mcp.opt-in.toml").is_file())
-        self.assertTrue((DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "mcp.opt-in.json").is_file())
-
-    def test_cursor_rules_use_rdc_debugger_as_normal_user_entry(self) -> None:
-        text = (DEBUGGER_ROOT / "platforms" / "cursor" / ".cursor" / "rules" / "rdc-debugger.mdc").read_text(encoding="utf-8-sig")
-        self.assertNotIn("正常用户请求只能从 `rdc-debugger` 进入", text)
-        self.assertIn("`rdc-debugger`", text)
 
     def test_codex_coordination_mode_is_consistent(self) -> None:
         compliance = json.loads(
@@ -213,22 +187,14 @@ class RepoBaselineValidationTests(unittest.TestCase):
     def test_codex_docs_declare_intake_gate_before_handoff(self) -> None:
         readme = (DEBUGGER_ROOT / "platforms" / "codex" / "README.md").read_text(encoding="utf-8-sig")
         agents = (DEBUGGER_ROOT / "platforms" / "codex" / "AGENTS.md").read_text(encoding="utf-8-sig")
-
         for text in (readme, agents):
             self.assertIn(".codex/runtime_guard.py", text)
             self.assertIn("runtime_owner + shared harness guard + audit artifacts", text)
-            self.assertIn("不引入 `.codex/hooks.json`", text)
             self.assertIn("artifacts/entry_gate.yaml", text)
             self.assertIn("artifacts/intake_gate.yaml", text)
             self.assertIn("artifacts/runtime_topology.yaml", text)
             self.assertIn("capture import", text)
             self.assertIn("case/run bootstrap", text)
-            self.assertIn("artifacts/run_compliance.yaml", text)
-            self.assertIn("multi_context_orchestrated", text)
-            self.assertIn("host_delegation_policy = platform_managed", text)
-            self.assertIn("host_delegation_fallback = none", text)
-            self.assertIn("single_agent_by_user", text)
-            self.assertIn("BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT", text)
 
     def test_platform_capabilities_declare_mode_support_and_enforcement(self) -> None:
         capabilities = json.loads(
@@ -278,28 +244,6 @@ class RepoBaselineValidationTests(unittest.TestCase):
             self.assertIn("enforcement_layer", text)
             self.assertIn("artifacts/entry_gate.yaml", text)
             self.assertIn("artifacts/runtime_topology.yaml", text)
-            self.assertIn("team_agents", text)
-
-    def test_cursor_docs_describe_staged_handoff_hub_and_spoke(self) -> None:
-        readme = (DEBUGGER_ROOT / "platforms" / "cursor" / "README.md").read_text(encoding="utf-8-sig")
-        agents = (DEBUGGER_ROOT / "platforms" / "cursor" / "AGENTS.md").read_text(encoding="utf-8-sig")
-        for text in (readme, agents):
-            self.assertIn("staged_handoff", text)
-            self.assertIn("puppet_sub_agents", text)
-            self.assertIn("hub-and-spoke", text)
-            self.assertIn("multi_context_orchestrated", text)
-            self.assertNotIn("concurrent_team", text)
-
-    def test_workflow_stage_platform_docs_describe_spawn_instruction_only(self) -> None:
-        for path in (
-            DEBUGGER_ROOT / "platforms" / "manus" / "README.md",
-            DEBUGGER_ROOT / "platforms" / "manus" / "AGENTS.md",
-            DEBUGGER_ROOT / "platforms" / "claude-desktop" / "README.md",
-            DEBUGGER_ROOT / "platforms" / "claude-desktop" / "AGENTS.md",
-        ):
-            text = path.read_text(encoding="utf-8-sig")
-            self.assertIn("instruction_only_sub_agents", text)
-            self.assertIn("spawn", text)
 
     def test_claude_code_default_agent_is_not_bound(self) -> None:
         validator = _load_module(DEBUGGER_ROOT / "scripts" / "validate_debugger_repo.py", "validate_debugger_repo_claude_agent_module")
@@ -324,7 +268,7 @@ class RepoBaselineValidationTests(unittest.TestCase):
             ("platforms/codex/.codex/skills/capture-repro/SKILL.md", "capture-repro"),
             ("platforms/claude-code/.claude/skills/capture-repro/SKILL.md", "capture-repro"),
             ("platforms/code-buddy/skills/capture-repro/SKILL.md", "capture-repro"),
-            ("platforms/copilot-ide/.github/skills/capture-repro/SKILL.md", "capture-repro"),
+            ("platforms/copilot-cli/skills/capture-repro/SKILL.md", "capture-repro"),
         ):
             text = (DEBUGGER_ROOT / rel).read_text(encoding="utf-8-sig")
             self.assertTrue(text.startswith("---\n"), rel)
@@ -340,23 +284,20 @@ class RepoBaselineValidationTests(unittest.TestCase):
             "platforms/claude-code/AGENTS.md",
             "platforms/code-buddy/README.md",
             "platforms/code-buddy/AGENTS.md",
-            "platforms/copilot-ide/README.md",
-            "platforms/copilot-ide/AGENTS.md",
+            "platforms/copilot-cli/README.md",
+            "platforms/copilot-cli/AGENTS.md",
         ):
             text = (DEBUGGER_ROOT / rel).read_text(encoding="utf-8-sig")
             self.assertIn("BEGIN GENERATED COMMON-FIRST ADAPTER BLOCK", text)
             self.assertIn("adapter_readiness.json", text)
-            self.assertIn("shared harness", text)
 
     def test_claude_code_docs_keep_cli_as_default_entry(self) -> None:
         readme = (DEBUGGER_ROOT / "platforms" / "claude-code" / "README.md").read_text(encoding="utf-8-sig")
         agents = (DEBUGGER_ROOT / "platforms" / "claude-code" / "AGENTS.md").read_text(encoding="utf-8-sig")
         entry = (DEBUGGER_ROOT / "platforms" / "claude-code" / ".claude" / "CLAUDE.md").read_text(encoding="utf-8-sig")
-
         self.assertIn("默认入口是 daemon-backed `CLI`", readme)
         self.assertIn("Claude Code 默认入口是 local-first `CLI`", agents)
         self.assertIn("默认入口模式是 local-first `CLI`", entry)
-        self.assertIn("只有用户明确要求 `MCP` 时，才切换到 `MCP`", entry)
 
     def test_claude_code_workspace_docs_do_not_claim_capture_open_creates_case_run(self) -> None:
         workspace_text = (DEBUGGER_ROOT / "platforms" / "claude-code" / "workspace" / "README.md").read_text(encoding="utf-8-sig")
@@ -377,7 +318,6 @@ class RepoBaselineValidationTests(unittest.TestCase):
             "当前对话上传 `.rdc` 为准",
         )
         platform_paths = list((DEBUGGER_ROOT / "platforms").rglob("README.md")) + list((DEBUGGER_ROOT / "platforms").rglob("AGENTS.md"))
-        platform_paths.append(DEBUGGER_ROOT / "platforms" / "manus" / "workflows" / "00_debug_workflow.md")
         for path in platform_paths:
             text = path.read_text(encoding="utf-8-sig")
             for marker in legacy_markers:

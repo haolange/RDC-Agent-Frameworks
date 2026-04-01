@@ -564,7 +564,7 @@ def _seed_run(
 ) -> Path:
     case_root = root / "workspace" / "cases" / case_id
     run_root = case_root / "runs" / run_id
-    entry_mode = "mcp" if platform in {"claude-desktop", "manus"} else "cli"
+    entry_mode = "cli"
     _write(case_root / "case.yaml", f"case_id: {case_id}\ncurrent_run: {run_id}\nreference_contract_ref: ../workspace/cases/{case_id}/case_input.yaml#reference_contract\n")
     case_input = {
         "schema_version": "1",
@@ -1526,55 +1526,6 @@ class RunComplianceAuditTests(unittest.TestCase):
         artifact = yaml.safe_load((run_root / "artifacts" / "run_compliance.yaml").read_text(encoding="utf-8"))
         failing = {item["id"] for item in artifact["checks"] if item["result"] == "fail"}
         self.assertIn("workflow_stage_overreach", failing)
-
-    def test_workflow_stage_allows_serial_instruction_only_specialists(self) -> None:
-        root = self._temp_root()
-        _seed_base(root)
-        _seed_common_session(root, "sess_fixture_001", "run_01")
-        run_root = _seed_run(root, "case_001", "run_01", "manus", "workflow_stage")
-        action_chain = root / "common" / "knowledge" / "library" / "sessions" / "sess_fixture_001" / "action_chain.jsonl"
-        events = [json.loads(line) for line in action_chain.read_text(encoding="utf-8").splitlines() if line.strip()]
-        events.append(
-            {
-                "schema_version": "2",
-                "event_id": "evt-0012-second-workflow-specialist",
-                "ts_ms": 1772537603200,
-                "run_id": "run_01",
-                "session_id": "sess_fixture_001",
-                "agent_id": "rdc-debugger",
-                "event_type": "dispatch",
-                "status": "ok",
-                "duration_ms": 0,
-                "refs": [],
-                "payload": _rt_payload(entry_mode="mcp", target_agent="shader_ir_agent", summary="extra workflow specialist"),
-            }
-        )
-        events.append(
-            {
-                "schema_version": "2",
-                "event_id": "evt-0013-second-workflow-artifact",
-                "ts_ms": 1772537603300,
-                "run_id": "run_01",
-                "session_id": "sess_fixture_001",
-                "agent_id": "shader_ir_agent",
-                "event_type": "artifact_write",
-                "status": "ok",
-                "duration_ms": 40,
-                "refs": ["evt-0012-second-workflow-specialist"],
-                "payload": _rt_payload(
-                    entry_mode="mcp",
-                    path=f"workspace/cases/{run_root.parent.parent.name}/runs/{run_root.name}/notes/shader_ir.md",
-                    summary="shader note",
-                ),
-            }
-        )
-        _write(action_chain, "\n".join(json.dumps(event, ensure_ascii=False) for event in events) + "\n")
-        _seed_runtime_topology(root, run_root, platform="manus")
-
-        proc = _run_audit(root, "manus", run_root)
-        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
-        artifact = yaml.safe_load((run_root / "artifacts" / "run_compliance.yaml").read_text(encoding="utf-8"))
-        self.assertEqual(artifact["status"], "passed")
 
     def test_resume_without_baton_ref_fails(self) -> None:
         root = self._temp_root()

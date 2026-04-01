@@ -1,7 +1,0 @@
-# Copy this snippet into ~/.codex/config.toml only when you explicitly want to use MCP.
-# Set RDC_DEBUGGER_PLUGIN_ROOT to ~/.agents/plugins/rdc-debugger before using this sample,
-# or replace the variable with the literal absolute path of that directory.
-
-[mcp_servers.renderdoc-platform-mcp]
-command = "cmd"
-args = ["/c", "${RDC_DEBUGGER_PLUGIN_ROOT}/tools/rdx.bat", "--non-interactive", "mcp"]

@@ -32,61 +32,6 @@
         "per_agent_model"
       ]
     },
-    "copilot-cli": {
-      "workspace_root": "platforms/copilot-cli",
-      "status_label": "full",
-      "agent_dir": "agents",
-      "skill_dir": "skills/rdc-debugger",
-      "role_config_dir": null,
-      "entrypoint_file": "README.md",
-      "native_surfaces": [
-        "plugin",
-        "agents",
-        "skills",
-        "hooks",
-        "mcp"
-      ]
-    },
-    "copilot-ide": {
-      "workspace_root": "platforms/copilot-ide",
-      "status_label": "full",
-      "agent_dir": ".github/agents",
-      "skill_dir": ".github/skills/rdc-debugger",
-      "role_config_dir": null,
-      "entrypoint_file": ".github/copilot-instructions.md",
-      "native_surfaces": [
-        "agents",
-        "skills",
-        "mcp",
-        "preferred_model",
-        "handoffs"
-      ]
-    },
-    "claude-desktop": {
-      "workspace_root": "platforms/claude-desktop",
-      "status_label": "degraded",
-      "agent_dir": null,
-      "skill_dir": "skills/rdc-debugger",
-      "role_config_dir": null,
-      "entrypoint_file": "references/entrypoints.md",
-      "native_surfaces": [
-        "skills",
-        "desktop_mcp_config"
-      ]
-    },
-    "manus": {
-      "workspace_root": "platforms/manus",
-      "status_label": "degraded",
-      "agent_dir": null,
-      "skill_dir": "skills/rdc-debugger",
-      "role_config_dir": null,
-      "entrypoint_file": "references/entrypoints.md",
-      "native_surfaces": [
-        "skills",
-        "mcp",
-        "workflow"
-      ]
-    },
     "codex": {
       "workspace_root": "platforms/codex",
       "status_label": "workspace-native",
@@ -102,35 +47,19 @@
         "multi_agent"
       ]
     },
-    "codex_plugin": {
-      "workspace_root": "platforms/codex_plugin/rdc-debugger",
-      "status_label": "installable-plugin",
-      "agent_dir": null,
+    "copilot-cli": {
+      "workspace_root": "platforms/copilot-cli",
+      "status_label": "full",
+      "agent_dir": "agents",
       "skill_dir": "skills/rdc-debugger",
       "role_config_dir": null,
       "entrypoint_file": "README.md",
       "native_surfaces": [
         "plugin",
-        "skills",
-        "marketplace",
-        "mcp_opt_in",
-        "generic_subagents"
-      ]
-    },
-    "cursor": {
-      "workspace_root": "platforms/cursor",
-      "status_label": "full",
-      "agent_dir": "agents",
-      "skill_dir": "skills/rdc-debugger",
-      "role_config_dir": null,
-      "entrypoint_file": ".cursor/rules/rdc-debugger.mdc",
-      "native_surfaces": [
         "agents",
         "skills",
         "hooks",
-        "mcp",
-        "per_agent_model",
-        "handoffs"
+        "mcp"
       ]
     }
   }

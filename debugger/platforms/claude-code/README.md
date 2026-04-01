@@ -3,55 +3,38 @@
 <!-- BEGIN GENERATED COMMON-FIRST ADAPTER BLOCK -->
 ## Common-First Adapter Contract
 
-- `common/` + package-local `tools/` 是共享执行内核；platform folders 是 adapter shells。
-- 对宿主可见的原生 surface：`agents`, `skills`, `hooks`, `mcp`, `per_agent_model`
-- 目标 contract 来自 `common/config/platform_capabilities.json` 与 `common/config/framework_compliance.json`；它不等同于当前 readiness。
-- 当前 adapter 必须满足的 surface：`agents`, `skills`, `hooks`, `mcp`
-- 目标 contract：`coordination_mode = concurrent_team`, `sub_agent_mode = team_agents`, `peer_communication = direct`
-- 当前 adapter readiness 通过 `common/config/adapter_readiness.json` 单独记录：`adapter_in_progress`
-- `status_label` / `local_support` / `remote_support` / `enforcement_layer` 只描述仓库姿态，不表示 strict readiness。
-- 严格执行必须由 shared harness、runtime lock、freeze state、artifact gate 和 finalization receipt 共同保证，不能靠 prompt wording 或 host marketing text。
-- Notes：保留 `concurrent_team` / `team_agents` / `direct` 的目标 contract；strict adapter 依赖 shared harness 和 host hook wiring。
+- `common/` + package-local `tools/` are the shared execution kernel; platform folders are adapter shells.
+- Host-visible native surfaces: `agents`, `skills`, `hooks`, `mcp`, `per_agent_model`
+- Target contract comes from `common/config/platform_capabilities.json` and `common/config/framework_compliance.json`; it is not the same as current readiness.
+- Current adapter must satisfy required surfaces: `agents`, `skills`, `hooks`, `mcp`
+- Target contract: `coordination_mode = concurrent_team`, `sub_agent_mode = team_agents`, `peer_communication = direct`
+- Current adapter readiness is tracked separately in `common/config/adapter_readiness.json`: `adapter_in_progress`
+- `status_label` / `local_support` / `remote_support` / `enforcement_layer` describe repo posture only; they do not imply strict readiness.
+- Strict execution must be enforced by shared harness, runtime lock, freeze state, artifact gate, and finalization receipt; not by prompt wording or host marketing text.
+- Notes: Retains concurrent_team/team_agents/direct target contract; strict adapter depends on shared harness and host hook wiring.
 <!-- END GENERATED COMMON-FIRST ADAPTER BLOCK -->
 
-当前目录是 Claude Code 的 platform-local 模板。Agent 的目标是使用 RenderDoc/RDC platform tools 调试 GPU 渲染问题。
+
+当前目录是 Claude Code 的 platform-local 模板。
 
 入口规则：
 
-- 当前宿主可直接访问本地进程、文件系统与 workspace，默认采用 local-first。
-- 默认入口是 daemon-backed `CLI`；只有用户明确要求时，才切换到 `MCP`。
-- 任务开始时，Agent 必须向用户说明当前采用的是 `CLI` 还是 `MCP`。
-- 若用户要求 `MCP`，但宿主未配置对应 `MCP` server，必须直接阻断并提示配置。
-- 当前模板默认不预注册 `MCP`；若要启用，使用 `.claude/settings.mcp.opt-in.json` 的示例配置显式接入。
-- 当前平台的 `local_support` / `remote_support` / `enforcement_layer` 以 `common/config/platform_capabilities.json` 中 `claude-code` 行为准；README 不再单独发明第二套 remote 口径。
+- 默认入口是 daemon-backed `CLI`；只有用户明确要求时才切换到 `MCP`
+- 平台能力上限、协作模式与 hooks 分层以 `common/config/platform_capabilities.json` 为准
+- accepted intake 需要 `artifacts/entry_gate.yaml` 与 `artifacts/runtime_topology.yaml`
+- accepted intake 前必须同时具备可导入 `.rdc` 与 `strict_ready` 的 `fix reference`
+- 缺少 `.rdc` 时阻断为 `BLOCKED_MISSING_CAPTURE`
+- 缺少 fix reference 或只到 `fallback_only` 时阻断为 `BLOCKED_MISSING_FIX_REFERENCE`
+- triage clarification、skeptic challenge、redispatch、timeout 都必须走 shared workflow，不得静默兜底
 
 使用方式：
 
-1. 将仓库根目录 `debugger/common/` 整体拷贝到当前平台根目录的 `common/`，覆盖占位内容。
-2. 将 `RDC-Agent-Tools` 根目录整包拷贝到当前平台根目录的 `tools/`，覆盖占位内容。
-3. 确认 `tools/` 下存在 `validation.required_paths` 列出的必需文件，并确认零安装入口 `rdx.bat` 与 bundled runtime 已随包覆盖。
-4. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot、宿主入口文件与共享文档全部对齐。
-5. 正式发起 debug 前，用户必须先提供至少一份 `.rdc`；可在当前对话上传，或提供宿主当前会话可访问的文件路径。accepted intake 后由 Agent 导入 `workspace/cases/<case_id>/inputs/captures/`。
-6. 使用当前平台根目录下、与 `common/` 和 `tools/` 并列的 `workspace/` 作为运行区。
-7. 完成覆盖后，再在对应宿主中打开当前平台根目录。
-8. 平台启动后默认保持普通对话态；只有用户手动召唤 `rdc-debugger`，才进入调试框架。
+1. 覆盖 `common/`
+2. 覆盖 `tools/`
+3. 运行 `python common/config/validate_binding.py --strict`
+4. 在当前平台根目录下使用 `workspace/`
 
-约束：
+平台说明：
 
-- `common/` 默认只保留一个占位文件；正式共享正文仍由顶层 `debugger/common/` 提供，并由用户显式拷入。
-- 覆盖完成后，平台根 `common/README.md` 会成为正式 shared common 的入口说明，不再保留占位语义。
-- 未完成 `debugger/common/` 覆盖前，当前平台模板不可用。
-- 未完成 `debugger/common/` 覆盖、`tools/` 覆盖或 binding 校验前，Agent 必须拒绝执行依赖平台真相的工作。
-- 当前工具 snapshot 必须与 `RDC-Agent-Tools` 当前 catalog 完整对齐，并覆盖 `rd.vfs.*` 导航层、扩展 `rd.session.*`、`rd.core.*` discovery/observability，以及 bounded event-tree 读取语义；其中 `tabular/tsv` 仅作为 projection 支持。
-- `.claude/settings.json` 中即使预配置了 `MCP` server，也只表示可选接入面，不改变 Claude Code 默认的 local-first `CLI` 入口。
-- 当前平台的 `sub_agent_mode = team_agents`；Claude Code specialist 之间可直接通信。
-- remote 现在属于正式平台能力面；Claude Code 在 local 下可 `concurrent_team`，进入 remote 后统一降级为 `single_runtime_owner`。
-- local 下只有 team-agent live investigators 才能把 Tools 的 multi-context ceiling 用成 `multi_context_multi_owner`。
-- Claude hooks 使用 string `matcher`；文件路径过滤由共享 hook dispatcher 读取 hook payload 后自行判断，不在 settings.json 里写 object matcher。
-- 当前平台属于 `native-hooks` tier；`.claude/settings.json` 里的 hooks 只负责触发 `common/hooks/utils/harness_guard.py` 与共享 dispatcher，不在平台侧复制业务规则。
-- 未提供可导入的 `.rdc` 时，Agent 必须以 `BLOCKED_MISSING_CAPTURE` 直接阻断，不得初始化 case/run 或继续 triage、investigation、planning。
-- `workspace/` 预生成空骨架；真实运行产物只在被接受的手动 `rdc-debugger` intake 流程中按 case/run 写入。
-- standalone `capture open` 只建立 tools-layer session state，不会创建 framework `workspace/case/run`。
-- accepted intake 前必须先通过 `artifacts/entry_gate.yaml`；调查开始前必须写出 `artifacts/runtime_topology.yaml`。
-- 维护者若重跑 scaffold，必须继续产出 platform-local `common/` 最小占位目录，不得回退到跨级引用。
-- native hooks 会拦截 `session_start` / `pre_tool_use` / `post_tool_use` / `stop`，但真正的流程裁决仍以 `artifacts/run_compliance.yaml` 为准。
+- 这里只保留 Claude Code 壳层说明；流程真相以 shared `common/` 为准
+- reopen / reconnect 产生新的 `session_id` / `context_id` 是预期行为

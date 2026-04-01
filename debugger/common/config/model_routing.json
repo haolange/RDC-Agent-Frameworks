@@ -13,20 +13,13 @@
   "platform_classes": {
     "explicit_per_agent": [
       "code-buddy",
-      "cursor",
-      "copilot-cli",
-      "copilot-ide"
+      "copilot-cli"
     ],
     "host_limited_per_agent": [
       "claude-code"
     ],
-    "inherit_only": [
-      "claude-desktop",
-      "manus"
-    ],
     "single_family_per_agent": [
-      "codex",
-      "codex_plugin"
+      "codex"
     ]
   },
   "profiles": {
@@ -45,13 +38,8 @@
       "platform_rendering": {
         "claude-code": "opus",
         "code-buddy": "opus-4.6",
-        "cursor": "opus-4.6",
-        "copilot-cli": "opus-4.6",
-        "copilot-ide": "opus-4.6",
-        "claude-desktop": "inherit",
-        "manus": "inherit",
         "codex": "gpt-5.4",
-        "codex_plugin": "inherit"
+        "copilot-cli": "opus-4.6"
       }
     },
     "investigator": {
@@ -68,13 +56,8 @@
       "platform_rendering": {
         "claude-code": "sonnet",
         "code-buddy": "sonnet-4.6",
-        "cursor": "sonnet-4.6",
-        "copilot-cli": "sonnet-4.6",
-        "copilot-ide": "sonnet-4.6",
-        "claude-desktop": "inherit",
-        "manus": "inherit",
         "codex": "gpt-5.4",
-        "codex_plugin": "inherit"
+        "copilot-cli": "sonnet-4.6"
       }
     },
     "verifier": {
@@ -90,13 +73,8 @@
       "platform_rendering": {
         "claude-code": "opus",
         "code-buddy": "gpt-5.4",
-        "cursor": "gpt-5.4",
-        "copilot-cli": "gpt-5.4",
-        "copilot-ide": "gpt-5.4",
-        "claude-desktop": "inherit",
-        "manus": "inherit",
         "codex": "gpt-5.4",
-        "codex_plugin": "inherit"
+        "copilot-cli": "gpt-5.4"
       }
     },
     "reporter": {
@@ -112,13 +90,8 @@
       "platform_rendering": {
         "claude-code": "sonnet",
         "code-buddy": "gemini-3.1-pro",
-        "cursor": "gemini-3.1-pro",
-        "copilot-cli": "gemini-3.1-pro",
-        "copilot-ide": "gemini-3.1-pro",
-        "claude-desktop": "inherit",
-        "manus": "inherit",
         "codex": "gpt-5.4",
-        "codex_plugin": "inherit"
+        "copilot-cli": "gemini-3.1-pro"
       }
     }
   },

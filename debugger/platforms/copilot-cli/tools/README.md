@@ -5,7 +5,7 @@
 使用方式：
 
 1. 选择一个 `debugger/platforms/<platform>/` 模板。
-2. 将 `RDC-Agent-Tools` 根目录整包拷贝到该平台根目录的 `tools/`，覆盖当前目录。
+2. 将 RDC-Agent-Tools 根目录整包拷贝到该平台根目录的 `tools/`，覆盖当前目录。
 3. 完成覆盖后，运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime 与共享绑定均有效。
 4. 确认通过后，再在对应宿主中打开该平台根目录使用。
 
