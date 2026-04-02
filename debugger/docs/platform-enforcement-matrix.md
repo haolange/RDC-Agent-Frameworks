@@ -6,6 +6,8 @@
 
 ## 统一原则
 
+- `rdc-debugger` 是所有平台唯一 public entrypoint，但内部固定为 `Plan / Intake Phase -> Audited Execution Phase` 两段。
+- 宿主若支持 Plan Mode，应先把用户请求收敛为 `debug_plan`；严格执行链从 `entry_gate` 开始，而不是从第一次唤起 skill 开始。
 - 共享 harness 状态机是唯一真相源：`preflight -> entry_gate -> accept_intake -> dispatch_readiness -> dispatch_specialist -> specialist_feedback -> final_audit -> user_verdict`。
 - `accept_intake` 内部负责 `capture import -> case/run bootstrap -> intake_gate -> broker startup`，并产出 `runtime_session.yaml`、`runtime_snapshot.yaml`、`ownership_lease.yaml`、`runtime_failure.yaml`。
 - 平台原生 hooks 只负责拦截和触发共享 guard，不承载业务规则。
@@ -33,6 +35,7 @@
 ### `pseudo-hooks`
 
 - 不得把 wrapper、rules、Bash guardrail 或 IDE 规则系统写成 native lifecycle hooks。
+- 宿主 Plan Mode 只负责前置规划/澄清容器，不得被描述成已经进入严格 execution。
 - 所有关键跃迁仍然必须走共享 harness：`accept_intake`、`dispatch_specialist`、`final_audit`、`render_user_verdict`。
 - 不得伪造独立 runtime 所有权；所有 live runtime 访问都要经过 broker-owned session + ownership lease。
 

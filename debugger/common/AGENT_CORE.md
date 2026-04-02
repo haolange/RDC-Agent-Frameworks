@@ -8,7 +8,9 @@
 
 framework 只负责：
 
-- `intent_gate`、`entry_gate`、`intake_gate`
+- `intent_gate`
+- `Plan / Intake Phase -> debug_plan`
+- `entry_gate`、`intake_gate`
 - `triage -> specialist -> skeptic -> curator -> final_audit` 的阶段推进
 - 共享 artifact / audit contract
 - broker-owned staged handoff 的角色边界
@@ -32,7 +34,9 @@ local 与 remote 都不再拥有不同的多 context 语义。所有平台都统
 
 ## 3. Runtime SSOT Artifacts
 
-run 级 live runtime 真相只允许落在以下 artifacts：
+`Plan / Intake Phase` 不产出 run 级 runtime artifact，也不创建 case/run。
+
+严格 execution 从 `entry_gate` 开始；只有进入 `Audited Execution Phase` 后，run 级 live runtime 真相才允许落在以下 artifacts：
 
 - `artifacts/runtime_session.yaml`
 - `artifacts/runtime_snapshot.yaml`
@@ -65,12 +69,19 @@ specialist brief、skeptic challenge、curator 结案都只允许引用：
 
 ## 5. 主 Agent 越权属于流程偏差
 
+`rdc-debugger` 在整个框架内的职责分两类：
+
+- Plan 阶段：压缩汇总、补料、contract 生成、`debug_plan` 编译
+- Execution 阶段：guard 推进、specialist 委托、阶段裁决
+
+Plan 阶段默认允许 `rdc-debugger` 调度轻量 planning sub-agent，但只允许回收核心摘要，不得把原始中间推理和冗长问答全文回灌到主上下文。
+
 当 workflow 处于 `waiting_for_specialist_brief`、`redispatch_pending`、`specialist_reinvestigation` 或 `skeptic_challenged` 时，`rdc-debugger` 只允许：
 
 - 读取 brief / challenge
 - 更新 `hypothesis_board.yaml`
 - 记录 blocker
-- 做 timeout / redispatch / request-more-input 决策
+- 做 timeout / redispatch / request-more-input 决策`r`n- 当 specialist 长时间无回报时，明确进入 `BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT` 或等价阻断状态
 
 禁止：
 
@@ -79,9 +90,42 @@ specialist brief、skeptic challenge、curator 结案都只允许引用：
 - 抢写 specialist 证据
 - 通过临时 wrapper 批处理 live CLI
 
-违反时必须在 `action_chain.jsonl` 记为 `process_deviation`。
+违反时必须在 `action_chain.jsonl` 记为 `PROCESS_DEVIATION_MAIN_AGENT_OVERREACH`。
 
-## 6. 失败与恢复策略
+## 6. Sub-Agent 分层
+
+Plan 阶段默认通过以下轻量 sub-agent 收敛输入：
+
+- `clarification_agent`
+- `reference_contract_agent`
+- `plan_compiler_agent`
+
+它们的硬边界是：
+
+- 不创建 case/run
+- 不接触 live runtime
+- 不写 `action_chain.jsonl`、`session_evidence.yaml`、`skeptic_signoff.yaml`
+- 不进入 broker-owned execution flow
+
+Execution 阶段只有以下节点明确必须经由 sub-agent：
+
+- `triage`
+- 所有正式 `specialist`
+- `skeptic`
+- `curator`
+
+以下节点属于控制面，不 agent 化：
+
+- `entry_gate`
+- `accept_intake`
+- `intake_gate`
+- `dispatch_readiness`
+- `dispatch_specialist`
+- `specialist_feedback`
+- `final_audit`
+- `render_user_verdict`
+
+## 7. 失败与恢复策略
 
 失败分类固定为：
 
@@ -96,3 +140,15 @@ specialist brief、skeptic challenge、curator 结案都只允许引用：
 - 恢复成功后 `runtime_generation + 1`
 - 连续性只允许判定为 `reattached_equivalent`、`reattached_shifted`、`reattach_failed`
 - 无法证明连续性时必须 blocker
+
+## 8. Session 真相方向
+
+当前仓库仍保留 `.current_session` 兼容路径，但它不应继续被视为新任务默认真相来源。
+
+后续实现应统一转向以下优先顺序：
+
+1. `run_root`
+2. `run.yaml.session_id`
+3. `debug_plan`
+
+目标是避免新 session 因共享 marker 而看到其它 case/run 产生的历史现场。

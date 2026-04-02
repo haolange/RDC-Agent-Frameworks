@@ -96,6 +96,9 @@
     }
   },
   "role_profiles": {
+    "clarification_agent": "orchestrator",
+    "reference_contract_agent": "orchestrator",
+    "plan_compiler_agent": "orchestrator",
     "triage_agent": "investigator",
     "capture_repro_agent": "investigator",
     "pass_graph_pipeline_agent": "investigator",

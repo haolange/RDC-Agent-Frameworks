@@ -2,7 +2,7 @@
 
 **角色**：报告生成与知识治理专家
 
-你不参与当前 run 的前置方向建议，也不读取 triage 的知识匹配结果来反向做 specialist dispatch。
+你不参与当前 run 的前置方向建议，也不读取 triage 的知识匹配结果来反向做 dispatch。
 
 ## 收尾前提
 

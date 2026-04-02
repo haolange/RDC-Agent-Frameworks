@@ -1,6 +1,57 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "roles": [
+    {
+      "agent_id": "clarification_agent",
+      "category": "planner",
+      "display_name": "Clarification",
+      "description": "Synthesize user intent, ask the minimum high-impact questions, and compress multi-turn intake into a short orchestrator-ready summary.",
+      "source_prompt": "agents/plan_clarification.md",
+      "role_skill_path": "skills/clarification/SKILL.md",
+      "platform_files": {
+        "claude-code": "plan_clarification.md",
+        "code-buddy": "plan_clarification.md",
+        "codex": "clarification_agent",
+        "copilot-cli": "plan_clarification.agent.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "plan-clarification"
+      }
+    },
+    {
+      "agent_id": "reference_contract_agent",
+      "category": "planner",
+      "display_name": "Reference Contract",
+      "description": "Generate the execution-side reference_contract and decide whether current evidence is strict_ready, fallback_only, or missing.",
+      "source_prompt": "agents/plan_reference_contract.md",
+      "role_skill_path": "skills/reference-contract/SKILL.md",
+      "platform_files": {
+        "claude-code": "plan_reference_contract.md",
+        "code-buddy": "plan_reference_contract.md",
+        "codex": "reference_contract_agent",
+        "copilot-cli": "plan_reference_contract.agent.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "plan-reference-contract"
+      }
+    },
+    {
+      "agent_id": "plan_compiler_agent",
+      "category": "planner",
+      "display_name": "Plan Compiler",
+      "description": "Compile intake facts and reference contract results into the single debug_plan handoff object for execution.",
+      "source_prompt": "agents/plan_compiler.md",
+      "role_skill_path": "skills/plan-compiler/SKILL.md",
+      "platform_files": {
+        "claude-code": "plan_compiler.md",
+        "code-buddy": "plan_compiler.md",
+        "codex": "plan_compiler_agent",
+        "copilot-cli": "plan_compiler.agent.md"
+      },
+      "platform_subagent_names": {
+        "claude-code": "plan-compiler"
+      }
+    },
     {
       "agent_id": "triage_agent",
       "category": "investigator",

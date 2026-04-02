@@ -2,12 +2,12 @@
 
 当前 `debugger` 只承认一套平台 contract：
 
-| Platform | Coordination | Orchestration | Live Runtime Policy | Hook SSOT | Entry Modes | Backends |
-| --- | --- | --- | --- | --- | --- | --- |
-| Claude Code | `staged_handoff` | `multi_agent` | `single_runtime_single_context` | `shared_harness` | `CLI, MCP` | `local, remote` |
-| Code Buddy | `staged_handoff` | `multi_agent` | `single_runtime_single_context` | `shared_harness` | `CLI, MCP` | `local, remote` |
-| Codex | `staged_handoff` | `multi_agent` | `single_runtime_single_context` | `shared_harness` | `CLI, MCP` | `local, remote` |
-| Copilot CLI | `staged_handoff` | `multi_agent` | `single_runtime_single_context` | `shared_harness` | `CLI, MCP` | `local, remote` |
+| Platform | Coordination | Orchestration | Live Runtime Policy | Hook SSOT | Default Entry | Allowed Entry Modes | Backends |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Claude Code | `staged_handoff` | `multi_agent` | `single_runtime_single_context` | `shared_harness` | `CLI` | `CLI, MCP` | `local, remote` |
+| Code Buddy | `staged_handoff` | `multi_agent` | `single_runtime_single_context` | `shared_harness` | `CLI` | `CLI, MCP` | `local, remote` |
+| Codex | `staged_handoff` | `multi_agent` | `single_runtime_single_context` | `shared_harness` | `CLI` | `CLI, MCP` | `local, remote` |
+| Copilot CLI | `staged_handoff` | `multi_agent` | `single_runtime_single_context` | `shared_harness` | `CLI` | `CLI, MCP` | `local, remote` |
 
 补充说明：
 

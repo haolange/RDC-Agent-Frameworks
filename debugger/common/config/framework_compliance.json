@@ -33,7 +33,15 @@
     ],
     "run_compliance_artifact": "artifacts/run_compliance.yaml",
     "freeze_state_artifact": "artifacts/freeze_state.yaml",
-    "finalization_receipt_artifact": "artifacts/finalization_receipt.yaml"
+    "finalization_receipt_artifact": "artifacts/finalization_receipt.yaml",
+    "write_scope_paths": {
+      "workspace_control": "workspace/cases/<case_id>/",
+      "workspace_notes": "workspace/cases/<case_id>/runs/<run_id>/notes/",
+      "session_signoff": "common/knowledge/library/sessions/<session_id>/skeptic_signoff.yaml",
+      "workspace_reports": "workspace/cases/<case_id>/runs/<run_id>/reports/",
+      "session_artifacts": "common/knowledge/library/sessions/<session_id>/",
+      "knowledge_library": "common/knowledge/library/"
+    }
   },
   "platforms": {
     "claude-code": {"coordination_mode": "staged_handoff", "required_surfaces": ["agents", "skills", "hooks", "mcp"], "workflow_required": false, "enforcement_mode": "shared_harness", "enforcement_tier": "native-hooks", "public_entrypoints": ["rdc-debugger"], "requires_run_compliance_artifact": true},

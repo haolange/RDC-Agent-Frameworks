@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "model_profiles": {
     "orchestrator": {
       "intent": "deep_orchestration",
@@ -49,6 +49,27 @@
     "write_and_stop_gate": ["write_bugcard", "write_skeptic", "stop_gate"]
   },
   "roles": {
+    "clarification_agent": {
+      "model_profile": "orchestrator",
+      "tool_policy": "coordination_only",
+      "hook_policy": "none",
+      "write_scopes": [],
+      "delegates_to": ["rdc-debugger"]
+    },
+    "reference_contract_agent": {
+      "model_profile": "orchestrator",
+      "tool_policy": "coordination_only",
+      "hook_policy": "none",
+      "write_scopes": [],
+      "delegates_to": ["rdc-debugger"]
+    },
+    "plan_compiler_agent": {
+      "model_profile": "orchestrator",
+      "tool_policy": "coordination_only",
+      "hook_policy": "none",
+      "write_scopes": [],
+      "delegates_to": ["rdc-debugger"]
+    },
     "triage_agent": {
       "model_profile": "investigator",
       "tool_policy": "taxonomy",

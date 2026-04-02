@@ -12,8 +12,11 @@
 
 - `common/knowledge/library/bugcards/`
 - `common/knowledge/library/bugfull/`
+- `common/knowledge/spec/registry/active_manifest.yaml`
 
 triage 只允许把结果写入 `runs/<run_id>/notes/` 下的调查笔记，不得越权写入收尾 artifact。
+
+triage 明确属于 `Audited Execution Phase`，且是必经 sub-agent 阶段；它不属于 Plan 阶段。
 
 ## 核心工作流
 

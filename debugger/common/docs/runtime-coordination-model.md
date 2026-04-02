@@ -2,6 +2,8 @@
 
 本文定义 framework 如何消费 Tools 的 runtime truth，并把它落成 broker-owned staged handoff 协议。
 
+本文只覆盖 `Audited Execution Phase`。`Plan / Intake Phase` 不持有 live runtime，不创建 case/run，也不产出 run 级 runtime artifacts。
+
 ## 1. 固定概念
 
 - `entry_mode`
@@ -39,6 +41,11 @@
 18. `finalized`
 19. `blocked_specialist_timeout`
 
+补充说明：
+
+- 用户第一次唤起 `rdc-debugger` 不等于进入本状态机
+- 只有 `debug_plan.execution_readiness = ready` 后，才允许从 `entry_gate` 进入本状态机
+
 ## 3. Runtime Ownership Model
 
 - broker 始终直接持有 tools process
@@ -69,6 +76,8 @@
 - specialist 超时
 
 回转不是静默重试。每次 redispatch 都必须写入 `action_chain.jsonl` 并更新 `hypothesis_board.yaml`。
+
+Plan 阶段的澄清不属于这里的 redispatch；只有进入 execution 后的补料/回转才写入审计链。
 
 ## 6. Final Gate
 

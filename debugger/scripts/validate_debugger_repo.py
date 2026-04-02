@@ -207,7 +207,7 @@ def _doc_contract_findings(root: Path) -> list[str]:
     for marker in ("PROCESS_DEVIATION_MAIN_AGENT_OVERREACH", "BLOCKED_SPECIALIST_FEEDBACK_TIMEOUT"):
         if marker not in core_doc:
             findings.append(f"AGENT_CORE.md missing marker: {marker}")
-    for marker in ("primary_completion_question", "requested_artifact", "final_audit / render_user_verdict"):
+    for marker in ("Plan / Intake Phase", "debug_plan", "final_audit / render_user_verdict"):
         if marker not in main_skill:
             findings.append(f"rdc-debugger skill missing marker: {marker}")
     for marker in ("candidate_bug_refs", "recommended_investigation_paths"):
@@ -345,27 +345,23 @@ def _compliance_findings(root: Path) -> list[str]:
         dispatch_topology = str(platform_caps.get("dispatch_topology", "")).strip()
         specialist_dispatch_requirement = str(platform_caps.get("specialist_dispatch_requirement", "")).strip()
         host_delegation_policy = str(platform_caps.get("host_delegation_policy", "")).strip()
-        host_delegation_fallback = str(platform_caps.get("host_delegation_fallback", "")).strip()
-        local_live_runtime_policy = str(platform_caps.get("local_live_runtime_policy", "")).strip()
-        remote_live_runtime_policy = str(platform_caps.get("remote_live_runtime_policy", "")).strip()
-        if sub_agent_mode not in {"puppet_sub_agents", "puppet_sub_agents", "instruction_only_sub_agents"}:
+        local_live_runtime_policy = str(platform_caps.get("live_runtime_policy", "")).strip()
+        enforcement_mode = str(rules.get("enforcement_mode", "")).strip()
+        hooks_supported = _required_surface_supported(platform_caps, "hooks")
+        if sub_agent_mode not in {"puppet_sub_agents", "instruction_only_sub_agents"}:
             findings.append(f"{key}: invalid sub_agent_mode")
-        if peer_communication not in {"direct", "via_main_agent", "none"}:
+        if peer_communication not in {"via_main_agent", "none", "direct"}:
             findings.append(f"{key}: invalid peer_communication")
         if agent_description_mode not in {"independent_files", "spawn_instruction_only", "skill_files"}:
             findings.append(f"{key}: invalid agent_description_mode")
-        if dispatch_topology not in {"mesh", "hub_and_spoke", "workflow_serial"}:
+        if dispatch_topology not in {"hub_and_spoke", "workflow_serial", "mesh"}:
             findings.append(f"{key}: invalid dispatch_topology")
         if specialist_dispatch_requirement not in {"required"}:
             findings.append(f"{key}: invalid specialist_dispatch_requirement")
         if host_delegation_policy not in {"platform_managed"}:
             findings.append(f"{key}: invalid host_delegation_policy")
-        if host_delegation_fallback not in {"native", "none"}:
-            findings.append(f"{key}: invalid host_delegation_fallback")
-        if local_live_runtime_policy not in {"single_runtime_single_context", "single_runtime_single_context", "single_runtime_owner"}:
-            findings.append(f"{key}: invalid local_live_runtime_policy")
-        if remote_live_runtime_policy != "single_runtime_owner":
-            findings.append(f"{key}: remote_live_runtime_policy must be single_runtime_owner")
+        if local_live_runtime_policy != "single_runtime_single_context":
+            findings.append(f"{key}: live_runtime_policy must be single_runtime_single_context")
 
         expected_mode = str(rules.get("coordination_mode", "")).strip()
         actual_mode = str(platform_caps.get("coordination_mode", "")).strip()
@@ -373,13 +369,6 @@ def _compliance_findings(root: Path) -> list[str]:
             findings.append(f"{key}: coordination_mode mismatch ({expected_mode} != {actual_mode})")
 
         if actual_mode == "staged_handoff":
-            if sub_agent_mode != "puppet_sub_agents" or peer_communication != "direct" or dispatch_topology != "mesh":
-                findings.append(f"{key}: staged_handoff requires puppet_sub_agents + direct + mesh")
-            if specialist_dispatch_requirement != "required" or host_delegation_policy != "platform_managed":
-                findings.append(f"{key}: staged_handoff requires required/platform_managed delegation defaults")
-            if local_live_runtime_policy != "single_runtime_single_context":
-                findings.append(f"{key}: staged_handoff requires single_runtime_single_context local policy")
-        elif actual_mode == "staged_handoff":
             if sub_agent_mode != "puppet_sub_agents" or peer_communication != "via_main_agent" or dispatch_topology != "hub_and_spoke":
                 findings.append(f"{key}: staged_handoff requires puppet_sub_agents + via_main_agent + hub_and_spoke")
             if specialist_dispatch_requirement != "required" or host_delegation_policy != "platform_managed":
@@ -394,18 +383,12 @@ def _compliance_findings(root: Path) -> list[str]:
             if specialist_dispatch_requirement != "required" or host_delegation_policy != "platform_managed":
                 findings.append(f"{key}: workflow_stage requires required/platform_managed delegation defaults")
 
-        enforcement_mode = str(rules.get("enforcement_mode", "")).strip()
-        hooks_supported = _native_surface_supported(platform_caps, "hooks")
-        if enforcement_mode not in {"native_hook_harness", "pseudo_hook_harness", "no_hook_audit", "runtime_owner_gate_loop"}:
+        if enforcement_mode != "shared_harness":
             findings.append(f"{key}: invalid enforcement_mode")
-        if enforcement_mode == "native_hook_harness" and not hooks_supported:
-            findings.append(f"{key}: native_hook_harness requires hooks support")
-        if enforcement_mode == "pseudo_hook_harness" and hooks_supported:
-            findings.append(f"{key}: pseudo_hook_harness should not claim native hooks support")
-        if enforcement_mode == "no_hook_audit" and actual_mode != "workflow_stage":
-            findings.append(f"{key}: no_hook_audit requires workflow_stage or explicit plugin wrapper handling")
-        if enforcement_mode == "runtime_owner_gate_loop" and str(platform_caps.get("enforcement_layer", "")).strip() != "runtime_owner":
-            findings.append(f"{key}: runtime_owner_gate_loop requires enforcement_layer=runtime_owner")
+        if str(platform_caps.get("enforcement_layer", "")).strip() != "shared_harness":
+            findings.append(f"{key}: enforcement_layer must be shared_harness")
+        if rules.get("enforcement_tier") == "native-hooks" and not hooks_supported:
+            findings.append(f"{key}: native-hooks platform must support hooks")
 
         for surface in rules.get("required_surfaces") or []:
             if not _required_surface_supported(platform_caps, str(surface)):
@@ -434,7 +417,8 @@ def _compliance_findings(root: Path) -> list[str]:
         findings.append("platform_capabilities.json MCP-only platform set mismatch")
 
     live_sessions = root / "common" / "knowledge" / "library" / "sessions"
-    allowed = set(compliance["runtime_artifact_contract"]["allowed_live_library_session_entries"])
+    contract = compliance.get("runtime_artifact_contract") or {}
+    allowed = set(contract.get("allowed_live_library_session_entries") or [".current_session", "README.md"])
     if live_sessions.is_dir():
         for child in live_sessions.iterdir():
             if child.name in allowed:
@@ -507,8 +491,8 @@ def _intake_contract_findings(root: Path) -> list[str]:
     findings: list[str] = []
     required = [
         root / "common" / "docs" / "intake" / "README.md",
-        root / "common" / "docs" / "intake" / "USER_PROMPT_TEMPLATE.md",
-        root / "common" / "docs" / "intake" / "USER_PROMPT_MINIMAL.md",
+        root / "common" / "docs" / "intake" / "DEBUG_PLAN.md",
+        root / "common" / "docs" / "intake" / "PLAN_MODE_COMPATIBILITY.md",
         root / "common" / "docs" / "intake" / "examples" / "example_single.md",
         root / "common" / "docs" / "intake" / "examples" / "example_cross_device.md",
         root / "common" / "docs" / "intake" / "examples" / "example_regression.md",
@@ -641,6 +625,9 @@ def _write_scope_findings(root: Path) -> list[str]:
         findings.append(f"framework_compliance.json missing write_scope_paths entries: {sorted(missing_scopes)}")
 
     expected_role_scopes = {
+        "clarification_agent": set(),
+        "reference_contract_agent": set(),
+        "plan_compiler_agent": set(),
         "triage_agent": {"workspace_notes"},
         "capture_repro_agent": {"workspace_notes"},
         "pass_graph_pipeline_agent": {"workspace_notes"},
@@ -730,3 +717,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

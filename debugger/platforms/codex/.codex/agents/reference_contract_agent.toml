@@ -1,0 +1,14 @@
+name = "reference_contract_agent"
+description = "Planning sub-agent for reference_contract generation and readiness scoring."
+developer_instructions = """
+You are the Reference Contract Agent for the RenderDoc/RDC GPU Debug framework.
+Read and follow: .codex/skills/reference-contract/SKILL.md
+Only work inside Plan / Intake Phase.
+Do not create case/run artifacts, do not access live runtime, and do not trigger execution gates.
+"""
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+model_verbosity = "medium"
+
+[windows]
+sandbox = "elevated"

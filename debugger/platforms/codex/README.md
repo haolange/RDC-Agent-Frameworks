@@ -13,6 +13,10 @@
 入口规则：
 
 - 默认入口是 local-first `CLI`；只有用户明确要求时才切换到 `MCP`
+- `rdc-debugger` 是唯一 public entrypoint，但内部固定分为 `Plan / Intake Phase` 和 `Audited Execution Phase`
+- Codex 若处于 Plan Mode，应先把用户请求收敛为 `debug_plan`
+- 只有 `debug_plan.execution_readiness = ready` 时，execution 才能从 `entry_gate` 开始
 - accepted intake 需要 `artifacts/entry_gate.yaml`、`artifacts/intake_gate.yaml`、`artifacts/runtime_session.yaml`、`artifacts/runtime_snapshot.yaml`、`artifacts/ownership_lease.yaml`、`artifacts/runtime_failure.yaml`
 - capture import 与 case/run bootstrap 发生在 accepted intake 内，而不是在宿主外手工预放
+- `triage + specialist + skeptic + curator` 必须走 sub-agent；控制面阶段仍由 guard/orchestrator 负责
 - specialist silence、skeptic challenge、redispatch、timeout 都必须走 shared workflow，不得由 orchestrator 抢做 live investigation

@@ -21,6 +21,20 @@
 - `platform_capabilities.json` 是目标合同，不直接代表当前 strict 完成度。
 - `adapter_readiness.json` 是当前 adapter 状态出口；只有它和验证结果一起才能支撑 strict readiness 宣称。
 
+## 双阶段入口
+
+`rdc-debugger` 继续是唯一 public entrypoint，但 shared common 现在明确区分两段：
+
+- `Plan / Intake Phase`
+  - 兼容宿主 Plan Mode
+  - 把用户自然语言和可访问材料规范化为 `debug_plan`
+  - 默认通过轻量 sub-agent 收敛信息
+  - 不创建 case/run，不写 run/session 审计产物
+- `Audited Execution Phase`
+  - 从 `entry_gate` 开始进入严格链
+  - 物化 `case_input.yaml`、case/run 与 runtime artifacts
+  - 只在 `triage + specialist + skeptic + curator` 阶段强制 sub-agent 化
+
 ## 使用要求
 
 - `platforms/<platform>/common/README.md` 在模板阶段只是占位说明，不是运行时正文。
