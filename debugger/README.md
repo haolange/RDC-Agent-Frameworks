@@ -33,12 +33,12 @@ Plan 阶段只负责把用户事实转换为可执行 contract；严格执行链
 2. 将 `RDC-Agent-Tools` 根目录整包拷贝到目标平台根目录的 `tools/`
 3. 运行 `python common/config/validate_binding.py --strict`，确认 package-local `tools/`、zero-install runtime、snapshot 与宿主入口文件全部对齐
 4. 提供至少一份可导入 `.rdc`
-5. 提供足以让 Plan 阶段生成 `strict_ready reference_contract` 的事实和参考材料
+5. 提供自然语言事实与宿主当前可访问的参考材料；不足部分由 Plan 阶段继续追问并由 agent 自行整理为内部 `reference_contract`
 
 未完成以上前置条件前：
 
 - 缺少 `.rdc` 时必须以 `BLOCKED_MISSING_CAPTURE` 阻断
-- 参考材料不足以生成 `strict_ready reference_contract` 时，必须以 `BLOCKED_MISSING_FIX_REFERENCE` 阻断 execution
+- 经 Plan 阶段最小追问后，若参考材料仍不足以生成 `strict_ready reference_contract`，必须以 `BLOCKED_MISSING_FIX_REFERENCE` 阻断 execution
 - 不得初始化 case/run，不得进入 live 调查
 
 ## 文档边界
