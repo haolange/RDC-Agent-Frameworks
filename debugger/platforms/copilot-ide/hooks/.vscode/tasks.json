@@ -1,0 +1,210 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "RDC: Preflight Check",
+      "detail": "Run shared harness preflight before debugger work starts (sessionStart equivalent)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "common/hooks/utils/codebuddy_hook_dispatch.py",
+        "session-start"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "DEBUGGER_CASE_ROOT": "${input:caseRoot}",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "RDC: Validate BugCard",
+      "detail": "Validate BugCard contract and schema before library write",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "common/hooks/utils/codebuddy_hook_dispatch.py",
+        "write-bugcard"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "DEBUGGER_RUN_ROOT": "${input:runRoot}",
+          "TOOL_OUTPUT_FILE": "${input:bugcardFile}",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "RDC: Validate Skeptic Signoff",
+      "detail": "Validate skeptic signoff artifact format",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "common/hooks/utils/codebuddy_hook_dispatch.py",
+        "write-skeptic"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "DEBUGGER_RUN_ROOT": "${input:runRoot}",
+          "TOOL_OUTPUT_FILE": "${input:skepticFile}",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "RDC: Finalization Gate",
+      "detail": "Run finalization gate for RenderDoc/RDC GPU Debug (agentStop equivalent)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "common/hooks/utils/codebuddy_hook_dispatch.py",
+        "stop-gate"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "DEBUGGER_RUN_ROOT": "${input:runRoot}",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "RDC: Force Finalization Gate",
+      "detail": "Run finalization gate with force flag (bypasses keyword check)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "common/hooks/utils/codebuddy_hook_dispatch.py",
+        "stop-gate-force"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "DEBUGGER_RUN_ROOT": "${input:runRoot}",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "RDC: Run Harness Guard",
+      "detail": "Run specific harness guard command",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "common/hooks/utils/harness_guard.py",
+        "${input:harnessCommand}",
+        "--run-root",
+        "${input:runRoot}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "caseRoot",
+      "type": "promptString",
+      "description": "Path to case root directory",
+      "default": "${workspaceFolder}/workspace/cases/case_001"
+    },
+    {
+      "id": "runRoot",
+      "type": "promptString",
+      "description": "Path to run root directory",
+      "default": "${workspaceFolder}/workspace/cases/case_001/runs/run_001"
+    },
+    {
+      "id": "bugcardFile",
+      "type": "promptString",
+      "description": "Path to BugCard YAML file",
+      "default": "common/knowledge/library/bugcards/example-bugcard.yaml"
+    },
+    {
+      "id": "skepticFile",
+      "type": "promptString",
+      "description": "Path to Skeptic signoff YAML file",
+      "default": "common/knowledge/library/sessions/session_001/skeptic_signoff.yaml"
+    },
+    {
+      "id": "harnessCommand",
+      "type": "pickString",
+      "description": "Select harness guard command",
+      "options": [
+        "preflight",
+        "intake-gate",
+        "dispatch-readiness",
+        "specialist-feedback",
+        "final-audit",
+        "render-user-verdict"
+      ],
+      "default": "dispatch-readiness"
+    }
+  ]
+}

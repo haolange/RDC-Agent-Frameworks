@@ -1,0 +1,11 @@
+# GitHub Copilot IDE Configuration
+skills:
+  - path: ./skills
+
+agents:
+  - path: ./agents
+
+# Optional: default settings
+defaults:
+  model: gpt-4
+  target: vscode

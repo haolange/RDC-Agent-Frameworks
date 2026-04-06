@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "renderdoc-platform-mcp": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "${DEBUGGER_PLATFORM_TOOLS_ROOT}/rdx.bat",
+        "--non-interactive",
+        "mcp"
+      ]
+    }
+  }
+}
